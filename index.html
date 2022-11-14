@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="baidu-site-verification" content="L6Lm9d5Crl"/>
+  
+  
+  
+  
+  <title>ATField&#39; s BLOG</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="ATField&#39; s BLOG">
+<meta property="og:url" content="https://atffang.github.io/index.html">
+<meta property="og:site_name" content="ATField&#39; s BLOG">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="FangTianYao">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="ATField&#39; s BLOG" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/my_photos/小图标.png">
+  
+  
+  
+<link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+    
+    
+  
+  
+      <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  <!-- 加载特效 -->
+    <script src="/js/pace.js"></script>
+    <link href="/css/pace/pace-theme-flash.css" rel="stylesheet" />
+  <script>
+      var yiliaConfig = {
+          fancybox: true,
+          animate: true,
+          isHome: true,
+          isPost: false,
+          isArchive: false,
+          isTag: false,
+          isCategory: false,
+          open_in_new: false
+      }
+  </script>
+<meta name="generator" content="Hexo 5.4.2"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        
+<script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+
+        <a href="/" class="profilepic">
+            
+            <img src="/my_photos/头像.png" class="js-avatar show">
+            
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/"></a></h1>
+        </hgroup>
+        
+        
+            <form>
+                <input type="text" class="st-default-search-input search" id="local-search-input" placeholder="搜索一下" autocomplete="off">
+            </form>
+            <div id="local-search-result"></div>
+        
+        
+            <script type="text/javascript">
+                (function() {
+                    'use strict';
+                    function getMatchData(keyword, data) {
+                        var matchData = [];
+                        for(var i =0;i<data.length;i++){
+                            if(data[i].title.toLowerCase().indexOf(keyword)>=0) 
+                                matchData.push(data[i])
+                        }
+                        return matchData;
+                    }
+                    var $input = $('#local-search-input');
+                    var $resultContent = $('#local-search-result');
+                    $input.keyup(function(){
+                        $.ajax({
+                            url: '/search.json',
+                            dataType: "json",
+                            success: function( json ) {
+                                var str='<ul class=\"search-result-list\">';                
+                                var keyword = $input.val().trim().toLowerCase();
+                                $resultContent.innerHTML = "";
+                                if ($input.val().trim().length <= 0) {
+                                    $resultContent.empty();
+                                    $('#switch-area').show();
+                                    return;
+                                }
+                                var results = getMatchData(keyword, json);
+                                if(results.length === 0){
+                                    $resultContent.empty();
+                                    $('#switch-area').show();
+                                    return;
+                                } 
+                                for(var i =0; i<results.length; i++){
+                                    str += "<li><a href='"+ results[i].url +"' class='search-result-title'>"+ results[i].title +"</a></li>";
+                                }
+                                str += "</ul>";
+                                $resultContent.empty();
+                                $resultContent.append(str);
+                                $('#switch-area').hide();
+                            }
+                        });
+                    });
+                })();
+            </script>
+        
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a  href="/archives/">所有文章</a></li>
+                        
+                            <li><a  href="/categories/">分类</a></li>
+                        
+                            <li><a  href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fl github"  target="_blank" href="https://github.com/ATFfang" title="github">github</a>
+                            
+                                <a class="fl mail"  target="_blank" href="mailto:643737159@qq.com" title="mail">mail</a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        
+                    </div>
+                </section>
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank"  class="main-nav-link switch-friends-link" href="https://xianbeil.github.io/">csdn</a>
+                    
+                      <a target="_blank"  class="main-nav-link switch-friends-link" href="https://segmentfault.com/blog/maocg_web">segmentfault</a>
+                    
+                      <a target="_blank"  class="main-nav-link switch-friends-link" href="http://www.jianshu.com/users/eb37ef89c746/latest_articles">简书</a>
+                    
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">爱动漫,爱游戏,爱编程,爱运动,爱的太多了!</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页"></a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                
+                    <img lazy-src="/my_photos/头像.png" class="js-avatar">
+                
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页"></a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/categories/">分类</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a class="github" target="_blank" href="https://github.com/ATFfang" title="github">github</a>
+                    
+                        <a class="mail" target="_blank" href="mailto:643737159@qq.com" title="mail">mail</a>
+                    
+                </div>
+            </nav>
+        </header>
+    </div>
+</nav>
+      <div class="body-wrap">
+  
+    <article id="post-GIS算法01：浅谈投影与坐标系" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a  href="/2022/10/16/GIS%E7%AE%97%E6%B3%9501%EF%BC%9A%E6%B5%85%E8%B0%88%E6%8A%95%E5%BD%B1%E4%B8%8E%E5%9D%90%E6%A0%87%E7%B3%BB/" class="article-date">
+      <time datetime="2022-10-16T12:25:15.000Z" itemprop="datePublished">2022-10-16</time>
+</a>
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a  class="article-title" href="/2022/10/16/GIS%E7%AE%97%E6%B3%9501%EF%BC%9A%E6%B5%85%E8%B0%88%E6%8A%95%E5%BD%B1%E4%B8%8E%E5%9D%90%E6%A0%87%E7%B3%BB/">GIS算法01：浅谈投影与坐标系</a>
+    </h1>
+  
+
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>&emsp;&emsp; 地理学中，<strong>坐标系</strong>是描述点在地球上的位置的重要手段，我们熟悉的经纬度即为坐标系的一种。宏观上，一般将坐标系分为两类：<strong>地理坐标系</strong>、<strong>投影坐标系</strong>，下面我将分别介绍这两种坐标系。</p>
+<h2 id="地理坐标系"><a href="#地理坐标系" class="headerlink" title="地理坐标系"></a>地理坐标系</h2><p>&emsp;&emsp; 我们知道，地球并非是一个均匀的球体，而是一个表面凹凸不平的椭球，在地理学科中存在许多模型以描述地球椭球：</p>
+<ul>
+<li><strong>地球椭球体</strong>：一个扁率极小的椭圆，绕地球体短轴旋转所形成的规则椭球体称之为地球椭球体。 </li>
+<li><strong>大地水准面</strong>：与平均海水面重合并延伸到大陆内部的水准面</li>
+<li></li>
+</ul>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/GIS%E7%AE%97%E6%B3%95/">GIS算法</a>
+    </div>
+
+
+      
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+
+  
+    <article id="post-hexo框架下部署个人博客" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a  href="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="article-date">
+      <time datetime="2022-10-15T06:47:14.000Z" itemprop="datePublished">2022-10-15</time>
+</a>
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a  class="article-title" href="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">hexo框架下部署个人博客</a>
+    </h1>
+  
+
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h4 id="啰嗦两句"><a href="#啰嗦两句" class="headerlink" title="啰嗦两句"></a>啰嗦两句</h4><p>&emsp;&emsp; 参考了很多篇博客，花了一天时间终于把不那么完整的博客上线了，对于我这个HTML小白来说还是挺有成就感的哈哈，简单记录一下。<br>&emsp;&emsp; &emsp;Hexo是一个快速、简介的博客框架，用户可以将Markdown格式文件上传并生成网页。以下是我进行部署时的步骤与一些要点：</p>
+<h4 id="Step1：安装Git与node-js"><a href="#Step1：安装Git与node-js" class="headerlink" title="Step1：安装Git与node.js"></a>Step1：安装Git与node.js</h4><p>1.1 <strong>安装Git</strong> &emsp;&emsp;官网：<a target="_blank" rel="noopener" href="https://git-scm.com/">https://git-scm.com/</a></p>
+<p>1.2  <strong>安装node</strong> &emsp;&emsp;官网：<a target="_blank" rel="noopener" href="https://nodejs.org/en/">https://nodejs.org/en/</a></p>
+<p>1.3  在系统环境变量中添加node的路径，以确保你的电脑能访问到他<br>（系统环境变量：右击此电脑-属性-高级系统设置-环境变量）</p>
+<p>1.4  打开gitbash命令界面，输入以下命令检验是否安装成功：<br>  <code>node -v</code><br> <code>npm -v</code></p>
+<img src="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/01hexo1.jpg" class="" title="sucessful">
+
+<h4 id="Step2：安装hexo"><a href="#Step2：安装hexo" class="headerlink" title="Step2：安装hexo"></a>Step2：安装hexo</h4><p>2.1  更换国内镜像源：防止下载速度过慢<br><code>npm config set registry https://registry.npm.taobao.org</code></p>
+<p>2.2  确认更换状态：<br><code>npm config get registry</code></p>
+<p>2.3  进入node安装目录，创建文件夹<code>node_global</code>和<code>node_cache</code> 并执行以下命令</p>
+<img src="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/01hexo.2.jpg" class="" title="sucessful">
+
+<p><code>npm config set prefix &quot;D:\programming\nodejs\node_global&quot;</code><br><code>npm config set cache &quot;D:\programming\nodejs\node_cache&quot;</code></p>
+<p>2.4 环境配置：新增环境变量<code>NODE_PATH</code>和添加<code>Path</code>（用户变量和系统变量），两个值都为 <code>\node_global</code>文件夹位置。</p>
+<p>2.5 <strong>安装hexo</strong>!<br>在你想要安装hexo的地方（我在node里）右键：gitbash here<br><code>npm install hexo-cli -g</code><br>可以再装个：<br><code>npm install hexo -save</code></p>
+<h4 id="Step3：新建博客文件夹"><a href="#Step3：新建博客文件夹" class="headerlink" title="Step3：新建博客文件夹"></a>Step3：新建博客文件夹</h4><p>3.1 新建一个blog文件夹</p>
+<p>3.2 gitbash here，输入<code>hexo init</code>，初始化hexo环境</p>
+<p>3.3 输入<code>npm install</code>，安装npm依赖包</p>
+<p>3.4 输入<code>hexo generate</code>或者是<code>hexo g</code>，生成静态页面，输入<code>hexo server</code>或者是<code>hexo s</code>，打开静态页面链接查看生成的hexo博客</p>
+<p>3.5 <code>ctrl+C</code>关闭</p>
+<h4 id="Step4：连接至GitHub"><a href="#Step4：连接至GitHub" class="headerlink" title="Step4：连接至GitHub"></a>Step4：连接至GitHub</h4><p>&emsp;&emsp; 在之前的步骤中，我们只是生成了一个本机才能访问的页面，接下来我们利用GitHub使所有人都可以访问你的网页</p>
+<p>4.1 确保你拥有一个<strong>科学上网</strong>的途径以及一个GitHub账号</p>
+<p>4.2 使本机和GitHub可以连接：</p>
+<p>&emsp;&emsp; 4.2.1 检验本机是否产生过秘钥<br>&emsp;&emsp;&emsp;&emsp; <code>cd ~/.ssh</code><br>&emsp;&emsp;&emsp;&emsp;  <code>ls</code></p>
+<p> &emsp;&emsp; 4.2.2 如果没有，执行以下命令来生成密钥：<br>&emsp;&emsp;&emsp;&emsp;  <code>ssh-keygen -t rsa -C &quot;自己的邮箱地址&quot;</code></p>
+<p>&emsp;&emsp; 4.2.3 按三次回车，生成成功后，去对应默认路径里用记事本打开id_rsa.pub，得到ssh key公钥。</p>
+<p> &emsp;&emsp; 4.2.4 在个人GitHub账号里，找到setting-&gt;SSH and GPG keys-&gt;new SSH key，输入title，将id_rsa.pub中的内容粘贴到下面key中，点击下面的add SSH key。</p>
+<p>&emsp;&emsp; 4.2.5 新建一个GitHub仓库，命名为<code>username.github.io</code></p>
+<h4 id="Step5：设置博客文件夹"><a href="#Step5：设置博客文件夹" class="headerlink" title="Step5：设置博客文件夹"></a>Step5：设置博客文件夹</h4><p>5.1 在之前新建的博客文件夹（我之前提到的blog文件夹）中，打开配置文件_config.yml，按照以下方式更改：</p>
+<img src="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/01hexo.3.jpg" class="" title="sucessful">
+
+<p>5.2 在Git Bash中执行<code>npm install hexo-deployer-git --save</code>命令</p>
+<p>5.3 最后执行 <code>hexo deploy</code>或者<code>hexo d</code>，完成部署</p>
+<h4 id="Step6：发布文章"><a href="#Step6：发布文章" class="headerlink" title="Step6：发布文章"></a>Step6：发布文章</h4><p>6.1 Git Bash中输入<code>hexo new title</code>，title是文章的名字。完成后可以看到在<code>\Blog\hexo\source_posts\</code> 文件夹中新建了一个markdown文件</p>
+<p>6.2 编辑文件，执行<code>hexo g</code> 与<code>hexo d</code> 即可发布</p>
+<p>6.3 访问**<code>username.github.io</code>**查看博客</p>
+<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>当然，以上是最简单的博客部署方式，你可以下载不同的主题(theme)并更改配置文件以更改主题，获得更好的视觉效果</p>
+<p>注意，更改配置文件后，出现无法提交的问题，一个原因是改错了，一个原因是网速，此时重新部署，或先执行<code>hexo clean</code>，再g、d。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/%E6%88%96%E8%AE%B8%E7%94%A8%E5%BE%97%E5%88%B0%E7%9A%84tips/">或许用得到的tips</a>
+    </div>
+
+
+      
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                &copy; 2022 FangTianYao
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank">Hexo &nbsp;&nbsp;</a><a href="https://github.com/maochunguang" target="_blank">Blog</a> by tommy
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" >极客到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+
+    </div>
+    
+<script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+
+    <script>
+        $(document).ready(function() {
+            var backgroundnum = 1;
+            var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+            $("#mobile-nav").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+            $(".left-col").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+        })
+    </script>
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'xxxxx', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	  var hm = document.createElement("script");
+	  hm.src = "//hm.baidu.com/hm.js?xxxxxx";
+	  var s = document.getElementsByTagName("script")[0]; 
+	  s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    $(document).ready(function() {
+        if ($("#comments").length < 1) {
+            $("#scroll > a:nth-child(2)").hide();
+        };
+    })
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+  <script language="javascript">
+    $(function() {
+        $("a[title]").each(function() {
+            var a = $(this);
+            var title = a.attr('title');
+            if (title == undefined || title == "") return;
+            a.data('title', title).removeAttr('title').hover(
+            function() {
+                var offset = a.offset();
+                $("<div id=\"anchortitlecontainer\"></div>").appendTo($("body")).html(title).css({
+                    top: offset.top - a.outerHeight() - 15,
+                    left: offset.left + a.outerWidth()/2 + 1
+                }).fadeIn(function() {
+                    var pop = $(this);
+                    setTimeout(function() {
+                        pop.remove();
+                    }, pop.text().length * 800);
+                });
+            }, function() {
+                $("#anchortitlecontainer").remove();
+            });
+        });
+    });
+</script>
+
+
+  </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

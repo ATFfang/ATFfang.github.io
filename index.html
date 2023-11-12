@@ -193,7 +193,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-11-12 10:52:31" itemprop="dateModified" datetime="2023-11-12T10:52:31+08:00">2023-11-12</time>
+                <time title="修改时间：2023-11-12 11:38:12" itemprop="dateModified" datetime="2023-11-12T11:38:12+08:00">2023-11-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -211,14 +211,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1k</span>
+              <span>813</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
+              <span>1 分钟</span>
             </span>
 
         </div>
@@ -230,25 +230,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>&emsp;&emsp;上个月一时兴起，购入了一块树莓派4B。</p>
-<div align="center" > <img src=https://s2.loli.net/2023/11/12/4XA5YE8GZDuNbOg.png  width=60%/> </div>
-&emsp;&emsp;到手后烧录了带GUI的Raspberry Pi系统，换源、安装了一些依赖并外界了键鼠小屏幕后，就因为面试的事搁置了。直到现在才想到将它好好利用起来。搁置的这段时间只零零散散部署过一些爬虫，但是由于部署程序时，我只通过filezilla完成主机与树莓派服务器之间的数据传输，再把数据传给实验室其他人，过程略显繁琐。因此，这次我打算直接将树莓派服务器作为实验室内网下的云存储平台使用。
-&emsp;&emsp;在修改前，首先要解决一个问题：在同一局域网下，我的主机无法ping通树莓派服务器，但是在同一手机热点下确可以。解决方法是在主机(Windows)中修改防火墙高级允许入站、出站规则中的**文件和打印机共享**。
-<div align="center" > <img src=https://s2.loli.net/2023/11/12/DU1ShQJ6c7vky89.png  width=60%/> </div>
-&emsp;&emsp;这个问题煞是令我费解。因为在手机热点下电脑可以ping通服务器，但在WiFi下却需要修改防火墙设置，不知道背后的逻辑是什么。
-&emsp;&emsp;确认机器间的连接通畅后，就可以开始设置树莓派了。为了安全起见，我首先在root下新建了一个账号，将共享的文件置于该账号下。首先更新一下源：
-&emsp;&emsp;``sudo apt-get update``
-&emsp;&emsp;安装samba程序。Samba(Server Message Block)是一个开源的软件套件，用于实现基于SMB/CIFS协议的文件和打印服务，使得不同操作系统的计算机能够在局域网上共享文件和打印机。
-&emsp;&emsp;``sudo apt-get install samba samba-common-bin``
-&emsp;&emsp;随后修改配置文件：
-&emsp;&emsp;``sudo vi /etc/samba/smb.conf``
-&emsp;&emsp;在share definitions一章将read only = yes改为=no，使得其他用户得以修改共享的文件。保存编辑并重启samba服务：
-&emsp;&emsp;``sudo /etc/init.d/smbd restart``
-&emsp;&emsp;添加默认用户：
-&emsp;&emsp;``sudo smbpasswd -a 刚刚新建的用户名``
-&emsp;&emsp在文件资源管理器中打开地址：``\\树莓派ip地址\用户名``，按要求输入账号密码（就是刚才创建与添加的），即可访问：
-<div align="center" > <img src=https://s2.loli.net/2023/11/12/hwjHTnEaMG2UQcm.png  width=60%/> </div>
-
+          <p>瞎捣鼓:)<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/11/11/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%90%AD%E5%BB%BA01%EF%BC%9A%E4%B8%80%E4%B8%AA%E5%86%85%E7%BD%91%E8%AE%BF%E9%97%AE%E7%9A%84%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 

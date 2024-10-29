@@ -20,28 +20,32 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="ATField&#39; s BLOG">
-<meta property="og:url" content="https://atffang.github.io/page/2/index.html">
+  <meta name="description" content="程序设计需求：爬取百度指数目标城市的年均值。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="百度指数爬取02 年均值爬取">
+<meta property="og:url" content="https://atffang.github.io/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/index.html">
 <meta property="og:site_name" content="ATField&#39; s BLOG">
+<meta property="og:description" content="程序设计需求：爬取百度指数目标城市的年均值。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-29T12:26:15.000Z">
+<meta property="article:modified_time" content="2024-10-29T12:47:55.040Z">
 <meta property="article:author" content="FangTianYao">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://atffang.github.io/page/2/">
+<link rel="canonical" href="https://atffang.github.io/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>ATField' s BLOG</title>
+  <title>百度指数爬取02 年均值爬取 | ATField' s BLOG</title>
   
 
 
@@ -156,13 +160,14 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2023/03/13/%E6%A0%B8%E5%AF%86%E5%BA%A6%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -174,10 +179,9 @@
       <meta itemprop="name" content="ATField' s BLOG">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/03/13/%E6%A0%B8%E5%AF%86%E5%BA%A6%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">核密度分析</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          百度指数爬取02 年均值爬取
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -185,33 +189,25 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2023-03-13 10:59:32" itemprop="dateCreated datePublished" datetime="2023-03-13T10:59:32+08:00">2023-03-13</time>
+              <time title="创建时间：2024-10-29 20:26:15 / 修改时间：20:47:55" itemprop="dateCreated datePublished" datetime="2024-10-29T20:26:15+08:00">2024-10-29</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-10-07 22:01:16" itemprop="dateModified" datetime="2023-10-07T22:01:16+08:00">2023-10-07</time>
-              </span>
-            <span class="post-meta-item">
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
               <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
+                <i class="fa fa-eye"></i>
               </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%A9%BA%E9%97%B4%E5%88%86%E6%9E%90%E4%B8%8EGIS%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">空间分析与GIS算法</span></a>
-                </span>
-            </span>
-
-          <br>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>2.1k</span>
+              <span>2.2k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -230,224 +226,35 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>本文简单介绍了GIS空间分析/地统计中极其基础，但非常重要的算法：核密度分析<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/03/13/%E6%A0%B8%E5%AF%86%E5%BA%A6%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
+        <p>程序设计需求：爬取百度指数目标城市的年均值。<br><span id="more"></span><br>&emsp;&emsp;该程序使用抓包方法获取百度指数对应搜索目标的年均值数据。通过观察百度指数网页的api调用情况，百度指数像后端请求的api构成应当为：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://index.baidu.com/api/SearchApi/index?area=&#123;area&#125;&amp;word=&#123;words&#125;&amp;startDate=&#123;startDate&#125;&amp;endDate=&#123;endDate&#125;</span><br></pre></td></tr></table></figure><br>其中，area为搜索发起地，words为搜索关键字，至多包含5个，startDate和endDate分别为起始时间与结束时间。<br>这些变量的构建方式如下：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">words = [[&#123;<span class="string">&quot;name&quot;</span>: key, <span class="string">&quot;wordType&quot;</span>: <span class="number">1</span>&#125;] <span class="keyword">for</span> key <span class="keyword">in</span> keys]</span><br><span class="line"></span><br><span class="line">words = <span class="built_in">str</span>(words).replace(<span class="string">&quot; &quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;&#x27;&quot;</span>, <span class="string">&quot;\&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line">startDate = <span class="string">f&quot;<span class="subst">&#123;year&#125;</span>-01-01&quot;</span></span><br><span class="line"></span><br><span class="line">endDate = <span class="string">f&quot;<span class="subst">&#123;year&#125;</span>-12-31&quot;</span></span><br></pre></td></tr></table></figure><br>其中，keys是搜索的各对象。</p>
+<p>通过request构建请求头，并使用get方法请求数据：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">headers = &#123;</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Connection&quot;</span>: <span class="string">&quot;keep-alive&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Accept&quot;</span>: <span class="string">&quot;application/json, text/plain, */*&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Sec-Fetch-Site&quot;</span>: <span class="string">&quot;same-origin&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Sec-Fetch-Mode&quot;</span>: <span class="string">&quot;cors&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Sec-Fetch-Dest&quot;</span>: <span class="string">&quot;empty&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Cipher-Text&quot;</span>: <span class="string">&quot;1698156005330_1698238860769_ZPrC2QTaXriysBT+5sgXcnbTX3/lW65av4zgu9uR1usPy82bArEg4m9deebXm7/O5g6QWhRxEd9/r/hqHad2WnVFVVWybHPFg3YZUUCKMTIYFeSUIn23C6HdTT1SI8mxsG5mhO4X9nnD6NGI8hF8L5/G+a5cxq+b21PADOpt/XB5eu/pWxNdwfa12krVNuYI1E8uHQ7TFIYjCzLX9MoJzPU6prjkgJtbi3v0X7WGKDJw9hwnd5Op4muW0vWKMuo7pbxUNfEW8wPRmSQjIgW0z5p7GjNpsg98rc3FtHpuhG5JFU0kZ6tHgU8+j6ekZW7+JljdyHUMwEoBOh131bGl+oIHR8vw8Ijtg8UXr0xZqcZbMEagEBzWiiKkEAfibCui59hltAgW5LG8IOtBDqp8RJkbK+IL5GcFkNaXaZfNMpI=&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Referer&quot;</span>: <span class="string">&quot;https://index.baidu.com/v2/main/index.html&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;Accept-Language&quot;</span>: <span class="string">&quot;zh-CN,zh;q=0.9&quot;</span>,</span><br><span class="line"></span><br><span class="line">        <span class="string">&#x27;Cookie&#x27;</span>: cookie&#125;</span><br><span class="line"></span><br><span class="line">    res = requests.get(url, headers=headers)</span><br><span class="line"></span><br><span class="line">    res_json = res.json()</span><br></pre></td></tr></table></figure></p>
+<p>返回的年均值与请求关键词如下两个列表所示：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">retuen_keys_num = <span class="built_in">len</span>(res_json[<span class="string">&#x27;data&#x27;</span>][<span class="string">&#x27;generalRatio&#x27;</span>])</span><br><span class="line"></span><br><span class="line">avg_list = [res_json[<span class="string">&#x27;data&#x27;</span>][<span class="string">&#x27;generalRatio&#x27;</span>][i][<span class="string">&#x27;all&#x27;</span>][<span class="string">&#x27;avg&#x27;</span>] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(retuen_keys_num)]</span><br><span class="line"></span><br><span class="line">destination_list = [res_json[<span class="string">&#x27;data&#x27;</span>][<span class="string">&#x27;generalRatio&#x27;</span>][i][<span class="string">&#x27;word&#x27;</span>][<span class="number">0</span>][<span class="string">&#x27;name&#x27;</span>] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(retuen_keys_num)]</span><br></pre></td></tr></table></figure></p>
+
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2022/12/31/2022%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/12/31/2022%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/" class="post-title-link" itemprop="url">2022，我们的记忆</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-12-31 23:54:15" itemprop="dateCreated datePublished" datetime="2022-12-31T23:54:15+08:00">2022-12-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-03-24 17:05:24" itemprop="dateModified" datetime="2023-03-24T17:05:24+08:00">2023-03-24</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E6%83%B3%E5%BD%95/" itemprop="url" rel="index"><span itemprop="name">随想录</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>38</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>这个时代遗忘的疾病正变得越来越严重，仅一下2022年发生的事情，为以后翻阅。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/12/31/2022%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="post-title-link" itemprop="url">hexo框架下部署个人博客</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-10-15 14:47:14" itemprop="dateCreated datePublished" datetime="2022-10-15T14:47:14+08:00">2022-10-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-12-28 10:57:55" itemprop="dateModified" datetime="2023-12-28T10:57:55+08:00">2023-12-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%88%96%E8%AE%B8%E7%94%A8%E5%BE%97%E5%88%B0%E7%9A%84tips/" itemprop="url" rel="index"><span itemprop="name">或许用得到的tips</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>4 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>记录一下第一次使用hexo框架的摸索过程<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/10/15/hexo%E6%A1%86%E6%9E%B6%E4%B8%8B%E9%83%A8%E7%BD%B2%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="prev" title="flask提供python脚本api查询数据库">
+      <i class="fa fa-chevron-left"></i> flask提供python脚本api查询数据库
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
   
-
-
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
-  </nav>
 
 
 

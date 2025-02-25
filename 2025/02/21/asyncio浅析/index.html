@@ -20,28 +20,32 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="ATField&#39; s BLOG">
-<meta property="og:url" content="https://atffang.github.io/index.html">
+  <meta name="description" content="Event LoopPython 的事件循环（Event Loop）是异步编程中的核心概念，通常与 asyncio 库（Python3.5引入）一起使用。事件循环负责管理和调度异步任务，确保这些任务在适当的时机运行，而不会阻塞主线程。事件循环是基于“协程”的模型，它允许 Python 程序在进行 I&#x2F;O 操作或等待某些事件时不会阻塞其他操作，从而提高程序的效率。event loop的基本流程：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="asyncio浅析">
+<meta property="og:url" content="https://atffang.github.io/2025/02/21/asyncio%E6%B5%85%E6%9E%90/index.html">
 <meta property="og:site_name" content="ATField&#39; s BLOG">
+<meta property="og:description" content="Event LoopPython 的事件循环（Event Loop）是异步编程中的核心概念，通常与 asyncio 库（Python3.5引入）一起使用。事件循环负责管理和调度异步任务，确保这些任务在适当的时机运行，而不会阻塞主线程。事件循环是基于“协程”的模型，它允许 Python 程序在进行 I&#x2F;O 操作或等待某些事件时不会阻塞其他操作，从而提高程序的效率。event loop的基本流程：">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-21T02:10:09.000Z">
+<meta property="article:modified_time" content="2025-02-21T02:12:23.095Z">
 <meta property="article:author" content="FangTianYao">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://atffang.github.io/">
+<link rel="canonical" href="https://atffang.github.io/2025/02/21/asyncio%E6%B5%85%E6%9E%90/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>ATField' s BLOG</title>
+  <title>asyncio浅析 | ATField' s BLOG</title>
   
 
 
@@ -156,80 +160,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/02/22/JavaScript%E5%BC%82%E6%AD%A5%E6%9C%BA%E5%88%B6%E6%B5%85%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/02/22/JavaScript%E5%BC%82%E6%AD%A5%E6%9C%BA%E5%88%B6%E6%B5%85%E6%9E%90/" class="post-title-link" itemprop="url">JavaScript异步机制浅析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-02-22 10:02:54" itemprop="dateCreated datePublished" datetime="2025-02-22T10:02:54+08:00">2025-02-22</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
@@ -245,10 +179,9 @@
       <meta itemprop="name" content="ATField' s BLOG">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/02/21/asyncio%E6%B5%85%E6%9E%90/" class="post-title-link" itemprop="url">asyncio浅析</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          asyncio浅析
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -261,7 +194,14 @@
               <time title="创建时间：2025-02-21 10:10:09 / 修改时间：10:12:23" itemprop="dateCreated datePublished" datetime="2025-02-21T10:10:09+08:00">2025-02-21</time>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -286,7 +226,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="Event-Loop"><a href="#Event-Loop" class="headerlink" title="Event Loop"></a>Event Loop</h4><p>Python 的事件循环（Event Loop）是异步编程中的核心概念，通常与 <code>asyncio</code> 库（Python3.5引入）一起使用。事件循环负责管理和调度异步任务，确保这些任务在适当的时机运行，而不会阻塞主线程。事件循环是基于“协程”的模型，它允许 Python 程序在进行 I/O 操作或等待某些事件时不会阻塞其他操作，从而提高程序的效率。<br><strong>event loop</strong>的基本流程：</p>
+        <h4 id="Event-Loop"><a href="#Event-Loop" class="headerlink" title="Event Loop"></a>Event Loop</h4><p>Python 的事件循环（Event Loop）是异步编程中的核心概念，通常与 <code>asyncio</code> 库（Python3.5引入）一起使用。事件循环负责管理和调度异步任务，确保这些任务在适当的时机运行，而不会阻塞主线程。事件循环是基于“协程”的模型，它允许 Python 程序在进行 I/O 操作或等待某些事件时不会阻塞其他操作，从而提高程序的效率。<br><strong>event loop</strong>的基本流程：</p>
 <ul>
 <li><strong>定义协程（coroutines）</strong>: 协程是 Python 中的异步函数（Asynchronous Functions），通常用 <code>async def</code> 定义，执行时不会立即执行，而是返回一个 “awaitable” 对象。</li>
 <li><strong>创建事件循环</strong>: <code>asyncio.get_event_loop()</code> 创建一个事件循环，它负责管理和调度所有异步任务。</li>
@@ -322,686 +262,34 @@
 <p>但是这样并没有意义，运行的事件并没有缩短。因此，我们改变策略为：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">say_after</span>(<span class="params">delay, what</span>):</span><br><span class="line">    <span class="keyword">await</span> asyncio.sleep(delay)</span><br><span class="line">    <span class="built_in">print</span>(what)</span><br><span class="line">    </span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">	task1 = asyncio.create_task(say_after(<span class="number">1</span>, <span class="string">&quot;hello&quot;</span>))</span><br><span class="line">	task2 = asyncio.create_task(say_after(<span class="number">2</span>, <span class="string">&quot;world&quot;</span>))</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;start at <span class="subst">&#123;time.strftime(<span class="string">&#x27;%X&#x27;</span>)&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">await</span> task1</span><br><span class="line">    <span class="keyword">await</span> task2</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;finish at <span class="subst">&#123;time.strftime(<span class="string">&#x27;%X&#x27;</span>)&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure><br>输出为<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">start at 16:23:01</span><br><span class="line">hello</span><br><span class="line">world</span><br><span class="line">finish at 16:23:03</span><br></pre></td></tr></table></figure><br>这次，我们预先包装了两个task，在其放到Event Loop后，Event Loop并不会将控制权交由task，从而实现串行。</p>
 <p>如何返回task的值？<br>最简单：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="keyword">await</span> task1</span><br></pre></td></tr></table></figure><br>使用gather:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="keyword">await</span> asyncio.gather(task1, taske)</span><br></pre></td></tr></table></figure><br>gather还有一个好处，可以不需要包装为task再输入，可以直接读取coroutine：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="keyword">await</span> asyncio.gather(</span><br><span class="line">	say_after(<span class="number">1</span>, <span class="string">&quot;hello&quot;</span>),				 </span><br><span class="line">	say_after(<span class="number">2</span>, <span class="string">&quot;world&quot;</span>)</span><br><span class="line">	)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(a)</span><br></pre></td></tr></table></figure></p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/12/13/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/12/13/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/" class="post-title-link" itemprop="url">2025年终总结</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-12-13 16:00:49" itemprop="dateCreated datePublished" datetime="2024-12-13T16:00:49+08:00">2024-12-13</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-01-12 13:56:18" itemprop="dateModified" datetime="2025-01-12T13:56:18+08:00">2025-01-12</time>
-              </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.4k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>3 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>2025年终总结<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/12/13/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/12/12/%E5%9F%BA%E4%BA%8E%E4%B8%89%E7%BB%B4%E7%BD%91%E6%A0%BC%E7%A0%81LAS%E7%82%B9%E4%BA%91%E7%BD%91%E6%A0%BC%E5%8C%96%E5%AD%98%E5%82%A8%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E6%96%B9%E6%A1%88%E4%BB%8B%E7%BB%8D/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/12/12/%E5%9F%BA%E4%BA%8E%E4%B8%89%E7%BB%B4%E7%BD%91%E6%A0%BC%E7%A0%81LAS%E7%82%B9%E4%BA%91%E7%BD%91%E6%A0%BC%E5%8C%96%E5%AD%98%E5%82%A8%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E6%96%B9%E6%A1%88%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">基于三维网格码LAS点云网格化存储与可视化方案介绍</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-12-12 15:54:35 / 修改时间：16:16:27" itemprop="dateCreated datePublished" datetime="2024-12-12T15:54:35+08:00">2024-12-12</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>77</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>三维网格码计算思路分享02。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/12/12/%E5%9F%BA%E4%BA%8E%E4%B8%89%E7%BB%B4%E7%BD%91%E6%A0%BC%E7%A0%81LAS%E7%82%B9%E4%BA%91%E7%BD%91%E6%A0%BC%E5%8C%96%E5%AD%98%E5%82%A8%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E6%96%B9%E6%A1%88%E4%BB%8B%E7%BB%8D/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/12/13/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/" rel="prev" title="2025年终总结">
+      <i class="fa fa-chevron-left"></i> 2025年终总结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/02/22/JavaScript%E5%BC%82%E6%AD%A5%E6%9C%BA%E5%88%B6%E6%B5%85%E6%9E%90/" rel="next" title="JavaScript异步机制浅析">
+      JavaScript异步机制浅析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
   
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">地球空间网格编码正反算实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-12-11 19:41:43" itemprop="dateCreated datePublished" datetime="2024-12-11T19:41:43+08:00">2024-12-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-12-12 16:12:15" itemprop="dateModified" datetime="2024-12-12T16:12:15+08:00">2024-12-12</time>
-              </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>5.6k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>10 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>三维网格码计算思路分享。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/11/28/DTDC2024/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/11/28/DTDC2024/" class="post-title-link" itemprop="url">DTDC2024</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-11-28 22:42:00 / 修改时间：22:52:36" itemprop="dateCreated datePublished" datetime="2024-11-28T22:42:00+08:00">2024-11-28</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>31</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>华东师范大学李响老师课题组参加DTDC2024会议。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/11/28/DTDC2024/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/11/25/2024%E4%B8%AD%E5%9B%BD%E7%A0%94%E7%A9%B6%E7%94%9F%E6%95%B0%E5%AD%A6%E5%BB%BA%E6%A8%A1%E7%AB%9E%E8%B5%9B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/11/25/2024%E4%B8%AD%E5%9B%BD%E7%A0%94%E7%A9%B6%E7%94%9F%E6%95%B0%E5%AD%A6%E5%BB%BA%E6%A8%A1%E7%AB%9E%E8%B5%9B/" class="post-title-link" itemprop="url">2024中国研究生数学建模竞赛</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-11-25 12:44:51 / 修改时间：13:36:49" itemprop="dateCreated datePublished" datetime="2024-11-25T12:44:51+08:00">2024-11-25</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>888</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>D题大数据驱动的地理综合问题国二。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/11/25/2024%E4%B8%AD%E5%9B%BD%E7%A0%94%E7%A9%B6%E7%94%9F%E6%95%B0%E5%AD%A6%E5%BB%BA%E6%A8%A1%E7%AB%9E%E8%B5%9B/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/11/25/IWGMS2024/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/11/25/IWGMS2024/" class="post-title-link" itemprop="url">IWGMS2024</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-11-25 11:00:56 / 修改时间：12:42:38" itemprop="dateCreated datePublished" datetime="2024-11-25T11:00:56+08:00">2024-11-25</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>879</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>mark一下自己的第一次汇报^-^<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/11/25/IWGMS2024/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/" class="post-title-link" itemprop="url">百度指数爬取02 年均值爬取</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-10-29 20:26:15 / 修改时间：20:47:55" itemprop="dateCreated datePublished" datetime="2024-10-29T20:26:15+08:00">2024-10-29</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2.2k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>4 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>程序设计需求：爬取百度指数目标城市的年均值。<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-title-link" itemprop="url">flask提供python脚本api查询数据库</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2023-12-28 10:55:33 / 修改时间：15:18:46" itemprop="dateCreated datePublished" datetime="2023-12-28T10:55:33+08:00">2023-12-28</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/" itemprop="url" rel="index"><span itemprop="name">编程学习-Python</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>5 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>利用python的Flask库将脚本打包成api，实现通过url实现前端sql查询，访问数据库<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
 
 
 
@@ -1053,6 +341,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Event-Loop"><span class="nav-number">1.</span> <span class="nav-text">Event Loop</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#asyncio-%E7%9A%84%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E8%A7%84%E8%8C%83"><span class="nav-number">2.</span> <span class="nav-text">asyncio 的基本使用规范</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E7%9A%84%E4%B8%8A%E6%89%8B"><span class="nav-number">3.</span> <span class="nav-text">简单的上手</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

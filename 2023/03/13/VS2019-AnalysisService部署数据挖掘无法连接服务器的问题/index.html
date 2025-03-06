@@ -226,7 +226,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>397</span>
+              <span>385</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -245,7 +245,16 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>VS2019-AnalysisService挖掘SQLServer2012数据库时，无法连接本地服务器的问题<br><span id="more"></span><br>&emsp;&emsp;起因是使用Visual Studio2019的Analysis Service模块，对SQLServer2012数据库进行挖掘时，部署后软件报错：无法连接localhost服务器，遂找了各种资料，最终综合两个方法解决了问题。<br>首先，在Visual Studio2019挖掘项目的属性-部署中，可以看到服务器名为localhost，即本台电脑。<br>但在SQLServer中，服务器名却为：<br><a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwGut"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwGut.md.jpg" alt="ppQwGut.md.jpg"></a><div align=left><br>即localhost+数据库实例名，因此，将Visual Studio2019中的服务器也改为相同的名称：<br><a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwJDP"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwJDP.md.jpg" alt="ppQwJDP.md.jpg"></a><div align=left><br>替换后，我的项目部署时仍然报错：缺少用户名NT SERVICE\MSOLAP$SQLSERVE。此时只需要在SQLServer中的安全性-登录名中，新建该登录名，并赋予其一定的权限即可。<br><a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwYHf"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwYHf.md.jpg" alt="ppQwYHf.md.jpg"></a><div align=left></p>
+        <p>VS2019-AnalysisService挖掘SQLServer2012数据库时，无法连接本地服务器的问题</p>
+<span id="more"></span>
+<p>  起因是使用Visual Studio2019的Analysis Service模块，对SQLServer2012数据库进行挖掘时，部署后软件报错：无法连接localhost服务器，遂找了各种资料，最终综合两个方法解决了问题。<br />
+首先，在Visual Studio2019挖掘项目的属性-部署中，可以看到服务器名为localhost，即本台电脑。<br />
+但在SQLServer中，服务器名却为：<br />
+<a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwGut"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwGut.md.jpg" alt="ppQwGut.md.jpg" /></a><div align=left><br />
+即localhost+数据库实例名，因此，将Visual Studio2019中的服务器也改为相同的名称：<br />
+<a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwJDP"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwJDP.md.jpg" alt="ppQwJDP.md.jpg" /></a><div align=left><br />
+替换后，我的项目部署时仍然报错：缺少用户名NT SERVICE\MSOLAP$SQLSERVE。此时只需要在SQLServer中的安全性-登录名中，新建该登录名，并赋予其一定的权限即可。<br />
+<a target="_blank" rel="noopener" href="https://imgse.com/i/ppQwYHf"><div align=center><img src="https://s1.ax1x.com/2023/03/13/ppQwYHf.md.jpg" alt="ppQwYHf.md.jpg" /></a><div align=left></p>
 
     </div>
 

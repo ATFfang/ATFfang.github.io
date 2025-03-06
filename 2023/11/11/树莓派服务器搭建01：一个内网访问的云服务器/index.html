@@ -241,10 +241,24 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>瞎捣鼓:)<br><span id="more"></span></p>
+        <p>瞎捣鼓:)</p>
+<span id="more"></span>
 <p>上个月一时兴起，购入了一块树莓派4B。</p>
-<p><img src=https://s2.loli.net/2023/11/12/4XA5YE8GZDuNbOg.png  width=60%/> 到手后烧录了带GUI的Raspberry Pi系统，换源、安装了一些依赖并外接了键鼠小屏幕后，就因为面试的事搁置了。直到现在才想到将它好好利用起来。搁置的这段时间只零零散散部署过一些爬虫，但是由于部署程序时，我只通过filezilla完成主机与树莓派服务器之间的数据传输，再把数据传给实验室其他人，过程略显繁琐。因此，这次我打算直接将树莓派服务器作为实验室内网下的云存储平台使用。<br>在修改前，首先要解决一个问题：在同一局域网下，我的主机无法ping通树莓派服务器，但是在同一手机热点下确可以。解决方法是在主机(Windows)中修改防火墙高级允许入站、出站规则中的<strong>文件和打印机共享</strong></p>
-<p><img src=https://s2.loli.net/2023/11/12/DU1ShQJ6c7vky89.png  width=60% align="center"/>这个问题煞是令我费解。因为在手机热点下电脑可以ping通服务器，但在WiFi下却需要修改防火墙设置，不知道背后的逻辑是什么。<br>确认机器间的连接通畅后，就可以开始设置树莓派了。为了安全起见，我首先在root下新建了一个账号，将共享的文件置于该账号下。首先更新一下源：<br><code>sudo apt-get update</code><br>安装samba程序。Samba(Server Message Block)是一个开源的软件套件，用于实现基于SMB/CIFS协议的文件和打印服务，使得不同操作系统的计算机能够在局域网上共享文件和打印机。<br><code>sudo apt-get install samba samba-common-bin</code><br>随后修改配置文件：<br><code>sudo vi /etc/samba/smb.conf</code><br>在share definitions一章将read only = yes改为=no，使得其他用户得以修改共享的文件。保存编辑并重启samba服务：<br><code>sudo /etc/init.d/smbd restart</code><br>添加默认用户：<br><code>sudo smbpasswd -a 刚刚新建的用户名</code><br>在文件资源管理器中打开地址：<code>\\树莓派ip地址\用户名</code>，按要求输入账号密码（就是刚才创建与添加的），即可访问：<br><img src=https://s2.loli.net/2023/11/12/hwjHTnEaMG2UQcm.png  width=60%/></p>
+<p><img src=https://s2.loli.net/2023/11/12/4XA5YE8GZDuNbOg.png  width=60%/> 到手后烧录了带GUI的Raspberry Pi系统，换源、安装了一些依赖并外接了键鼠小屏幕后，就因为面试的事搁置了。直到现在才想到将它好好利用起来。搁置的这段时间只零零散散部署过一些爬虫，但是由于部署程序时，我只通过filezilla完成主机与树莓派服务器之间的数据传输，再把数据传给实验室其他人，过程略显繁琐。因此，这次我打算直接将树莓派服务器作为实验室内网下的云存储平台使用。<br />
+在修改前，首先要解决一个问题：在同一局域网下，我的主机无法ping通树莓派服务器，但是在同一手机热点下确可以。解决方法是在主机(Windows)中修改防火墙高级允许入站、出站规则中的<strong>文件和打印机共享</strong></p>
+<p><img src=https://s2.loli.net/2023/11/12/DU1ShQJ6c7vky89.png  width=60% align="center"/>这个问题煞是令我费解。因为在手机热点下电脑可以ping通服务器，但在WiFi下却需要修改防火墙设置，不知道背后的逻辑是什么。<br />
+确认机器间的连接通畅后，就可以开始设置树莓派了。为了安全起见，我首先在root下新建了一个账号，将共享的文件置于该账号下。首先更新一下源：<br />
+<code>sudo apt-get update</code><br />
+安装samba程序。Samba(Server Message Block)是一个开源的软件套件，用于实现基于SMB/CIFS协议的文件和打印服务，使得不同操作系统的计算机能够在局域网上共享文件和打印机。<br />
+<code>sudo apt-get install samba samba-common-bin</code><br />
+随后修改配置文件：<br />
+<code>sudo vi /etc/samba/smb.conf</code><br />
+在share definitions一章将read only = yes改为=no，使得其他用户得以修改共享的文件。保存编辑并重启samba服务：<br />
+<code>sudo /etc/init.d/smbd restart</code><br />
+添加默认用户：<br />
+<code>sudo smbpasswd -a 刚刚新建的用户名</code><br />
+在文件资源管理器中打开地址：<code>\\树莓派ip地址\用户名</code>，按要求输入账号密码（就是刚才创建与添加的），即可访问：<br />
+<img src=https://s2.loli.net/2023/11/12/hwjHTnEaMG2UQcm.png  width=60%/></p>
 
     </div>
 

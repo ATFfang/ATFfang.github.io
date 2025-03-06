@@ -216,7 +216,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>3.1k</span>
+              <span>3.2k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -242,7 +242,7 @@
 <script type="math/tex; mode=display">
 y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_p x_{ip} + \epsilon_i
 $$其中， $y_i$ 是因变量，$x_{ij}$ 是自变量，$\beta_j$ 是回归系数，$\epsilon_i$ 是误差项。
-在GWR中，回归系数 $\beta_j$ 被允许在空间上变化，即每个地理位置都有自己的一组回归系数。GWR的模型形式为：</script><p>y<em>i = \beta_0(u_i, v_i) + \beta_1(u_i, v_i) x</em>{i1} + \beta<em>2(u_i, v_i) x</em>{i2} + \cdots + \beta<em>p(u_i, v_i) x</em>{ip} + \epsilon<em>i$$其中，$\beta_p(u_i, v_i) x</em>{ip}$ 是依赖于地理位置 $(u<em>i, v_i) x</em>{ip}$ 的回归系数，意味着不同地理位置可能有不同的线性关系。</p>
+在GWR中，回归系数 $\beta_j$ 被允许在空间上变化，即每个地理位置都有自己的一组回归系数。GWR的模型形式为：</script><p>y_i = \beta_0(u_i, v_i) + \beta_1(u_i, v_i) x_{i1} + \beta_2(u_i, v_i) x_{i2} + \cdots + \beta_p(u_i, v_i) x_{ip} + \epsilon_i$$其中，$\beta_p(u_i, v_i) x_{ip}$ 是依赖于地理位置 $(u_i, v_i) x_{ip}$ 的回归系数，意味着不同地理位置可能有不同的线性关系。</p>
 <p>在OLS的求解中，我们先使用矩阵表示：</p>
 <script type="math/tex; mode=display">
 \mathbf{y} = \mathbf{X} \boldsymbol{\beta} + \boldsymbol{\varepsilon}
@@ -264,8 +264,8 @@ $$</script><p>\beta = (X^T X)^{-1} X^T y</p>
 <script type="math/tex; mode=display">OLS模型的参数估计为：</script><p>\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}</p>
 <script type="math/tex; mode=display">这里，$\hat{\boldsymbol{\beta}}$ 是通过最小化残差平方和得到的回归系数的估计值。
 将GWR的权重矩阵引入。为了估计每个地理位置的局部回归系数，GWR对每个点分配一个权重矩阵$W(u_i, v_i)$用于表示与其他点的地理邻近关系。距离越近的点权重越大，距离远的点权重越小。回归系数可以通过加权最小二乘法来估计：</script><p>\hat{\beta}(u_i, v_i) = (X^T W(u_i, v_i) X)^{-1} X^T W(u_i, v_i) y</p>
-<script type="math/tex; mode=display">GWR 的目标函数是对每个观测点单独进行回归。权重矩阵 $W(u_i, v_i)$ 表示为：</script><p>W(u<em>i, v_i) = \begin{pmatrix}<br>w</em>{i1} &amp; 0 &amp; 0 &amp; \dots &amp; 0 \<br>0 &amp; w<em>{i2} &amp; 0 &amp; \dots &amp; 0 \<br>0 &amp; 0 &amp; w</em>{i3} &amp; \dots &amp; 0 \<br>\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; 0 \<br>0 &amp; 0 &amp; 0 &amp; \dots &amp; w_{in}<br>\end{pmatrix}</p>
-<script type="math/tex; mode=display">权重$wij$通常是通过某种距离衰减函数来计算的，常见的是高斯核函数：</script><p>w<em>{ij} = \exp\left(-\frac{d</em>{ij}^2}{2b^2}\right)</p>
+<script type="math/tex; mode=display">GWR 的目标函数是对每个观测点单独进行回归。权重矩阵 $W(u_i, v_i)$ 表示为：</script><p>W(u_i, v_i) = \begin{pmatrix}<br>w_{i1} &amp; 0 &amp; 0 &amp; \dots &amp; 0 \\<br>0 &amp; w_{i2} &amp; 0 &amp; \dots &amp; 0 \\<br>0 &amp; 0 &amp; w_{i3} &amp; \dots &amp; 0 \\<br>\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; 0 \\<br>0 &amp; 0 &amp; 0 &amp; \dots &amp; w_{in}<br>\end{pmatrix}</p>
+<script type="math/tex; mode=display">权重$wij$通常是通过某种距离衰减函数来计算的，常见的是高斯核函数：</script><p>w_{ij} = \exp\left(-\frac{d_{ij}^2}{2b^2}\right)</p>
 <script type="math/tex; mode=display">其中：
 - $ w_{ij} $ 是观测点 $i$ 与观测点 $j$ 之间的权重，
 - $ d_{ij} $ 是观测点 $i$ 和 $j$ 之间的空间距离，
@@ -275,7 +275,7 @@ $$</script><p>\beta = (X^T X)^{-1} X^T y</p>
 
 ### 2. GNNWR model
 GNNWR模型通过引入神经网络来动态计算空间权重矩阵$W(u_i, v_i)$，从而更灵活地捕捉空间非平稳性。
-$$\mathbf{W}(u_i, v_i) = \text{SWNN}(d_{i1}, d_{i2}, \ldots, d_{in})</script><p>其中，SWNN是一个是一个神经网络，输入是目标位置与所有其他位置之间的距离向量$d<em>{i1}, d</em>{i2}, \ldots, d_{in}$，输出是权重矩阵$W(u_i, v_i)$。<br>GNNWR通过两项指标进行模型诊断：</p>
+$$\mathbf{W}(u_i, v_i) = \text{SWNN}(d_{i1}, d_{i2}, \ldots, d_{in})</script><p>其中，SWNN是一个是一个神经网络，输入是目标位置与所有其他位置之间的距离向量$d_{i1}, d_{i2}, \ldots, d_{in}$，输出是权重矩阵$W(u_i, v_i)$。<br>GNNWR通过两项指标进行模型诊断：</p>
 <ul>
 <li>Goodness of Fit检验<br><script type="math/tex">F_1 = \frac{RSS_G / \delta_1}{RSS_0 / (n - p - 1)}</script> 其中，$RSS_G$是GNNWR模型的残差平方和，$RSS_0$是OLS模型的残差平方和，$\delta_1$是GNNWR模型中使用的带宽参数。</li>
 </ul>

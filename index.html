@@ -274,6 +274,120 @@ mjx-container[display="true"] + br {
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/03/12/3D%20Guassian%20Splatting/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="FangTianYao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ATField' s BLOG">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/12/3D%20Guassian%20Splatting/" class="post-title-link" itemprop="url">3D Guassian Splatting</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-12 23:12:43" itemprop="dateCreated datePublished" datetime="2025-03-12T23:12:43+08:00">2025-03-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-14 22:14:24" itemprop="dateModified" datetime="2025-03-14T22:14:24+08:00">2025-03-14</time>
+              </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="环境构建"><a class="markdownIt-Anchor" href="#环境构建"></a> 环境构建</h3>
+<p>首先clone仓库<a target="_blank" rel="noopener" href="https://github.com/graphdeco-inria/gaussian-splatting">https://github.com/graphdeco-inria/gaussian-splatting</a></p>
+<p>理论上应该按照源码提供的environment.yml文件创建环境，即：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda env create --file environment.<span class="property">yml</span></span><br></pre></td></tr></table></figure>
+<p>然而，实验室服务器CUDA版本为12.2，environment.yml中指定的python和pytorch版本过低，因此，选择自己配置环境python3.10, cuda12.1对应的pytorch（适用于12.2）：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">conda create -n gaussian_splatting python=<span class="number">3.10</span></span><br><span class="line">conda activate gaussian_splatting</span><br><span class="line">pip3 install torch torchvision torchaudio --index-url <span class="attr">https</span>:<span class="comment">//download.pytorch.org/whl/cu121</span></span><br><span class="line"></span><br><span class="line">pip install submodules\diff-gaussian-rasterization</span><br><span class="line">pip install submodules\simple-knn</span><br><span class="line">pip install plyfile</span><br><span class="line">pip install tqdm</span><br><span class="line">pip install opencv-python</span><br><span class="line">pip install joblib</span><br></pre></td></tr></table></figure>
+<h3 id="数据前期处理程序"><a class="markdownIt-Anchor" href="#数据前期处理程序"></a> 数据前期处理程序</h3>
+<p>都是在Windows端下载。</p>
+<p>下载ffmep <a target="_blank" rel="noopener" href="http://www.gyan.dev/ffmpeg/builds/">www.gyan.dev/ffmpeg/builds/</a></p>
+<p>将文件夹重命名为ffmep，将bin文件路径加入系统变量</p>
+<p>下载COLMAP</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/colmap/colmap/releases">https://github.com/colmap/colmap/releases</a></p>
+<p>将文件夹重命名为COLMAP，将bin文件路径加入系统变量</p>
+<p>下载ImageMagick</p>
+<h3 id="训练流程"><a class="markdownIt-Anchor" href="#训练流程"></a> 训练流程</h3>
+<ul>
+<li>Step1：录制视频，使用ffmep进行抽帧</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ffmpeg -i input.<span class="property">mp4</span> -vf <span class="string">&quot;setpts=0.2*PTS&quot;</span> input/input_%4d.<span class="property">jpg</span></span><br></pre></td></tr></table></figure>
+<p>-i input.mp4：指定输入视频文件为 input.mp4。<br />
+-vf “setpts=0.2 PTS”：这是一个视频过滤器选项，其中 setpts 指令用来设置帧的时间戳（Presentation TimeStamps）。这里的表达式 0.2PTS 表示将当前帧的时间戳乘以0.2，这意味着抽取出来的帧之间的间隔被拉长了5倍，所以生成的图像序列将以视频原始速度的五分之一进行播放。<br />
+input/input_%4d.jpg：这是输出文件格式及路径，其中 %4d 是一个格式化占位符，它会被自增的整数所替换，确保每个输出文件名是唯一的。例如，输出的第一帧将会被保存为 input/input_0001.jpg，第二帧为 input/input_0002.jpg，依此类推。同时，输出目录被指定为 input/ 目录下。</p>
+<ul>
+<li>Step2：使用3D Guassian Splatting仓库中包含的convert.py完成图像数据转换。</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python convert.<span class="property">py</span> -s &lt;location&gt; [--resize]</span><br></pre></td></tr></table></figure>
+<p>location：代表需要转化的图像位置，图像必须被放在一个input文件夹下，location则为其父文件夹。<br />
+[–resize]：表示是否变化图像尺寸，可选</p>
+<ul>
+<li>Step3：将转换完成的图像，包括images和sparse两个文件夹，放在一个父文件夹下作为输入数据，进行训练。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python train.py -s &lt;location&gt;</span><br></pre></td></tr></table></figure>
+<p>location：代表数据路径</p>
+<h3 id="结果预览"><a class="markdownIt-Anchor" href="#结果预览"></a> 结果预览</h3>
+<p>拉取代码：<a target="_blank" rel="noopener" href="https://github.com/kishimisu/Gaussian-Splatting-WebGL.git%EF%BC%8C%E5%9C%A8live">https://github.com/kishimisu/Gaussian-Splatting-WebGL.git，在live</a> server中打开网页，上传ply数据：<br />
+<img src="https://atffang.github.io/2025/03/14/3D Guassian Splatting/try.png"/></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/03/06/GNNWR/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1008,86 +1122,6 @@ mjx-container[display="true"] + br {
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/11/25/IWGMS2024/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="FangTianYao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ATField' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/11/25/IWGMS2024/" class="post-title-link" itemprop="url">IWGMS2024</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2024-11-25 11:00:56 / 修改时间：12:42:38" itemprop="dateCreated datePublished" datetime="2024-11-25T11:00:56+08:00">2024-11-25</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>877</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>mark一下自己的第一次汇报<sup>-</sup></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/11/25/IWGMS2024/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1159,7 +1193,7 @@ mjx-container[display="true"] + br {
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1211,13 +1245,13 @@ mjx-container[display="true"] + br {
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">65k</span>
+    <span title="站点总字数">67k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">1:59</span>
+    <span title="站点阅读时长">2:01</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

@@ -6,7 +6,7 @@
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
-  <updated>2025-03-15T07:54:54.142Z</updated>
+  <updated>2025-03-30T01:41:37.613Z</updated>
   <id>https://atffang.github.io/</id>
   
   <author>
@@ -15,6 +15,23 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>局域网访问服务器Docker下psql数据库的若干问题</title>
+    <link href="https://atffang.github.io/2025/03/29/%E5%B1%80%E5%9F%9F%E7%BD%91%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1%E5%99%A8Docker%E4%B8%8Bpsql%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98/"/>
+    <id>https://atffang.github.io/2025/03/29/%E5%B1%80%E5%9F%9F%E7%BD%91%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1%E5%99%A8Docker%E4%B8%8Bpsql%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98/</id>
+    <published>2025-03-29T15:45:34.000Z</published>
+    <updated>2025-03-30T01:41:37.613Z</updated>
+    
+    <content type="html"><![CDATA[<p>瞎捣鼓</p><span id="more"></span><p>最近有在实验室服务器的docker上部署服务的需求，将数据注入psql数据库并在docker环境中访问一切正常，然而在局域网下其他设备访问数据时，出现了一些问题，遂简单记录。</p><p>首先，由于postgresql数据库的默认端口为5432，然而docker仅仅预留了几个映射端口与外部通信，因此，需要修改psql的运行端口，这里我选择的映射端口为25002:2002。在 Docker 中，端口映射的格式通常是 host_port:container_port，即 宿主机端口:容器内端口。因此，首先需要修改psql的运行端口为2002。</p><p>找到<code>/etc/postgresql/14/main/postgresql.conf</code>配置文件，将<code>port = 5432</code>修改为制定端口，我这里为2002。</p><p>并添加：<code>listen_addresses = '*'</code>开启远程访问。</p><p>随后修改<code>/etc/postgresql/14/main/pg_hba.conf</code>来设置放行ip。设置规则为在实验室局域网下的ip全部放行，那么添加规则：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host    all             all             192.168.41.0/24          md5</span><br></pre></td></tr></table></figure><p>最后，重启服务：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /etc/init.d/postgresql restart</span><br></pre></td></tr></table></figure><p>那么通过局域网下其他设备访问服务器的25002端口即可访问数据库：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql -h 192.168.41.56 -p 25002 -U postgres -d shanghaipoidb</span><br></pre></td></tr></table></figure><p>尝试在命令行中远程连接，并未发生什么问题，但在pgadmin中连接却提示错误为一个172.x.x.x的ip被拒绝访问，如果出现这种情况，意味着 Docker 容器内的 PostgreSQL 服务绑定的是容器的内部网络 IP（例如 <code>172.x.x.x</code>），而不是宿主机的 IP 地址（例如 <code>192.x.x.x</code>）。当你使用 pgAdmin 连接时，pgAdmin 可能尝试直接连接容器的内部 IP 地址，而不是宿主机的地址，因此连接被拒绝。只需将改ip使用上面相同的方式加入放行ip即可。</p>]]></content>
+    
+    
+    <summary type="html">&lt;p&gt;瞎捣鼓&lt;/p&gt;</summary>
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>Entropy and Cross Entropy</title>
@@ -346,25 +363,6 @@
     
     
     <category term="编程学习-Python" scheme="https://atffang.github.io/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>GCJ02toWGS84</title>
-    <link href="https://atffang.github.io/2023/03/25/GCJ02toWGS84/"/>
-    <id>https://atffang.github.io/2023/03/25/GCJ02toWGS84/</id>
-    <published>2023-03-25T05:26:55.000Z</published>
-    <updated>2023-03-25T05:33:20.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>json文件GCJ02向WGS84坐标系转换的小工具</p><span id="more"></span><p>在做地图学作业时，需要对json数据完成GCJ02向WGS84坐标系的转换，QGIS实现时遇到了一些问题，因此借助openAI的帮助，写了个小脚本，分享给大家。</p><iframe  height=200width=60%src="https://atffang.github.io/GeoJson_GCJ02_WGS84/"  frameborder=0  allowfullscreen></iframe>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;json文件GCJ02向WGS84坐标系转换的小工具&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="工具" scheme="https://atffang.github.io/categories/%E5%B7%A5%E5%85%B7/"/>
     
     
   </entry>

@@ -6,7 +6,7 @@
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
-  <updated>2025-05-28T14:26:08.356Z</updated>
+  <updated>2025-05-28T14:28:10.645Z</updated>
   <id>https://atffang.github.io/</id>
   
   <author>
@@ -17,11 +17,11 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>重返统计学2：从最大似然开始</title>
+    <title>重返统计学1：从最大似然开始</title>
     <link href="https://atffang.github.io/2025/05/28/%E9%87%8D%E8%BF%94%E7%BB%9F%E8%AE%A1%E5%AD%A62%E4%BB%8E%E6%9C%80%E5%A4%A7%E4%BC%BC%E7%84%B6%E5%BC%80%E5%A7%8B/"/>
     <id>https://atffang.github.io/2025/05/28/%E9%87%8D%E8%BF%94%E7%BB%9F%E8%AE%A1%E5%AD%A62%E4%BB%8E%E6%9C%80%E5%A4%A7%E4%BC%BC%E7%84%B6%E5%BC%80%E5%A7%8B/</id>
     <published>2025-05-28T14:24:16.000Z</published>
-    <updated>2025-05-28T14:26:08.356Z</updated>
+    <updated>2025-05-28T14:28:10.645Z</updated>
     
     <content type="html"><![CDATA[<p>介绍一下最大似然</p><span id="more"></span><img src="https://atffang.github.io/2025/05/28/重返统计学2从最大似然开始/MLE.png"/>]]></content>
     

@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="介绍一下最大似然">
+  <meta name="description" content="和之前的文章呼应下，继续介绍python的异步机制。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="继续聊聊异步">
 <meta property="og:url" content="https://atffang.github.io/2025/05/29/%E7%BB%A7%E7%BB%AD%E8%81%8A%E8%81%8A%E5%BC%82%E6%AD%A5/index.html">
 <meta property="og:site_name" content="ATField&#39; s BLOG">
-<meta property="og:description" content="介绍一下最大似然">
+<meta property="og:description" content="和之前的文章呼应下，继续介绍python的异步机制。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-29T15:39:59.000Z">
-<meta property="article:modified_time" content="2025-05-29T15:43:56.554Z">
+<meta property="article:modified_time" content="2025-05-29T15:46:47.446Z">
 <meta property="article:author" content="FangTianYao">
 <meta name="twitter:card" content="summary">
 
@@ -191,7 +191,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-05-29 23:39:59 / 修改时间：23:43:56" itemprop="dateCreated datePublished" datetime="2025-05-29T23:39:59+08:00">2025-05-29</time>
+              <time title="创建时间：2025-05-29 23:39:59 / 修改时间：23:46:47" itemprop="dateCreated datePublished" datetime="2025-05-29T23:39:59+08:00">2025-05-29</time>
             </span>
 
           
@@ -207,7 +207,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>4.3k</span>
+              <span>4.4k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -226,7 +226,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>介绍一下最大似然</p>
+        <p>和之前的文章呼应下，继续介绍python的异步机制。</p>
 <span id="more"></span>
 <p>在之前的文章中（指路[<a href="https://atffang.github.io/2025/02/21/asyncio%E6%B5%85%E6%9E%90/#more">https://atffang.github.io/2025/02/21/asyncio浅析/#more</a>]），我们简单学习了python的asynicio机制，但当我回看这篇文章时，仍然觉得许多东西——特别是概念，没有讲清楚。因此有了这篇文章，我们将从底层机制开始介绍python中的异步操作。</p>
 <h3 id="为什么要异步"><a class="markdownIt-Anchor" href="#为什么要异步"></a> 为什么要异步？</h3>

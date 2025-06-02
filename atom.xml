@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>ATField&#39; s BLOG</title>
+  <title>Tianyao&#39; s BLOG</title>
   
-  <subtitle>ATField</subtitle>
+  <subtitle>Tianyao</subtitle>
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
@@ -10,7 +10,7 @@
   <id>https://atffang.github.io/</id>
   
   <author>
-    <name>FangTianYao</name>
+    <name>Fang Tianyao</name>
     
   </author>
   

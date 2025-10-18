@@ -6,7 +6,7 @@
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
-  <updated>2025-10-18T14:12:26.223Z</updated>
+  <updated>2025-10-18T14:15:44.398Z</updated>
   <id>https://atffang.github.io/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://atffang.github.io/2025/10/18/obsidain%E5%9F%BA%E4%BA%8Es3%E7%9A%84%E5%A4%9A%E7%AB%AF%E5%90%8C%E6%AD%A5/"/>
     <id>https://atffang.github.io/2025/10/18/obsidain%E5%9F%BA%E4%BA%8Es3%E7%9A%84%E5%A4%9A%E7%AB%AF%E5%90%8C%E6%AD%A5/</id>
     <published>2025-10-18T13:44:05.000Z</published>
-    <updated>2025-10-18T14:12:26.223Z</updated>
+    <updated>2025-10-18T14:15:44.398Z</updated>
     
     <content type="html"><![CDATA[<p>obsidain基于s3的多端同步。</p><span id="more"></span><p>安利大家一个obsidian非常好用的插件 <strong>Remotely save</strong> ，他可以基于多个云服务厂商，比如 onedrive 与 google drvie 进行多端同步，就不需要买obsidian自己的云服务了。不过我在使用学校邮箱的onedrive进行验证的时候出现了一些问题导致无法继续，不得已使用最基础的s3服务。</p><p>首先，在obsidian的第三方库仓库中下载Remotely save，查看其设置，在第一个选择远程选项中可以选择多种云存储的方式，由于我使用自己的云服务器进行存储与同步，选择第一项S3或兼容S3的服务。</p><p>存储位置我使用了之前99一年买的阿里云挂壁大学生服务器，阿里对大学生没得说，从服务器到大模型token额度，都对学生开放了优惠甚至部分免费的福利。</p><p>在linux云服务器上安装minio，开放9000端口，并新建bucket，保存ID和Key，将上述信息填入Remotely save的，包括服务地址（<a href="http://xxx.xxx.xxx.xxx:9000">http://xxx.xxx.xxx.xxx:9000</a>），区域（填us-east-1就ok），Access Key ID，Secret Access Key，Bucket name，点击检查测试连接即可。</p><p>点击Remotely save的刷新按钮，即可便捷的上传或下拉这个仓库了，超级方便，并且可以在选项中设置打开自动更新，关闭自动更新和每隔一段时间自动更新。</p><img src="https://atffang.github.io/2025/10/18/obsidain基于s3的多端同步/多端同步.jpg"/>]]></content>
     

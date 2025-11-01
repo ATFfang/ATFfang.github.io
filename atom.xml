@@ -6,7 +6,7 @@
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
-  <updated>2025-11-01T11:25:23.894Z</updated>
+  <updated>2025-11-01T11:36:52.601Z</updated>
   <id>https://atffang.github.io/</id>
   
   <author>
@@ -21,9 +21,9 @@
     <link href="https://atffang.github.io/2025/11/01/Datahader.Networks%20%E7%BB%98%E5%88%B6bundling%20flow/"/>
     <id>https://atffang.github.io/2025/11/01/Datahader.Networks%20%E7%BB%98%E5%88%B6bundling%20flow/</id>
     <published>2025-11-01T11:16:07.000Z</published>
-    <updated>2025-11-01T11:25:23.894Z</updated>
+    <updated>2025-11-01T11:36:52.601Z</updated>
     
-    <content type="html"><![CDATA[<p>Datahader.Networks 绘制bundling flow</p><span id="more"></span><p>详细文档参见 <a href="https://datashader.org/user_guide/Networks.html">https://datashader.org/user_guide/Networks.html</a></p><p>我们曾经介绍了绘制普通流的方式，实际上仅仅是基于贝塞尔曲线做了插值，绘制了类似于“飞机航线”的流线，大概如下图：</p><p>The point and line-segment plotting provided by Datashader can be put together in different ways to visualize specific types of data. For instance, network graph data, i.e., networks of nodes connected by edges, can very naturally be represented by points and lines. Here we will show examples of using Datashader’s graph-specific plotting tools, focusing on how to visualize very large graphs while allowing any portion of the rendering pipeline to replaced with components suitable for specific problems.</p>]]></content>
+    <content type="html"><![CDATA[<p>Datahader.Networks 绘制bundling flow</p><span id="more"></span><p>详细文档参见 <a href="https://datashader.org/user_guide/Networks.html">https://datashader.org/user_guide/Networks.html</a></p><p>我们曾经介绍了绘制普通流的方式，实际上仅仅是基于贝塞尔曲线做了插值，绘制了类似于“飞机航线”的流线，大概如下图：<br /><img src="https://atffang.github.io/2025/11/01/Datahader_Networks/中国人口流动.png"/></p><p>The point and line-segment plotting provided by Datashader can be put together in different ways to visualize specific types of data. For instance, network graph data, i.e., networks of nodes connected by edges, can very naturally be represented by points and lines. Here we will show examples of using Datashader’s graph-specific plotting tools, focusing on how to visualize very large graphs while allowing any portion of the rendering pipeline to replaced with components suitable for specific problems.</p>]]></content>
     
     
     <summary type="html">&lt;p&gt;Datahader.Networks 绘制bundling flow&lt;/p&gt;</summary>

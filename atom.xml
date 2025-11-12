@@ -6,7 +6,7 @@
   <link href="https://atffang.github.io/atom.xml" rel="self"/>
   
   <link href="https://atffang.github.io/"/>
-  <updated>2025-11-12T05:31:33.478Z</updated>
+  <updated>2025-11-12T05:32:28.690Z</updated>
   <id>https://atffang.github.io/</id>
   
   <author>
@@ -21,9 +21,9 @@
     <link href="https://atffang.github.io/2025/11/12/deepsort/"/>
     <id>https://atffang.github.io/2025/11/12/deepsort/</id>
     <published>2025-11-12T05:23:19.000Z</published>
-    <updated>2025-11-12T05:31:33.478Z</updated>
+    <updated>2025-11-12T05:32:28.690Z</updated>
     
-    <content type="html"><![CDATA[<p>梳理摄像头行人追踪经典论文SIMPLE ONLINE AND REALTIME TRACKING WITH A DEEP ASSOCIATION METRIC中的方法。</p><span id="more"></span><h3 id="abstract"><a class="markdownIt-Anchor" href="#abstract"></a> Abstract</h3><p>Simple Online and Realtime Tracking (SORT) is a pragmatic<br />approach to multiple object tracking with a focus on simple,<br />effective algorithms. In this paper, we integrate appearance<br />information to improve the performance of SORT. Due to this<br />extension we are able to track objects through longer periods of occlusions, effectively reducing the number of identity<br />switches. In spirit of the original framework we place much<br />of the computational complexity into an offline pre-training<br />stage where we learn a deep association metric on a largescale person re-identification dataset. During online application, we establish measurement-to-track associations using<br />nearest neighbor queries in visual appearance space. Experimental evaluation shows that our extensions reduce the number of identity switches by 45%, achieving overall competitive performance at high frame rates.</p><h3 id="方法解读"><a class="markdownIt-Anchor" href="#方法解读"></a> 方法解读</h3><img src="https://atffang.github.io/2025/11/12/deepsort/deepsort.png"/>]]></content>
+    <content type="html"><![CDATA[<p>梳理摄像头行人追踪经典论文SIMPLE ONLINE AND REALTIME TRACKING WITH A DEEP ASSOCIATION METRIC中的方法。</p><span id="more"></span><h3 id="abstract"><a class="markdownIt-Anchor" href="#abstract"></a> Abstract</h3><p>Simple Online and Realtime Tracking (SORT) is a pragmatic approach to multiple object tracking with a focus on simple, effective algorithms. In this paper, we integrate appearance information to improve the performance of SORT. Due to this extension we are able to track objects through longer periods of occlusions, effectively reducing the number of identity switches. In spirit of the original framework we place much of the computational complexity into an offline pre-training stage where we learn a deep association metric on a largescale person re-identification dataset. During online application, we establish measurement-to-track associations using nearest neighbor queries in visual appearance space. Experimental evaluation shows that our extensions reduce the number of identity switches by 45%, achieving overall competitive performance at high frame rates.</p><h3 id="方法解读"><a class="markdownIt-Anchor" href="#方法解读"></a> 方法解读</h3><img src="https://atffang.github.io/2025/11/12/deepsort/deepsort.png"/>]]></content>
     
     
     <summary type="html">&lt;p&gt;梳理摄像头行人追踪经典论文SIMPLE ONLINE AND REALTIME TRACKING WITH A DEEP ASSOCIATION METRIC中的方法。&lt;/p&gt;</summary>

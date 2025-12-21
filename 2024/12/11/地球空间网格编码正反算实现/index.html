@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="三维网格码计算思路分享。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="地球空间网格编码正反算实现">
 <meta property="og:url" content="https://atffang.github.io/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="三维网格码计算思路分享。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-12-11T11:41:43.000Z">
 <meta property="article:modified_time" content="2024-12-12T08:12:15.000Z">
@@ -213,14 +213,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>7.8k</span>
+              <span>5.7k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>14 分钟</span>
+              <span>10 分钟</span>
             </span>
 
         </div>
@@ -232,229 +232,50 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
-</head>
-<body>
-<p>三维网格码计算思路分享。 <span id="more"></span>
-似乎这两年低空经济成为了潮流方向，多了一些政策倾斜。前阵子刚有公司来交流相关事宜，16日华师大又要新成立低空经济研究中心，这两天组里为了这些事情鞍前马后，竟然有些仿佛过年的热闹。我负责的工作是探索其中一小个部分，也是一个非常小众的应用方向：地球空间网格码，该工作目前的理论基础为国标<strong>GBT
-40087-2021 地球空间网格编码规则</strong>。 地球空间网格基于
-GeoSOT(Geographical coordinate global Subdivision based on
-One-dimensioninteger and Two
-ton”power)地球剖分模型,将地球空间统一剖分成不同尺度的网格单元,并按统一编码规则进行标识和表达,构建了网格化的地球空间数据组织参考框架。该框架支持地球表面空间和地球立体空间与地理空间信息的聚合,可有效解决物联网、大数据、云计算中海量空间信息在标识和表达上的唯一性、可读性、尺度性、关联性的瓶颈,实现了多源,多尺度数据网格化高效组织、处理和应用,突破了地理空间信息跨行业应用的技术壁垒,推动地球系统科学的发展。
-具体来说，网格剖分分为经纬度的水平面剖分和高程的垂直剖分。具体过程相对复杂，参见上述国家标准，本文仅分享一些实现步骤。
-#### 1. 经纬度网格剖分 根据国标，经纬度剖分的步骤如下所示： 1.
-将该点经、纬度坐标表示成GB/T16831规定的形式,即A’B’C.D”; 2.
-将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数。即将度|A|由十进制数转换成8
-bit 定长二进制数(A)2, 将分B由一进制数转换成6bit定长二进制数(B)2,
-将秒C由十进制数转换成6bit定长二进制数(C)2,
-将秒以下数D由一进制数转换成11bit定长二进制数(D)2; 3.
-分别将经、纬度坐标度、分、秒及秒以下二进制数(A)2、(B)2、(C)2、(D)2直接拼接成31
-bit定长二进制数(E)2, 即(E)2=(A)2(B)2(C)2(D)2, 分别得到两个 31
-bit定长数经度(EL)2, 和纬度(EB)2; 4. 将纬度(EB)2,前置、经度(EL)2后置,
-采用莫顿交叉的方式生成62bit的混合代码(F)2, 例如若(EB)2为100111
-,(EL)2为011010, 则(EB)2在前, (EL)2在后的莫顿交叉运算结果为(F)2为
-100101101110; 5. 将二进制混合代码(F)2转成四进制编码(F)4; 6.
-根据待求网格的级别m, 将(F)4中后32-m位四进制的码元去掉得到(F’)4; 7.
-根据经度和纬度,前加上G0、G1、G2或G3即可得到网格代码。</p>
-<p>代码实现步骤如下： 定义一个类： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">WGS84coordinate</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, latitude, longitude, elevation</span>):</span><br><span class="line">        self.latitude = latitude</span><br><span class="line">        self.longitude = longitude</span><br><span class="line">        self.elevation = elevation</span><br></pre></td></tr></table></figure></p>
-<p>实现步骤1： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 将该点经、纬度坐标表示成GB/T16831规定的形式,即A&#x27;B&#x27;C.D&quot;;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decimal2dms</span>(<span class="params">self, decimal</span>):</span><br><span class="line">        degrees = <span class="built_in">int</span>(decimal)</span><br><span class="line">        minutes = <span class="built_in">int</span>((<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span>)</span><br><span class="line">        seconds = (<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span></span><br><span class="line">        seconds = (seconds - minutes) * <span class="number">60</span></span><br><span class="line">        seconds_fractional, seconds_integer = math.modf(seconds)</span><br><span class="line">        <span class="keyword">return</span> [<span class="built_in">int</span>(degrees), <span class="built_in">int</span>(minutes), <span class="built_in">int</span>(seconds_integer), seconds_fractional]</span><br></pre></td></tr></table></figure></p>
-<p>实现步骤2,3： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 2. 将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数, 拼为31 bit定长数</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">dms2bit</span>(<span class="params">self, dms</span>):</span><br><span class="line">        <span class="comment"># dms = [degrees, seconds_fractional, seconds_integer]</span></span><br><span class="line">        degrees, minutes, seconds_integer, seconds_fractional = dms</span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees&#125;, 分：&#123;minutes&#125;, 秒整数：&#123;seconds_integer&#125;，秒小数：&#123;seconds_fractional&#125;&quot;)</span></span><br><span class="line">        degrees_bin, minutes_bin, seconds_integer_bin = <span class="string">f&quot;<span class="subst">&#123;degrees:08b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;minutes:06b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;seconds_integer:06b&#125;</span>&quot;</span></span><br><span class="line">        seconds_fractional_scaled = <span class="built_in">int</span>(seconds_fractional * <span class="number">2048</span>)</span><br><span class="line">        seconds_fractional_bin = <span class="string">f&quot;<span class="subst">&#123;seconds_fractional_scaled:011b&#125;</span>&quot;</span></span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees_bin&#125;, 分：&#123;minutes_bin&#125;, 秒整数：&#123;seconds_integer_bin&#125;，秒小数：&#123;seconds_fractional_bin&#125;&quot;)</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#x27;</span>.join([degrees_bin, minutes_bin, seconds_integer_bin, seconds_fractional_bin])</span><br></pre></td></tr></table></figure></p>
-<p>实现步骤4,5： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 3. 将经纬度的编码莫顿交叉,转为四进制编码</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">mortoncross</span>(<span class="params">self</span>):</span><br><span class="line">        latbit = self.dms2bit(self.decimal2dms(self.latitude))</span><br><span class="line">        lonbit = self.dms2bit(self.decimal2dms(self.longitude))</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">assert</span> <span class="built_in">len</span>(latbit) == <span class="number">31</span> <span class="keyword">and</span> <span class="built_in">len</span>(lonbit) == <span class="number">31</span>, <span class="string">&quot;Both binary strings must be 31 bits long.&quot;</span></span><br><span class="line">        interleaved_bits = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">31</span>):</span><br><span class="line">            interleaved_bits.append(latbit[i])</span><br><span class="line">            interleaved_bits.append(lonbit[i])</span><br><span class="line">        bit2 = <span class="string">&#x27;&#x27;</span>.join(interleaved_bits)</span><br><span class="line">        bit4 = <span class="string">&#x27;&#x27;</span>.join(<span class="built_in">str</span>(<span class="built_in">int</span>(bit2[i:i+<span class="number">2</span>], <span class="number">2</span>)) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(bit2), <span class="number">2</span>))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> bit4</span><br></pre></td></tr></table></figure></p>
-<p>实现步骤6,7： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 4. 根据待求网格的级别m,将(F)中后32-m位四进制的码元去掉得到(F);</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">gridcode</span>(<span class="params">self, m</span>):</span><br><span class="line">        bit4 = self.mortoncross()</span><br><span class="line">        gridcode = bit4[:m-<span class="number">32</span>]</span><br><span class="line"></span><br><span class="line">        gridcode = <span class="string">&quot;G0&quot;</span> + gridcode</span><br><span class="line">        <span class="comment"># 高度码实现下面讲。</span></span><br><span class="line">        elevationcode = self.elevationcode(m)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> [gridcode, elevationcode]</span><br></pre></td></tr></table></figure> #### 2. 高程网格剖分 <span
-class="math display">\[n = \frac{\theta_0}{\theta} \log_{1 + \theta_0}
-\left( \frac{H + r_0}{r_0} \right) \tag{5}\]</span></p>
+        <p>三维网格码计算思路分享。</p>
+<span id="more"></span>
+<p>似乎这两年低空经济成为了潮流方向，多了一些政策倾斜。前阵子刚有公司来交流相关事宜，16日华师大又要新成立低空经济研究中心，这两天组里为了这些事情鞍前马后，竟然有些仿佛过年的热闹。我负责的工作是探索其中一小个部分，也是一个非常小众的应用方向：地球空间网格码，该工作目前的理论基础为国标<strong>GBT 40087-2021 地球空间网格编码规则</strong>。<br />
+地球空间网格基于 GeoSOT(Geographical coordinate global Subdivision based on One-dimensioninteger and Two ton&quot;power)地球剖分模型,将地球空间统一剖分成不同尺度的网格单元,并按统一编码规则进行标识和表达,构建了网格化的地球空间数据组织参考框架。该框架支持地球表面空间和地球立体空间与地理空间信息的聚合,可有效解决物联网、大数据、云计算中海量空间信息在标识和表达上的唯一性、可读性、尺度性、关联性的瓶颈,实现了多源,多尺度数据网格化高效组织、处理和应用,突破了地理空间信息跨行业应用的技术壁垒,推动地球系统科学的发展。<br />
+具体来说，网格剖分分为经纬度的水平面剖分和高程的垂直剖分。具体过程相对复杂，参见上述国家标准，本文仅分享一些实现步骤。</p>
+<h4 id="1-经纬度网格剖分"><a class="markdownIt-Anchor" href="#1-经纬度网格剖分"></a> 1. 经纬度网格剖分</h4>
+<p>根据国标，经纬度剖分的步骤如下所示：</p>
+<ol>
+<li>将该点经、纬度坐标表示成GB/T16831规定的形式,即A’B’C.D&quot;;</li>
+<li>将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数。即将度|A|由十进制数转换成8 bit 定长二进制数(A)2, 将分B由一进制数转换成6bit定长二进制数(B)2, 将秒C由十进制数转换成6bit定长二进制数©2, 将秒以下数D由一进制数转换成11bit定长二进制数(D)2;</li>
+<li>分别将经、纬度坐标度、分、秒及秒以下二进制数(A)2、(B)2、©2、(D)2直接拼接成31 bit定长二进制数(E)2, 即(E)2=(A)2(B)2©2(D)2, 分别得到两个 31 bit定长数经度(EL)2, 和纬度(EB)2;</li>
+<li>将纬度(EB)2,前置、经度(EL)2后置, 采用莫顿交叉的方式生成62bit的混合代码(F)2, 例如若(EB)2为100111 ,(EL)2为011010, 则(EB)2在前, (EL)2在后的莫顿交叉运算结果为(F)2为 100101101110;</li>
+<li>将二进制混合代码(F)2转成四进制编码(F)4;</li>
+<li>根据待求网格的级别m, 将(F)4中后32-m位四进制的码元去掉得到(F’)4;</li>
+<li>根据经度和纬度,前加上G0、G1、G2或G3即可得到网格代码。</li>
+</ol>
+<p>代码实现步骤如下：<br />
+定义一个类：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">WGS84coordinate</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, latitude, longitude, elevation</span>):</span><br><span class="line">        self.latitude = latitude</span><br><span class="line">        self.longitude = longitude</span><br><span class="line">        self.elevation = elevation</span><br></pre></td></tr></table></figure>
+<p>实现步骤1：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 将该点经、纬度坐标表示成GB/T16831规定的形式,即A&#x27;B&#x27;C.D&quot;;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decimal2dms</span>(<span class="params">self, decimal</span>):</span><br><span class="line">        degrees = <span class="built_in">int</span>(decimal)</span><br><span class="line">        minutes = <span class="built_in">int</span>((<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span>)</span><br><span class="line">        seconds = (<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span></span><br><span class="line">        seconds = (seconds - minutes) * <span class="number">60</span></span><br><span class="line">        seconds_fractional, seconds_integer = math.modf(seconds)</span><br><span class="line">        <span class="keyword">return</span> [<span class="built_in">int</span>(degrees), <span class="built_in">int</span>(minutes), <span class="built_in">int</span>(seconds_integer), seconds_fractional]</span><br></pre></td></tr></table></figure>
+<p>实现步骤2,3：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 2. 将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数, 拼为31 bit定长数</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">dms2bit</span>(<span class="params">self, dms</span>):</span><br><span class="line">        <span class="comment"># dms = [degrees, seconds_fractional, seconds_integer]</span></span><br><span class="line">        degrees, minutes, seconds_integer, seconds_fractional = dms</span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees&#125;, 分：&#123;minutes&#125;, 秒整数：&#123;seconds_integer&#125;，秒小数：&#123;seconds_fractional&#125;&quot;)</span></span><br><span class="line">        degrees_bin, minutes_bin, seconds_integer_bin = <span class="string">f&quot;<span class="subst">&#123;degrees:08b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;minutes:06b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;seconds_integer:06b&#125;</span>&quot;</span></span><br><span class="line">        seconds_fractional_scaled = <span class="built_in">int</span>(seconds_fractional * <span class="number">2048</span>)</span><br><span class="line">        seconds_fractional_bin = <span class="string">f&quot;<span class="subst">&#123;seconds_fractional_scaled:011b&#125;</span>&quot;</span></span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees_bin&#125;, 分：&#123;minutes_bin&#125;, 秒整数：&#123;seconds_integer_bin&#125;，秒小数：&#123;seconds_fractional_bin&#125;&quot;)</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#x27;</span>.join([degrees_bin, minutes_bin, seconds_integer_bin, seconds_fractional_bin])</span><br></pre></td></tr></table></figure>
+<p>实现步骤4,5：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 3. 将经纬度的编码莫顿交叉,转为四进制编码</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">mortoncross</span>(<span class="params">self</span>):</span><br><span class="line">        latbit = self.dms2bit(self.decimal2dms(self.latitude))</span><br><span class="line">        lonbit = self.dms2bit(self.decimal2dms(self.longitude))</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">assert</span> <span class="built_in">len</span>(latbit) == <span class="number">31</span> <span class="keyword">and</span> <span class="built_in">len</span>(lonbit) == <span class="number">31</span>, <span class="string">&quot;Both binary strings must be 31 bits long.&quot;</span></span><br><span class="line">        interleaved_bits = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">31</span>):</span><br><span class="line">            interleaved_bits.append(latbit[i])</span><br><span class="line">            interleaved_bits.append(lonbit[i])</span><br><span class="line">        bit2 = <span class="string">&#x27;&#x27;</span>.join(interleaved_bits)</span><br><span class="line">        bit4 = <span class="string">&#x27;&#x27;</span>.join(<span class="built_in">str</span>(<span class="built_in">int</span>(bit2[i:i+<span class="number">2</span>], <span class="number">2</span>)) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(bit2), <span class="number">2</span>))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> bit4</span><br></pre></td></tr></table></figure>
+<p>实现步骤6,7：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 4. 根据待求网格的级别m,将(F)中后32-m位四进制的码元去掉得到(F);</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">gridcode</span>(<span class="params">self, m</span>):</span><br><span class="line">        bit4 = self.mortoncross()</span><br><span class="line">        gridcode = bit4[:m-<span class="number">32</span>]</span><br><span class="line"></span><br><span class="line">        gridcode = <span class="string">&quot;G0&quot;</span> + gridcode</span><br><span class="line">        <span class="comment"># 高度码实现下面讲。</span></span><br><span class="line">        elevationcode = self.elevationcode(m)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> [gridcode, elevationcode]</span><br></pre></td></tr></table></figure>
+<h4 id="2-高程网格剖分"><a class="markdownIt-Anchor" href="#2-高程网格剖分"></a> 2. 高程网格剖分</h4>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable width="100%"><mtr><mtd width="50%"></mtd><mtd><mrow><mi>n</mi><mo>=</mo><mfrac><msub><mi>θ</mi><mn>0</mn></msub><mi>θ</mi></mfrac><msub><mo><mi>log</mi><mo>⁡</mo></mo><mrow><mn>1</mn><mo>+</mo><msub><mi>θ</mi><mn>0</mn></msub></mrow></msub><mrow><mo fence="true">(</mo><mfrac><mrow><mi>H</mi><mo>+</mo><msub><mi>r</mi><mn>0</mn></msub></mrow><msub><mi>r</mi><mn>0</mn></msub></mfrac><mo fence="true">)</mo></mrow></mrow></mtd><mtd width="50%"></mtd><mtd><mtext>(5)</mtext></mtd></mtr></mtable><annotation encoding="application/x-tex">n = \frac{\theta_0}{\theta} \log_{1 + \theta_0} \left( \frac{H + r_0}{r_0} \right) \tag{5}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:2.40003em;vertical-align:-0.95003em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.24196799999999996em;"><span style="top:-2.45586em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mbin mtight">+</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:-0.02778em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.34424em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.36033em;"><span style="top:-2.3139999999999996em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8360000000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span></span><span class="tag"><span class="strut" style="height:2.40003em;vertical-align:-0.95003em;"></span><span class="mord text"><span class="mord">(</span><span class="mord"><span class="mord">5</span></span><span class="mord">)</span></span></span></span></span></span></p>
 <p>其中：</p>
 <ul>
-<li>( n ) ——
-从地面向上（或向下）数第n层立体网格，n为整数，地面以上n大于等于0，地面以下
-n &lt; 0；</li>
-<li><span class="math inline">\(\theta_0\)</span>——
-初始划分范围定义的基础网格（1°网格）对应的经（纬）跨度差，单位为弧度（rad）
-<span class="math inline">\(\theta_0 = \frac{\pi}{180}\)</span></li>
-<li><span class="math inline">\(\theta\)</span> ——
-该网格对应的经（纬）跨度差，单位为弧度（rad）；</li>
-<li><span class="math inline">\(r_0\)</span> ——
-地球长半轴，单位为米（m），<span class="math inline">\(r_0 =
-6\,378\,137\)</span>； 去掉层数<span class="math inline">\(n\)</span>
-高位的 0 形成的编码即为高度域编码。</li>
+<li>( n ) —— 从地面向上（或向下）数第n层立体网格，n为整数，地面以上n大于等于0，地面以下 n &lt; 0；</li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">\theta_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.84444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>—— 初始划分范围定义的基础网格（1°网格）对应的经（纬）跨度差，单位为弧度（rad）<br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>0</mn></msub><mo>=</mo><mfrac><mi>π</mi><mn>180</mn></mfrac></mrow><annotation encoding="application/x-tex">\theta_0 = \frac{\pi}{180}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.84444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.040392em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">8</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi></mrow><annotation encoding="application/x-tex">\theta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span></span></span></span> —— 该网格对应的经（纬）跨度差，单位为弧度（rad）；</li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">r_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> —— 地球长半轴，单位为米（m），<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mn>0</mn></msub><mo>=</mo><mn>6</mn><mtext> </mtext><mn>378</mn><mtext> </mtext><mn>137</mn></mrow><annotation encoding="application/x-tex">r_0 = 6\,378\,137</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">6</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">3</span><span class="mord">7</span><span class="mord">8</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">1</span><span class="mord">3</span><span class="mord">7</span></span></span></span>；<br />
+去掉层数<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal">n</span></span></span></span> 高位的 0 形成的编码即为高度域编码。</li>
 </ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 计算高度的网格码</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">elevationcode</span>(<span class="params">self, m</span>):</span><br><span class="line">        theta_0 = math.pi / <span class="number">180</span></span><br><span class="line">        theta = GridSpanlist[m-<span class="number">1</span>] * math.pi / <span class="number">180</span></span><br><span class="line">        H = self.elevation</span><br><span class="line">        r_0 = <span class="number">6378137</span></span><br><span class="line">  </span><br><span class="line">        <span class="comment"># 计算公式</span></span><br><span class="line">        n = (theta_0 / theta) * math.log((H + r_0) / r_0, (<span class="number">1</span> + theta_0))</span><br><span class="line">        n = math.floor(n)</span><br><span class="line">        <span class="keyword">if</span> n &lt; <span class="number">0</span>:</span><br><span class="line">            n = <span class="number">0</span></span><br><span class="line">        n = <span class="built_in">str</span>(<span class="built_in">bin</span>(n)[<span class="number">2</span>:])</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(n) &lt; m:</span><br><span class="line">            n = <span class="string">&#x27;0&#x27;</span> * (m - <span class="built_in">len</span>(n)) + n</span><br><span class="line">        n = <span class="string">&quot;H&quot;</span> + n</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> n</span><br></pre></td></tr></table></figure>
-<h4 id="网格码反算">3. 网格码反算</h4>
-<p>这一部分的具体求解国标并没有提及，因此只能尝试自行求解，代码准确性为止，仅供参考：
+<h4 id="3-网格码反算"><a class="markdownIt-Anchor" href="#3-网格码反算"></a> 3. 网格码反算</h4>
+<p>这一部分的具体求解国标并没有提及，因此只能尝试自行求解，代码准确性为止，仅供参考：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GridCode</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, grid_code, elevation_code, m</span>):</span><br><span class="line">        self.grid_code = grid_code</span><br><span class="line">        self.elevation_code = elevation_code</span><br><span class="line">        self.m = m</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__str__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;格网编码：<span class="subst">&#123;self.grid_code, self.elevation_code&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">degridcode_bit2dms</span>(<span class="params">self, binary_str</span>):</span><br><span class="line">        degrees_bin = binary_str[<span class="number">0</span>:<span class="number">8</span>]    <span class="comment"># 前8位是度</span></span><br><span class="line">        minutes_bin = binary_str[<span class="number">8</span>:<span class="number">14</span>]   <span class="comment"># 接下来的6位是分</span></span><br><span class="line">        seconds_integer_bin = binary_str[<span class="number">14</span>:<span class="number">20</span>]  <span class="comment"># 接下来的6位是秒的整数部分</span></span><br><span class="line">        seconds_fractional_bin = binary_str[<span class="number">20</span>:<span class="number">31</span>]  <span class="comment"># 最后的11位是秒的小数部分</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将每个二进制子串转换回整数</span></span><br><span class="line">        degrees = <span class="built_in">int</span>(degrees_bin, <span class="number">2</span>)</span><br><span class="line">        minutes = <span class="built_in">int</span>(minutes_bin, <span class="number">2</span>)</span><br><span class="line">        seconds_integer = <span class="built_in">int</span>(seconds_integer_bin, <span class="number">2</span>)</span><br><span class="line">        seconds_fractional_scaled = <span class="built_in">int</span>(seconds_fractional_bin, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将秒的小数部分恢复为原来的小数值</span></span><br><span class="line">        seconds_fractional = seconds_fractional_scaled / <span class="number">2048</span></span><br><span class="line">        total_seconds = seconds_integer + seconds_fractional</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将秒数转换为分的部分（秒/60）</span></span><br><span class="line">        total_minutes = minutes + total_seconds / <span class="number">60</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将分数转换为度的部分（分/60）</span></span><br><span class="line">        decimal = <span class="built_in">abs</span>(degrees) + total_minutes / <span class="number">60</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> decimal</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 编码反算</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">degridcode</span>(<span class="params">self</span>):</span><br><span class="line">        gridcode = self.grid_code</span><br><span class="line">        gridcode = gridcode[<span class="number">2</span>:]</span><br><span class="line">        gridcode = gridcode.ljust(<span class="number">31</span>, <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line"></span><br><span class="line">        bit2 = <span class="string">&#x27;&#x27;</span>.join(<span class="built_in">bin</span>(<span class="built_in">int</span>(c, <span class="number">4</span>))[<span class="number">2</span>:].zfill(<span class="number">2</span>) <span class="keyword">for</span> c <span class="keyword">in</span> gridcode)</span><br><span class="line"></span><br><span class="line">        latbit = []</span><br><span class="line">        lonbit = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">32</span>):</span><br><span class="line">            latbit.append(bit2[i * <span class="number">2</span> - <span class="number">2</span>])</span><br><span class="line">            lonbit.append(bit2[i * <span class="number">2</span> - <span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">        latcode = <span class="string">&#x27;&#x27;</span>.join(latbit)</span><br><span class="line">        loncode = <span class="string">&#x27;&#x27;</span>.join(lonbit)</span><br><span class="line"></span><br><span class="line">        lat = self.degridcode_bit2dms(latcode)</span><br><span class="line">        lon = self.degridcode_bit2dms(loncode)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> lat, lon</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 高度码反算</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">deelevationcode</span>(<span class="params">self</span>):</span><br><span class="line">        n_binary, m = self.elevation_code, self.m</span><br><span class="line"></span><br><span class="line">        theta_0 = math.pi / <span class="number">180</span></span><br><span class="line">        theta = GridSpanlist[m-<span class="number">1</span>] * math.pi / <span class="number">180</span></span><br><span class="line">        r_0 = <span class="number">6378137</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 高度码反算</span></span><br><span class="line">        n_binary = n_binary[<span class="number">1</span>:]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将二进制的 n 转换回整数</span></span><br><span class="line">        n = <span class="built_in">int</span>(n_binary, <span class="number">2</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 根据公式反向解码，恢复 H</span></span><br><span class="line">        H = r_0 * (math.exp((n * theta) / theta_0 * math.log(<span class="number">1</span> + theta_0)) - <span class="number">1</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> H</span><br><span class="line">        </span><br><span class="line">    <span class="comment"># 整体反算：</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decode</span>(<span class="params">self</span>):</span><br><span class="line">        lat, lon = self.degridcode()</span><br><span class="line">        H = self.deelevationcode()</span><br><span class="line">        <span class="keyword">return</span> lat, lon, H</span><br></pre></td></tr></table></figure>
-这样做的目的是为了得到网格码的代表性坐标，但是这个坐标到底具体代表了网格码六面体的哪个位置，不得而知。本文仅代表个人的一些探索，代码并不一定正确。</p>
-</body>
-</html>
+<p>这样做的目的是为了得到网格码的代表性坐标，但是这个坐标到底具体代表了网格码六面体的哪个位置，不得而知。本文仅代表个人的一些探索，代码并不一定正确。</p>
 
     </div>
 
@@ -535,7 +356,7 @@ n &lt; 0；</li>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E6%A0%BC%E7%A0%81%E5%8F%8D%E7%AE%97"><span class="nav-number">1.</span> <span class="nav-text">3. 网格码反算</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%BD%91%E6%A0%BC%E5%89%96%E5%88%86"><span class="nav-number">1.</span> <span class="nav-text"> 1. 经纬度网格剖分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%AB%98%E7%A8%8B%E7%BD%91%E6%A0%BC%E5%89%96%E5%88%86"><span class="nav-number">2.</span> <span class="nav-text"> 2. 高程网格剖分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%BD%91%E6%A0%BC%E7%A0%81%E5%8F%8D%E7%AE%97"><span class="nav-number">3.</span> <span class="nav-text"> 3. 网格码反算</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -603,13 +424,13 @@ n &lt; 0；</li>
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

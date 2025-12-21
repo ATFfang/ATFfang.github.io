@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="解决 SQL 注入问题，在于不去拼接字符串构造 SQL，而是使用“预编译 + 参数绑定”的方式（即参数化查询）来处理 SQL 请求。抑或是使用ORM。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="不要用危险的字符拼接sql查询">
 <meta property="og:url" content="https://atffang.github.io/2025/05/16/%E4%B8%8D%E8%A6%81%E7%94%A8%E5%8D%B1%E9%99%A9%E7%9A%84%E5%AD%97%E7%AC%A6%E6%8B%BC%E6%8E%A5sql%E6%9F%A5%E8%AF%A2/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="解决 SQL 注入问题，在于不去拼接字符串构造 SQL，而是使用“预编译 + 参数绑定”的方式（即参数化查询）来处理 SQL 请求。抑或是使用ORM。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-16T02:38:11.000Z">
 <meta property="article:modified_time" content="2025-05-16T02:49:44.281Z">
@@ -207,14 +207,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>5.2k</span>
+              <span>3k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>9 分钟</span>
+              <span>6 分钟</span>
             </span>
 
         </div>
@@ -226,206 +226,31 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>解决 SQL 注入问题，在于不去拼接字符串构造 SQL，而是使用“预编译 +
-参数绑定”的方式（即参数化查询）来处理 SQL 请求。抑或是使用ORM。
-<span id="more"></span></p>
+        <p>解决 SQL 注入问题，在于不去拼接字符串构造 SQL，而是使用“预编译 + 参数绑定”的方式（即参数化查询）来处理 SQL 请求。抑或是使用ORM。</p>
+<span id="more"></span>
 <p><strong>什么是 SQL 注入？</strong></p>
-<p>SQL 注入（SQL Injection）是指攻击者通过构造恶意输入，插入到 SQL
-查询语句中，从而<strong>操控数据库</strong>执行非预期的操作，如绕过登录、删除数据等。
-例如： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">username = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line">sql = <span class="string">&quot;SELECT * FROM users WHERE username = &#x27;&quot;</span> + username + <span class="string">&quot;&#x27;;&quot;</span></span><br></pre></td></tr></table></figure></p>
-<p>当用户输入 <code>admin' OR '1'='1</code> 时，SQL 变成：
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = <span class="string">&#x27;admin&#x27;</span> OR <span class="string">&#x27;1&#x27;</span>=<span class="string">&#x27;1&#x27;</span>;</span><br></pre></td></tr></table></figure></p>
+<p>SQL 注入（SQL Injection）是指攻击者通过构造恶意输入，插入到 SQL 查询语句中，从而<strong>操控数据库</strong>执行非预期的操作，如绕过登录、删除数据等。<br />
+例如：</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">username = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line">sql = <span class="string">&quot;SELECT * FROM users WHERE username = &#x27;&quot;</span> + username + <span class="string">&quot;&#x27;;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>当用户输入 <code>admin' OR '1'='1</code> 时，SQL 变成：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = <span class="string">&#x27;admin&#x27;</span> OR <span class="string">&#x27;1&#x27;</span>=<span class="string">&#x27;1&#x27;</span>;</span><br></pre></td></tr></table></figure>
 <p>这会导致永远为真，绕过认证。</p>
-<h3
-id="解决方案1预编译参数绑定prepared-statements">解决方案1：预编译+参数绑定（Prepared
-Statements）</h3>
-<p>将 SQL
-语句结构提前固定好，<strong>只在后续绑定参数，而不是拼接字符串</strong>，数据库系统会提前“准备”好
-SQL 的执行计划。 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> psycopg2</span><br><span class="line"></span><br><span class="line">conn = psycopg2.connect(database=<span class="string">&quot;testdb&quot;</span>, user=<span class="string">&quot;postgres&quot;</span>, password=<span class="string">&quot;yourpassword&quot;</span>)</span><br><span class="line">cursor = conn.cursor()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用户输入</span></span><br><span class="line">username = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 安全的方式：参数化查询，防止SQL注入</span></span><br><span class="line">sql = <span class="string">&quot;SELECT * FROM users WHERE username = %s;&quot;</span></span><br><span class="line">cursor.execute(sql, (username,))  <span class="comment"># 第二个参数是 tuple，即使用户输入恶意内容也不会被执行为SQL代码</span></span><br><span class="line"></span><br><span class="line">rows = cursor.fetchall()</span><br><span class="line"><span class="built_in">print</span>(rows)</span><br></pre></td></tr></table></figure></p>
-<p>这里的 %s 是占位符，(username,) 是绑定参数。<strong>PostgreSQL
-会自动对输入内容进行转义和类型处理</strong>，用户输入的内容只会当作“数据”，不会被解释为
-SQL 代码。</p>
-<h3 id="解决方案2-ormobject-relational-mapping">解决方案2:
-ORM（Object-Relational Mapping）</h3>
-<p><strong>ORM 是一种将数据库表映射为程序中的对象</strong>
-的工具，它允许你用“面向对象的方式”来操作数据库，而不是手写 SQL。</p>
-<p>优点包括： - 代码更简洁、抽象 - 更容易维护和迁移数据库 - 内置
-<strong>参数化查询机制</strong>，天然避免 SQL 注入</p>
-<p>一个python+postgresql的简单的例子： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine, Column, Integer, String</span><br><span class="line"><span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker, declarative_base</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建数据库连接</span></span><br><span class="line">engine = create_engine(<span class="string">&quot;postgresql://postgres:yourpassword@localhost/testdb&quot;</span>)</span><br><span class="line">Session = sessionmaker(bind=engine)</span><br><span class="line">session = Session()</span><br><span class="line"></span><br><span class="line">Base = declarative_base()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个 User 模型</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">User</span>(<span class="title class_ inherited__">Base</span>):</span><br><span class="line">    __tablename__ = <span class="string">&#x27;users&#x27;</span></span><br><span class="line">    <span class="built_in">id</span> = Column(Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    username = Column(String)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询一个用户（安全）</span></span><br><span class="line">username_input = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line">user = session.query(User).<span class="built_in">filter</span>(User.username == username_input).first()</span><br><span class="line"><span class="built_in">print</span>(user)</span><br></pre></td></tr></table></figure></p>
-<p>当然，orm实际上更有益于我们进行数据库控制，即增删改查等操作：
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine, Column, Integer, String</span><br><span class="line"><span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker, declarative_base</span><br><span class="line"></span><br><span class="line"><span class="comment"># 数据库连接设置（请修改为你的实际用户名、密码和数据库名）</span></span><br><span class="line">engine = create_engine(<span class="string">&quot;postgresql://postgres:yourpassword@localhost/testdb&quot;</span>)</span><br><span class="line">Session = sessionmaker(bind=engine)</span><br><span class="line">session = Session()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义 ORM 基类</span></span><br><span class="line">Base = declarative_base()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义 User 模型（对应 users 表）</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">User</span>(<span class="title class_ inherited__">Base</span>):</span><br><span class="line">    __tablename__ = <span class="string">&#x27;users&#x27;</span></span><br><span class="line">    <span class="built_in">id</span> = Column(Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    username = Column(String)</span><br><span class="line">    email = Column(String)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建表（如果尚不存在）</span></span><br><span class="line">Base.metadata.create_all(engine)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 增（Insert） ----------</span></span><br><span class="line">new_user = User(username=<span class="string">&quot;alice&quot;</span>, email=<span class="string">&quot;alice@example.com&quot;</span>)</span><br><span class="line">session.add(new_user)</span><br><span class="line">session.commit()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;插入用户 ID：<span class="subst">&#123;new_user.<span class="built_in">id</span>&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 查（Query） ----------</span></span><br><span class="line"><span class="comment"># 查询所有用户</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;所有用户：&quot;</span>)</span><br><span class="line">users = session.query(User).<span class="built_in">all</span>()</span><br><span class="line"><span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">    <span class="built_in">print</span>(user.<span class="built_in">id</span>, user.username, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询特定用户</span></span><br><span class="line">user = session.query(User).<span class="built_in">filter</span>(User.username == <span class="string">&quot;alice&quot;</span>).first()</span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;找到用户：&quot;</span>, user.username, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 改（Update） ----------</span></span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    user.email = <span class="string">&quot;alice_updated@example.com&quot;</span></span><br><span class="line">    session.commit()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;已更新用户邮箱：&quot;</span>, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 删（Delete） ----------</span></span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    session.delete(user)</span><br><span class="line">    session.commit()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;已删除用户：&quot;</span>, user.username)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 关闭会话 ----------</span></span><br><span class="line">session.close()</span><br></pre></td></tr></table></figure></p>
-</body>
-</html>
+<h3 id="解决方案1预编译参数绑定prepared-statements"><a class="markdownIt-Anchor" href="#解决方案1预编译参数绑定prepared-statements"></a> 解决方案1：预编译+参数绑定（Prepared Statements）</h3>
+<p>将 SQL 语句结构提前固定好，<strong>只在后续绑定参数，而不是拼接字符串</strong>，数据库系统会提前“准备”好 SQL 的执行计划。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> psycopg2</span><br><span class="line"></span><br><span class="line">conn = psycopg2.connect(database=<span class="string">&quot;testdb&quot;</span>, user=<span class="string">&quot;postgres&quot;</span>, password=<span class="string">&quot;yourpassword&quot;</span>)</span><br><span class="line">cursor = conn.cursor()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用户输入</span></span><br><span class="line">username = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 安全的方式：参数化查询，防止SQL注入</span></span><br><span class="line">sql = <span class="string">&quot;SELECT * FROM users WHERE username = %s;&quot;</span></span><br><span class="line">cursor.execute(sql, (username,))  <span class="comment"># 第二个参数是 tuple，即使用户输入恶意内容也不会被执行为SQL代码</span></span><br><span class="line"></span><br><span class="line">rows = cursor.fetchall()</span><br><span class="line"><span class="built_in">print</span>(rows)</span><br></pre></td></tr></table></figure>
+<p>这里的 %s 是占位符，(username,) 是绑定参数。<strong>PostgreSQL 会自动对输入内容进行转义和类型处理</strong>，用户输入的内容只会当作“数据”，不会被解释为 SQL 代码。</p>
+<h3 id="解决方案2-ormobject-relational-mapping"><a class="markdownIt-Anchor" href="#解决方案2-ormobject-relational-mapping"></a> 解决方案2: ORM（Object-Relational Mapping）</h3>
+<p><strong>ORM 是一种将数据库表映射为程序中的对象</strong> 的工具，它允许你用“面向对象的方式”来操作数据库，而不是手写 SQL。</p>
+<p>优点包括：</p>
+<ul>
+<li>代码更简洁、抽象</li>
+<li>更容易维护和迁移数据库</li>
+<li>内置 <strong>参数化查询机制</strong>，天然避免 SQL 注入</li>
+</ul>
+<p>一个python+postgresql的简单的例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine, Column, Integer, String</span><br><span class="line"><span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker, declarative_base</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建数据库连接</span></span><br><span class="line">engine = create_engine(<span class="string">&quot;postgresql://postgres:yourpassword@localhost/testdb&quot;</span>)</span><br><span class="line">Session = sessionmaker(bind=engine)</span><br><span class="line">session = Session()</span><br><span class="line"></span><br><span class="line">Base = declarative_base()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个 User 模型</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">User</span>(<span class="title class_ inherited__">Base</span>):</span><br><span class="line">    __tablename__ = <span class="string">&#x27;users&#x27;</span></span><br><span class="line">    <span class="built_in">id</span> = Column(Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    username = Column(String)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询一个用户（安全）</span></span><br><span class="line">username_input = <span class="built_in">input</span>(<span class="string">&quot;请输入用户名：&quot;</span>)</span><br><span class="line">user = session.query(User).<span class="built_in">filter</span>(User.username == username_input).first()</span><br><span class="line"><span class="built_in">print</span>(user)</span><br></pre></td></tr></table></figure>
+<p>当然，orm实际上更有益于我们进行数据库控制，即增删改查等操作：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine, Column, Integer, String</span><br><span class="line"><span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> sessionmaker, declarative_base</span><br><span class="line"></span><br><span class="line"><span class="comment"># 数据库连接设置（请修改为你的实际用户名、密码和数据库名）</span></span><br><span class="line">engine = create_engine(<span class="string">&quot;postgresql://postgres:yourpassword@localhost/testdb&quot;</span>)</span><br><span class="line">Session = sessionmaker(bind=engine)</span><br><span class="line">session = Session()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义 ORM 基类</span></span><br><span class="line">Base = declarative_base()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义 User 模型（对应 users 表）</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">User</span>(<span class="title class_ inherited__">Base</span>):</span><br><span class="line">    __tablename__ = <span class="string">&#x27;users&#x27;</span></span><br><span class="line">    <span class="built_in">id</span> = Column(Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    username = Column(String)</span><br><span class="line">    email = Column(String)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建表（如果尚不存在）</span></span><br><span class="line">Base.metadata.create_all(engine)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 增（Insert） ----------</span></span><br><span class="line">new_user = User(username=<span class="string">&quot;alice&quot;</span>, email=<span class="string">&quot;alice@example.com&quot;</span>)</span><br><span class="line">session.add(new_user)</span><br><span class="line">session.commit()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;插入用户 ID：<span class="subst">&#123;new_user.<span class="built_in">id</span>&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 查（Query） ----------</span></span><br><span class="line"><span class="comment"># 查询所有用户</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;所有用户：&quot;</span>)</span><br><span class="line">users = session.query(User).<span class="built_in">all</span>()</span><br><span class="line"><span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">    <span class="built_in">print</span>(user.<span class="built_in">id</span>, user.username, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询特定用户</span></span><br><span class="line">user = session.query(User).<span class="built_in">filter</span>(User.username == <span class="string">&quot;alice&quot;</span>).first()</span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;找到用户：&quot;</span>, user.username, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 改（Update） ----------</span></span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    user.email = <span class="string">&quot;alice_updated@example.com&quot;</span></span><br><span class="line">    session.commit()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;已更新用户邮箱：&quot;</span>, user.email)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 删（Delete） ----------</span></span><br><span class="line"><span class="keyword">if</span> user:</span><br><span class="line">    session.delete(user)</span><br><span class="line">    session.commit()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;已删除用户：&quot;</span>, user.username)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------- 关闭会话 ----------</span></span><br><span class="line">session.close()</span><br></pre></td></tr></table></figure>
 
     </div>
 
@@ -506,9 +331,7 @@ ORM（Object-Relational Mapping）</h3>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%881%E9%A2%84%E7%BC%96%E8%AF%91%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9Aprepared-statements"><span class="nav-number">1.</span> <span class="nav-text">解决方案1：预编译+参数绑定（Prepared
-Statements）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%882-ormobject-relational-mapping"><span class="nav-number">2.</span> <span class="nav-text">解决方案2:
-ORM（Object-Relational Mapping）</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%881%E9%A2%84%E7%BC%96%E8%AF%91%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9Aprepared-statements"><span class="nav-number">1.</span> <span class="nav-text"> 解决方案1：预编译+参数绑定（Prepared Statements）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%882-ormobject-relational-mapping"><span class="nav-number">2.</span> <span class="nav-text"> 解决方案2: ORM（Object-Relational Mapping）</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -576,13 +399,13 @@ ORM（Object-Relational Mapping）</span></a></li></ol></div>
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

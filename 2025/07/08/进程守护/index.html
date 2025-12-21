@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="持久化的python服务">
 <meta property="og:type" content="article">
 <meta property="og:title" content="进程守护">
 <meta property="og:url" content="https://atffang.github.io/2025/07/08/%E8%BF%9B%E7%A8%8B%E5%AE%88%E6%8A%A4/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="持久化的python服务">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-08T07:34:03.000Z">
 <meta property="article:modified_time" content="2025-07-08T11:28:56.028Z">
@@ -207,14 +207,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>4.9k</span>
+              <span>2.8k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>9 分钟</span>
+              <span>5 分钟</span>
             </span>
 
         </div>
@@ -226,195 +226,32 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>持久化的python服务 <span id="more"></span></p>
+        <p>持久化的python服务</p>
+<span id="more"></span>
 <p><strong>进程守护</strong>指的是让一个程序<strong>在后台持续运行</strong>，<strong>具有自我恢复能力</strong>（崩溃自动重启），<strong>随系统启动自动启动</strong>，并可通过命令进行控制。</p>
-<h3 id="linux下systemd-持久守护-python-程序">1. linux下systemd 持久守护
-Python 程序</h3>
-<p>创建systemd服务配置文件： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo nano /etc/systemd/system/myscript.service</span><br></pre></td></tr></table></figure></p>
-<p>内容： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=My Persistent Python Script</span><br><span class="line">After=network.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">ExecStart=/usr/bin/python3 /home/user/run_my_job.py</span><br><span class="line">WorkingDirectory=/home/user</span><br><span class="line">Restart=always</span><br><span class="line">RestartSec=5</span><br><span class="line">User=your_linux_username</span><br><span class="line">StandardOutput=append:/var/log/myscript.log</span><br><span class="line">StandardError=append:/var/log/myscript.err</span><br><span class="line">Environment=PYTHONUNBUFFERED=1</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure></p>
-<p>启用并启动服务： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl daemon-reexec</span><br><span class="line">sudo systemctl daemon-reload</span><br><span class="line">sudo systemctl enable myscript.service</span><br><span class="line">sudo systemctl start myscript.service</span><br></pre></td></tr></table></figure></p>
-<p>查看日志和状态： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl status myscript.service</span><br><span class="line">sudo <span class="built_in">tail</span> -f /var/log/myscript.log</span><br></pre></td></tr></table></figure></p>
-<p>通过命令进行控制： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl stop myscript.service</span><br><span class="line">sudo systemctl restart myscript.service</span><br><span class="line">sudo systemctl <span class="built_in">disable</span> myscript.service</span><br></pre></td></tr></table></figure></p>
-<h3 id="跨平台python进程管理工具supervisord">2.
-跨平台python进程管理工具supervisord</h3>
-<p><strong>supervisord</strong> 是一个用 Python 编写的进程管理工具，
-它可以监控、启动、停止、重启你python脚本在内的进程。可以直接利用pip下载：
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install supervisor</span><br></pre></td></tr></table></figure></p>
-<p>Supervisor 由两个核心组件组成： -
-supervisord守护进程：负责读取配置、启动/监控任务 -
-supervisorctl命令行客户端：用于查看状态、重启任务等</p>
-<p>使用时，首先生成一个默认的配置： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo_supervisord_conf &gt; supervisord.conf</span><br></pre></td></tr></table></figure></p>
-<p>将需要守护的进程添加到配置文件中： <figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[program:my_script]</span></span><br><span class="line"><span class="attr">command</span>=python3 /home/user/scripts/my_script.py</span><br><span class="line"><span class="attr">directory</span>=/home/user/scripts</span><br><span class="line"><span class="attr">autostart</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">autorestart</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">startsecs</span>=<span class="number">5</span></span><br><span class="line"><span class="attr">stdout_logfile</span>=/var/log/my_script.out.log</span><br><span class="line"><span class="attr">stderr_logfile</span>=/var/log/my_script.err.log</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-linux下systemd-持久守护-python-程序"><a class="markdownIt-Anchor" href="#1-linux下systemd-持久守护-python-程序"></a> 1. linux下systemd 持久守护 Python 程序</h3>
+<p>创建systemd服务配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo nano /etc/systemd/system/myscript.service</span><br></pre></td></tr></table></figure>
+<p>内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=My Persistent Python Script</span><br><span class="line">After=network.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">ExecStart=/usr/bin/python3 /home/user/run_my_job.py</span><br><span class="line">WorkingDirectory=/home/user</span><br><span class="line">Restart=always</span><br><span class="line">RestartSec=5</span><br><span class="line">User=your_linux_username</span><br><span class="line">StandardOutput=append:/var/log/myscript.log</span><br><span class="line">StandardError=append:/var/log/myscript.err</span><br><span class="line">Environment=PYTHONUNBUFFERED=1</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+<p>启用并启动服务：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl daemon-reexec</span><br><span class="line">sudo systemctl daemon-reload</span><br><span class="line">sudo systemctl enable myscript.service</span><br><span class="line">sudo systemctl start myscript.service</span><br></pre></td></tr></table></figure>
+<p>查看日志和状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl status myscript.service</span><br><span class="line">sudo <span class="built_in">tail</span> -f /var/log/myscript.log</span><br></pre></td></tr></table></figure>
+<p>通过命令进行控制：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl stop myscript.service</span><br><span class="line">sudo systemctl restart myscript.service</span><br><span class="line">sudo systemctl <span class="built_in">disable</span> myscript.service</span><br></pre></td></tr></table></figure>
+<h3 id="2-跨平台python进程管理工具supervisord"><a class="markdownIt-Anchor" href="#2-跨平台python进程管理工具supervisord"></a> 2. 跨平台python进程管理工具supervisord</h3>
+<p><strong>supervisord</strong> 是一个用 Python 编写的进程管理工具， 它可以监控、启动、停止、重启你python脚本在内的进程。可以直接利用pip下载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install supervisor</span><br></pre></td></tr></table></figure>
+<p>Supervisor 由两个核心组件组成：</p>
+<ul>
+<li>supervisord守护进程：负责读取配置、启动/监控任务</li>
+<li>supervisorctl命令行客户端：用于查看状态、重启任务等</li>
+</ul>
+<p>使用时，首先生成一个默认的配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo_supervisord_conf &gt; supervisord.conf</span><br></pre></td></tr></table></figure>
+<p>将需要守护的进程添加到配置文件中：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[program:my_script]</span></span><br><span class="line"><span class="attr">command</span>=python3 /home/user/scripts/my_script.py</span><br><span class="line"><span class="attr">directory</span>=/home/user/scripts</span><br><span class="line"><span class="attr">autostart</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">autorestart</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">startsecs</span>=<span class="number">5</span></span><br><span class="line"><span class="attr">stdout_logfile</span>=/var/log/my_script.out.log</span><br><span class="line"><span class="attr">stderr_logfile</span>=/var/log/my_script.err.log</span><br></pre></td></tr></table></figure>
 <table>
 <thead>
 <tr>
@@ -451,27 +288,31 @@ supervisorctl命令行客户端：用于查看状态、重启任务等</p>
 <td>stderr_logfile</td>
 <td>错误日志路径</td>
 </tr>
+<tr>
+<td>启动supervisord守护进程：</td>
+<td></td>
+</tr>
 </tbody>
 </table>
-<p>启动supervisord守护进程： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">supervisord -c supervisord.conf</span><br></pre></td></tr></table></figure></p>
-<p>和systemd一样，supervisord也有一些管理任务的命令： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">supervisorctl -c supervisord.conf status</span><br><span class="line">supervisorctl -c supervisord.conf restart my_script</span><br><span class="line">supervisorctl -c supervisord.conf stop my_script</span><br></pre></td></tr></table></figure></p>
-<p>也可以利用supervisord进行不同gpu任务分发，不同gpu上运行不同进程并守护的骚操作，首先，在你的模型任务代码中加上通过参数指定gpu的逻辑：
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser()</span><br><span class="line">parser.add_argument(<span class="string">&#x27;--gpu&#x27;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">0</span>)</span><br><span class="line">args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">device = torch.device(<span class="string">f&quot;cuda:<span class="subst">&#123;args.gpu&#125;</span>&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span>)</span><br><span class="line">model.to(device)</span><br></pre></td></tr></table></figure></p>
-<p>然后，指定不同的gpu进行进程守护： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[program:worker1]</span><br><span class="line"><span class="built_in">command</span>=python3 /opt/scripts/train_model.py --gpu 0</span><br><span class="line"></span><br><span class="line">[program:worker2]</span><br><span class="line"><span class="built_in">command</span>=python3 /opt/scripts/train_model.py --gpu 1</span><br></pre></td></tr></table></figure></p>
-<h3 id="docker-restart-policy">3. Docker + restart policy</h3>
-<p>Docker 提供了一种机制叫做 restart
-policy（重启策略），用来控制当容器退出或系统重启时，是否自动重启该容器。
-对于一个Dockerfile，可以加上 –restart always运行。 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker build -t my-capture .</span><br><span class="line">docker run -d --name my_capture_container --restart always my-capture</span><br></pre></td></tr></table></figure>
-这个容器中的 Python 脚本崩溃时自动重启。</p>
-<p>当然，在docker-compose.yml 中可以这样配置： <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">camera_worker:</span></span><br><span class="line">    <span class="attr">build:</span> <span class="string">.</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/app/logs</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8000:8000&quot;</span></span><br></pre></td></tr></table></figure></p>
-<p>当然，如果想要在linux中开机自启动容器，除了上面的，只要再使得docker自动启动即可：
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl <span class="built_in">enable</span> docker</span><br></pre></td></tr></table></figure> 这个命令会把 Docker 服务注册到 systemd
-中，下次系统启动时会自动启动 Docker 服务, 也就自动拉起了 –restart always
-的容器。</p>
-<p>设置完之后，你可以检查一下重启策略是否配置好： <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker inspect your_container_name | grep -i restart</span><br></pre></td></tr></table></figure></p>
-</body>
-</html>
-
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">supervisord -c supervisord.conf</span><br></pre></td></tr></table></figure>
+<p>和systemd一样，supervisord也有一些管理任务的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">supervisorctl -c supervisord.conf status</span><br><span class="line">supervisorctl -c supervisord.conf restart my_script</span><br><span class="line">supervisorctl -c supervisord.conf stop my_script</span><br></pre></td></tr></table></figure>
+<p>也可以利用supervisord进行不同gpu任务分发，不同gpu上运行不同进程并守护的骚操作，首先，在你的模型任务代码中加上通过参数指定gpu的逻辑：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser()</span><br><span class="line">parser.add_argument(<span class="string">&#x27;--gpu&#x27;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">0</span>)</span><br><span class="line">args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">device = torch.device(<span class="string">f&quot;cuda:<span class="subst">&#123;args.gpu&#125;</span>&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span>)</span><br><span class="line">model.to(device)</span><br></pre></td></tr></table></figure>
+<p>然后，指定不同的gpu进行进程守护：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[program:worker1]</span><br><span class="line"><span class="built_in">command</span>=python3 /opt/scripts/train_model.py --gpu 0</span><br><span class="line"></span><br><span class="line">[program:worker2]</span><br><span class="line"><span class="built_in">command</span>=python3 /opt/scripts/train_model.py --gpu 1</span><br></pre></td></tr></table></figure>
+<h3 id="3-docker-restart-policy"><a class="markdownIt-Anchor" href="#3-docker-restart-policy"></a> 3. Docker + restart policy</h3>
+<p>Docker 提供了一种机制叫做 restart policy（重启策略），用来控制当容器退出或系统重启时，是否自动重启该容器。<br />
+对于一个Dockerfile，可以加上 --restart always运行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker build -t my-capture .</span><br><span class="line">docker run -d --name my_capture_container --restart always my-capture</span><br></pre></td></tr></table></figure>
+<p>这个容器中的 Python 脚本崩溃时自动重启。</p>
+<p>当然，在docker-compose.yml 中可以这样配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">camera_worker:</span></span><br><span class="line">    <span class="attr">build:</span> <span class="string">.</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/app/logs</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8000:8000&quot;</span></span><br></pre></td></tr></table></figure>
+<p>当然，如果想要在linux中开机自启动容器，除了上面的，只要再使得docker自动启动即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl <span class="built_in">enable</span> docker</span><br></pre></td></tr></table></figure>
+<p>这个命令会把 Docker 服务注册到 systemd 中，下次系统启动时会自动启动 Docker 服务, 也就自动拉起了 --restart always 的容器。</p>
+<p>设置完之后，你可以检查一下重启策略是否配置好：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker inspect your_container_name | grep -i restart</span><br></pre></td></tr></table></figure>
     </div>
 
     
@@ -551,9 +392,7 @@ policy（重启策略），用来控制当容器退出或系统重启时，是�
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#linux%E4%B8%8Bsystemd-%E6%8C%81%E4%B9%85%E5%AE%88%E6%8A%A4-python-%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.</span> <span class="nav-text">1. linux下systemd 持久守护
-Python 程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%A8%E5%B9%B3%E5%8F%B0python%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7supervisord"><span class="nav-number">2.</span> <span class="nav-text">2.
-跨平台python进程管理工具supervisord</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-restart-policy"><span class="nav-number">3.</span> <span class="nav-text">3. Docker + restart policy</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-linux%E4%B8%8Bsystemd-%E6%8C%81%E4%B9%85%E5%AE%88%E6%8A%A4-python-%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.</span> <span class="nav-text"> 1. linux下systemd 持久守护 Python 程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%B7%A8%E5%B9%B3%E5%8F%B0python%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7supervisord"><span class="nav-number">2.</span> <span class="nav-text"> 2. 跨平台python进程管理工具supervisord</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-docker-restart-policy"><span class="nav-number">3.</span> <span class="nav-text"> 3. Docker + restart policy</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -621,13 +460,13 @@ Python 程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

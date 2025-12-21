@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="https:&#x2F;&#x2F;github.com&#x2F;graphdeco-inria&#x2F;gaussian-splatting 复现">
 <meta property="og:type" content="article">
 <meta property="og:title" content="3D Guassian Splatting">
 <meta property="og:url" content="https://atffang.github.io/2025/03/12/3D%20Guassian%20Splatting/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="https:&#x2F;&#x2F;github.com&#x2F;graphdeco-inria&#x2F;gaussian-splatting 复现">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://atffang.github.io/2025/03/12/3D Guassian Splatting/try.png">
 <meta property="article:published_time" content="2025-03-12T15:12:43.000Z">
@@ -215,14 +215,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>3.7k</span>
+              <span>1.6k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>7 分钟</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -234,221 +234,44 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>https://github.com/graphdeco-inria/gaussian-splatting 复现
-<span id="more"></span> ### 环境构建</p>
-<p>首先clone仓库https://github.com/graphdeco-inria/gaussian-splatting</p>
+        <p><a target="_blank" rel="noopener" href="https://github.com/graphdeco-inria/gaussian-splatting">https://github.com/graphdeco-inria/gaussian-splatting</a> 复现</p>
+<span id="more"></span>
+<h3 id="环境构建"><a class="markdownIt-Anchor" href="#环境构建"></a> 环境构建</h3>
+<p>首先clone仓库<a target="_blank" rel="noopener" href="https://github.com/graphdeco-inria/gaussian-splatting">https://github.com/graphdeco-inria/gaussian-splatting</a></p>
 <p>理论上应该按照源码提供的environment.yml文件创建环境，即：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda env create --file environment.<span class="property">yml</span></span><br></pre></td></tr></table></figure>
-<p>然而，实验室服务器CUDA版本为12.2，environment.yml中指定的python和pytorch版本过低，因此，选择自己配置环境python3.10,
-cuda12.1对应的pytorch（适用于12.2）：</p>
+<p>然而，实验室服务器CUDA版本为12.2，environment.yml中指定的python和pytorch版本过低，因此，选择自己配置环境python3.10, cuda12.1对应的pytorch（适用于12.2）：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">conda create -n gaussian_splatting python=<span class="number">3.10</span></span><br><span class="line">conda activate gaussian_splatting</span><br><span class="line">pip3 install torch torchvision torchaudio --index-url <span class="attr">https</span>:<span class="comment">//download.pytorch.org/whl/cu121</span></span><br><span class="line"></span><br><span class="line">pip install submodules\diff-gaussian-rasterization</span><br><span class="line">pip install submodules\simple-knn</span><br><span class="line">pip install plyfile</span><br><span class="line">pip install tqdm</span><br><span class="line">pip install opencv-python</span><br><span class="line">pip install joblib</span><br></pre></td></tr></table></figure>
-<h3 id="数据前期处理程序">数据前期处理程序</h3>
+<h3 id="数据前期处理程序"><a class="markdownIt-Anchor" href="#数据前期处理程序"></a> 数据前期处理程序</h3>
 <p>都是在Windows端下载。</p>
-<p>下载ffmep <a
-target="_blank" rel="noopener" href="http://www.gyan.dev/ffmpeg/builds/">www.gyan.dev/ffmpeg/builds/</a></p>
+<p>下载ffmep <a target="_blank" rel="noopener" href="http://www.gyan.dev/ffmpeg/builds/">www.gyan.dev/ffmpeg/builds/</a></p>
 <p>将文件夹重命名为ffmep，将bin文件路径加入系统变量</p>
 <p>下载COLMAP</p>
-<p>https://github.com/colmap/colmap/releases</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/colmap/colmap/releases">https://github.com/colmap/colmap/releases</a></p>
 <p>将文件夹重命名为COLMAP，将bin文件路径加入系统变量</p>
 <p>下载ImageMagick</p>
-<h3 id="训练流程">训练流程</h3>
+<h3 id="训练流程"><a class="markdownIt-Anchor" href="#训练流程"></a> 训练流程</h3>
 <ul>
 <li>Step1：录制视频，使用ffmep进行抽帧</li>
 </ul>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ffmpeg -i input.<span class="property">mp4</span> -vf <span class="string">&quot;setpts=0.2*PTS&quot;</span> input/input_%4d.<span class="property">jpg</span></span><br></pre></td></tr></table></figure>
-<p>-i input.mp4：指定输入视频文件为 input.mp4。 -vf “setpts=0.2
-PTS”：这是一个视频过滤器选项，其中 setpts
-指令用来设置帧的时间戳（Presentation TimeStamps）。这里的表达式 0.2PTS
-表示将当前帧的时间戳乘以0.2，这意味着抽取出来的帧之间的间隔被拉长了5倍，所以生成的图像序列将以视频原始速度的五分之一进行播放。
-input/input_%4d.jpg：这是输出文件格式及路径，其中 %4d
-是一个格式化占位符，它会被自增的整数所替换，确保每个输出文件名是唯一的。例如，输出的第一帧将会被保存为
-input/input_0001.jpg，第二帧为
-input/input_0002.jpg，依此类推。同时，输出目录被指定为 input/
-目录下。</p>
+<p>-i input.mp4：指定输入视频文件为 input.mp4。<br />
+-vf “setpts=0.2 PTS”：这是一个视频过滤器选项，其中 setpts 指令用来设置帧的时间戳（Presentation TimeStamps）。这里的表达式 0.2PTS 表示将当前帧的时间戳乘以0.2，这意味着抽取出来的帧之间的间隔被拉长了5倍，所以生成的图像序列将以视频原始速度的五分之一进行播放。<br />
+input/input_%4d.jpg：这是输出文件格式及路径，其中 %4d 是一个格式化占位符，它会被自增的整数所替换，确保每个输出文件名是唯一的。例如，输出的第一帧将会被保存为 input/input_0001.jpg，第二帧为 input/input_0002.jpg，依此类推。同时，输出目录被指定为 input/ 目录下。</p>
 <ul>
-<li><p>Step2：使用3D Guassian
-Splatting仓库中包含的convert.py完成图像数据转换。 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python convert.<span class="property">py</span> -s &lt;location&gt; [--resize]</span><br></pre></td></tr></table></figure>
-location：代表需要转化的图像位置，图像必须被放在一个input文件夹下，location则为其父文件夹。
-[–resize]：表示是否变化图像尺寸，可选</p></li>
-<li><p>Step3：将转换完成的图像，包括images和sparse两个文件夹，放在一个父文件夹下作为输入数据，进行训练。
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python train.py -s &lt;location&gt;</span><br></pre></td></tr></table></figure> location：代表数据路径</p></li>
+<li>Step2：使用3D Guassian Splatting仓库中包含的convert.py完成图像数据转换。</li>
 </ul>
-<h3 id="结果预览">结果预览</h3>
-<p>拉取代码：https://github.com/kishimisu/Gaussian-Splatting-WebGL.git，在live
-server中打开网页，上传ply数据：
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python convert.<span class="property">py</span> -s &lt;location&gt; [--resize]</span><br></pre></td></tr></table></figure>
+<p>location：代表需要转化的图像位置，图像必须被放在一个input文件夹下，location则为其父文件夹。<br />
+[–resize]：表示是否变化图像尺寸，可选</p>
+<ul>
+<li>Step3：将转换完成的图像，包括images和sparse两个文件夹，放在一个父文件夹下作为输入数据，进行训练。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python train.py -s &lt;location&gt;</span><br></pre></td></tr></table></figure>
+<p>location：代表数据路径</p>
+<h3 id="结果预览"><a class="markdownIt-Anchor" href="#结果预览"></a> 结果预览</h3>
+<p>拉取代码：<a target="_blank" rel="noopener" href="https://github.com/kishimisu/Gaussian-Splatting-WebGL.git%EF%BC%8C%E5%9C%A8live">https://github.com/kishimisu/Gaussian-Splatting-WebGL.git，在live</a> server中打开网页，上传ply数据：<br />
 <img src="https://atffang.github.io/2025/03/12/3D Guassian Splatting/try.png"/></p>
-</body>
-</html>
 
     </div>
 
@@ -529,7 +352,7 @@ server中打开网页，上传ply数据：
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%89%8D%E6%9C%9F%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.</span> <span class="nav-text">数据前期处理程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%AD%E7%BB%83%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">训练流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C%E9%A2%84%E8%A7%88"><span class="nav-number">3.</span> <span class="nav-text">结果预览</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E6%9E%84%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text"> 环境构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%89%8D%E6%9C%9F%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.</span> <span class="nav-text"> 数据前期处理程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%AD%E7%BB%83%E6%B5%81%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text"> 训练流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C%E9%A2%84%E8%A7%88"><span class="nav-number">4.</span> <span class="nav-text"> 结果预览</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -597,13 +420,13 @@ server中打开网页，上传ply数据：
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

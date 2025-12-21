@@ -20,17 +20,19 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="浅试docker：为 AI 项目构建高可维护的开发环境">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅试docker：为 AI 项目构建高可维护的开发环境">
 <meta property="og:url" content="https://atffang.github.io/2025/06/30/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%BB%B4%E6%8A%A4%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="浅试docker：为 AI 项目构建高可维护的开发环境">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gcnaq17oc64n.feishu.cn/space/api/box/stream/download/asynccode/?code=NGI2NTJlZWU1OTExOGMzODgwMjAzZTM1NGJiMjhkNWNfZnA5ZE9tZHlwdWdhT3BOZjVtcVhzckd2Uk9Ma2pwdVRfVG9rZW46T2hBc2JGaHRHbzAyMEV4ZjAwZWMzSFYxbkloXzE3NTEyODkwNzk6MTc1MTI5MjY3OV9WNA">
 <meta property="article:published_time" content="2025-06-30T12:49:55.000Z">
 <meta property="article:modified_time" content="2025-06-30T13:14:28.909Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gcnaq17oc64n.feishu.cn/space/api/box/stream/download/asynccode/?code=NGI2NTJlZWU1OTExOGMzODgwMjAzZTM1NGJiMjhkNWNfZnA5ZE9tZHlwdWdhT3BOZjVtcVhzckd2Uk9Ma2pwdVRfVG9rZW46T2hBc2JGaHRHbzAyMEV4ZjAwZWMzSFYxbkloXzE3NTEyODkwNzk6MTc1MTI5MjY3OV9WNA">
 
 <link rel="canonical" href="https://atffang.github.io/2025/06/30/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%BB%B4%E6%8A%A4%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
 
@@ -207,14 +209,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>4.8k</span>
+              <span>2.7k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>9 分钟</span>
+              <span>5 分钟</span>
             </span>
 
         </div>
@@ -226,184 +228,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>浅试docker：为 AI 项目构建高可维护的开发环境 <span id="more"></span>
-我的需求是一个带cuda驱动的python容器，redis容器、psql容器、minio容器，因此，我指定docker-compose和dockerfile，他们之间的区别如下表：</p>
+        <p>浅试docker：为 AI 项目构建高可维护的开发环境</p>
+<span id="more"></span>
+<p>我的需求是一个带cuda驱动的python容器，redis容器、psql容器、minio容器，因此，我指定docker-compose和dockerfile，他们之间的区别如下表：</p>
 <table>
-<colgroup>
-<col style="width: 5%" />
-<col style="width: 44%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>方面</th>
@@ -415,8 +243,7 @@
 <tr>
 <td>核心作用</td>
 <td>定义单个镜像的构建过程，描述从基础镜像开始，安装软件、拷贝文件、配置环境等步骤，生成自定义镜像。</td>
-<td>定义多个容器的编排和运行，指定哪些镜像或 Dockerfile
-要启动，容器之间如何连接、挂载卷、端口映射等。</td>
+<td>定义多个容器的编排和运行，指定哪些镜像或 Dockerfile 要启动，容器之间如何连接、挂载卷、端口映射等。</td>
 </tr>
 <tr>
 <td>工作方式</td>
@@ -426,8 +253,7 @@
 <tr>
 <td>是否拉取镜像</td>
 <td>可以基于已有镜像（FROM xxx），也可以从头开始构建。</td>
-<td>可以使用已有镜像（image: xxx）或基于 Dockerfile 构建镜像（build:
-xxx）。</td>
+<td>可以使用已有镜像（image: xxx）或基于 Dockerfile 构建镜像（build: xxx）。</td>
 </tr>
 <tr>
 <td>功能范围</td>
@@ -446,34 +272,37 @@ xxx）。</td>
 <p>编写<strong>Dockerfile:</strong></p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> nvidia<span class="operator">/</span>cuda:<span class="number">12.8</span><span class="number">.0</span><span class="operator">-</span>cudnn<span class="operator">-</span>runtime<span class="operator">-</span>ubuntu22<span class="number">.04</span></span><br><span class="line"></span><br><span class="line">RUN apt<span class="operator">-</span><span class="keyword">get</span> <span class="keyword">update</span> <span class="operator">&amp;&amp;</span> apt<span class="operator">-</span><span class="keyword">get</span> install <span class="operator">-</span>y python3 python3<span class="operator">-</span>pip</span><br><span class="line"></span><br><span class="line">WORKDIR <span class="operator">/</span>app</span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span> requirements.txt .</span><br><span class="line"></span><br><span class="line">RUN pip install torch<span class="operator">=</span><span class="operator">=</span><span class="number">2.6</span><span class="number">.0</span> torchvision<span class="operator">=</span><span class="operator">=</span><span class="number">0.21</span><span class="number">.0</span> torchaudio<span class="operator">=</span><span class="operator">=</span><span class="number">2.6</span><span class="number">.0</span> <span class="comment">--index-url https://download.pytorch.org/whl/cu126</span></span><br><span class="line">RUN pip install <span class="comment">--no-cache-dir -r requirements.txt</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span> .<span class="operator">/</span>app <span class="operator">/</span>app</span><br><span class="line"></span><br><span class="line">CMD [&quot;python3&quot;, &quot;main.py&quot;]</span><br></pre></td></tr></table></figure>
 <p>例如，在python中通过<code>minio:9000</code>，在本机中可以通过<code>http://localhost:9001/</code>访问。</p>
-<h3 id="docker快速构建">docker快速构建</h3>
-<ol type="1">
-<li>下载docker
-desktop，对于分盘的windows电脑，建议迁移一下docker位置</li>
+<h3 id="docker快速构建"><a class="markdownIt-Anchor" href="#docker快速构建"></a> docker快速构建</h3>
+<ol>
+<li>下载docker desktop，对于分盘的windows电脑，建议迁移一下docker位置</li>
 <li>换源，我这里修改配置文件为：</li>
 </ol>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;builder&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;gc&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;defaultKeepStorage&quot;</span><span class="punctuation">:</span> <span class="string">&quot;20GB&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;experimental&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;https://docker.xuanyuan.me&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<ol start="3" type="1">
-<li><p>构建镜像：<code>docker compose build</code></p></li>
-<li><p>启动容器服务：<code>docker compose up -d</code>
-没有下载过dockert-compose中的容器的会先下载</p></li>
-<li><p>查看服务状态：<code>docker ps</code> -a <img
-src="https://gcnaq17oc64n.feishu.cn/space/api/box/stream/download/asynccode/?code=NGI2NTJlZWU1OTExOGMzODgwMjAzZTM1NGJiMjhkNWNfZnA5ZE9tZHlwdWdhT3BOZjVtcVhzckd2Uk9Ma2pwdVRfVG9rZW46T2hBc2JGaHRHbzAyMEV4ZjAwZWMzSFYxbkloXzE3NTEyODkwNzk6MTc1MTI5MjY3OV9WNA" /></p></li>
-<li><p>进入python容器：<code>docker exec -it labsecurity_app bash</code></p></li>
-<li><p>测试一下cuda环境是否可用，运行脚本：</p></li>
+<ol start="3">
+<li>
+<p>构建镜像：<code>docker compose build</code></p>
+</li>
+<li>
+<p>启动容器服务：<code>docker compose up -d</code> 没有下载过dockert-compose中的容器的会先下载</p>
+</li>
+<li>
+<p>查看服务状态：<code>docker ps</code> -a<br />
+<img src="https://gcnaq17oc64n.feishu.cn/space/api/box/stream/download/asynccode/?code=NGI2NTJlZWU1OTExOGMzODgwMjAzZTM1NGJiMjhkNWNfZnA5ZE9tZHlwdWdhT3BOZjVtcVhzckd2Uk9Ma2pwdVRfVG9rZW46T2hBc2JGaHRHbzAyMEV4ZjAwZWMzSFYxbkloXzE3NTEyODkwNzk6MTc1MTI5MjY3OV9WNA" alt="" /></p>
+</li>
+<li>
+<p>进入python容器：<code>docker exec -it labsecurity_app bash</code></p>
+</li>
+<li>
+<p>测试一下cuda环境是否可用，运行脚本：</p>
+</li>
 </ol>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.is_available())</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.get_device_name(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
-<ol start="8" type="1">
-<li>结束所有服务： <code>docker-compose stop</code>
-开始所有服务：<code>docker-compose start</code></li>
+<ol start="8">
+<li>结束所有服务： <code>docker-compose stop</code> 开始所有服务：<code>docker-compose start</code></li>
 <li>我在docker-compose里面挂载了：</li>
 </ol>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">volumes:</span><br><span class="line">    - ./app:/app</span><br></pre></td></tr></table></figure>
-<p>容器能看到本机的 <code>./app</code>
-目录，点击vscode左下方的&gt;&lt;，选择Attach to Running
-Container，进入python容器，就可以愉快的开发了</p>
-</body>
-</html>
+<p>容器能看到本机的 <code>./app</code> 目录，点击vscode左下方的&gt;&lt;，选择Attach to Running Container，进入python容器，就可以愉快的开发了</p>
 
     </div>
 
@@ -554,7 +383,7 @@ Container，进入python容器，就可以愉快的开发了</p>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">docker快速构建</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text"> docker快速构建</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -622,13 +451,13 @@ Container，进入python容器，就可以愉快的开发了</p>
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

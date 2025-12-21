@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="和之前的文章呼应下，继续介绍python的异步机制。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="继续聊聊异步">
 <meta property="og:url" content="https://atffang.github.io/2025/05/29/%E7%BB%A7%E7%BB%AD%E8%81%8A%E8%81%8A%E5%BC%82%E6%AD%A5/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="和之前的文章呼应下，继续介绍python的异步机制。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-29T15:39:59.000Z">
 <meta property="article:modified_time" content="2025-05-29T15:46:47.446Z">
@@ -207,14 +207,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>6.5k</span>
+              <span>4.4k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>12 分钟</span>
+              <span>8 分钟</span>
             </span>
 
         </div>
@@ -226,240 +226,58 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>和之前的文章呼应下，继续介绍python的异步机制。 <span id="more"></span>
-在之前的文章中（指路[https://atffang.github.io/2025/02/21/asyncio%E6%B5%85%E6%9E%90/#more]），我们简单学习了python的asynicio机制，但当我回看这篇文章时，仍然觉得许多东西——特别是概念，没有讲清楚。因此有了这篇文章，我们将从底层机制开始介绍python中的异步操作。
-### 为什么要异步？
-中国人应该都听过华罗庚烧开水的故事。其中办法甲是洗好水壶，灌上凉水，放在火上；在等待水开的时间里，洗茶壶、洗茶杯、拿茶叶；等水开了，泡茶喝。等待某个事件完成（比如水开）时，如果一直干等，时间就被浪费了；如果能利用等待时间去做其他有意义的事情，效率就会更高。在程序设计中，也是如此：</p>
+        <p>和之前的文章呼应下，继续介绍python的异步机制。</p>
+<span id="more"></span>
+<p>在之前的文章中（指路[<a href="https://atffang.github.io/2025/02/21/asyncio%E6%B5%85%E6%9E%90/#more">https://atffang.github.io/2025/02/21/asyncio浅析/#more</a>]），我们简单学习了python的asynicio机制，但当我回看这篇文章时，仍然觉得许多东西——特别是概念，没有讲清楚。因此有了这篇文章，我们将从底层机制开始介绍python中的异步操作。</p>
+<h3 id="为什么要异步"><a class="markdownIt-Anchor" href="#为什么要异步"></a> 为什么要异步？</h3>
+<p>中国人应该都听过华罗庚烧开水的故事。其中办法甲是洗好水壶，灌上凉水，放在火上；在等待水开的时间里，洗茶壶、洗茶杯、拿茶叶；等水开了，泡茶喝。等待某个事件完成（比如水开）时，如果一直干等，时间就被浪费了；如果能利用等待时间去做其他有意义的事情，效率就会更高。在程序设计中，也是如此：</p>
 <p>当程序遇到“必须等待”的操作时，比如等待网络响应、磁盘读写、用户输入，如果我们像传统方式那样干等，就会浪费大量宝贵时间。而如果我们能在等待的间隙去做别的事情，整体运行效率就能大幅提升。</p>
-<p>这就是 <strong>异步编程（Asynchronous Programming）</strong>
-的核心思想。异步编程是一种程序设计方式，它允许程序在遇到耗时操作时“暂时挂起当前任务”，去执行其他任务，待耗时操作完成后再回来继续执行。这样，程序不会因为等待某个操作而“卡死”或闲置，特别适合处理大量
-I/O 操作的场景。 ### 协程
-协程（Coroutine）是一种程序结构，允许函数在执行过程中暂停（挂起）并在未来某个时间恢复执行。它是一种“可暂停的函数”，实现了非抢占式的多任务协作。通俗来说，协程可以在执行中途“让出控制权”，让其他协程运行，等到时机合适再“继续执行”，而不是像线程那样被操作系统抢占。</p>
-<p>Python中的协程，特别是用 async def
-定义的异步协程，实际上是基于<strong>生成器（generator）</strong>
-机制演化而来的。生成器是一种特殊的迭代器，它可以在执行过程中暂停，并在需要时恢复执行。生成器函数使用
-yield 关键字来生成值，每次调用 yield
-时，函数会暂停执行，并返回一个值给调用者。下次调用生成器时，函数会从上次暂停的地方继续执行。这种暂停等待执行的状态成为<strong>挂起</strong>，传统函数调用有自己的调用栈，调用结束后栈帧销毁，而挂起状态的函数并不会销毁内部变量和参数。</p>
-<p>Python中，每次函数调用都会创建一个
-帧对象（PyFrameObject，C语言结构体），它包含了函数执行的所有上下文信息：
-- 当前指令指针（程序计数器，PC），指示下一条要执行的字节码位置 -
-局部变量和参数 - 操作数栈状态 - 代码对象引用</p>
-<p>生成器和协程本质上也是函数调用，只不过在挂起时不会销毁帧对象，而是把它冻结保存起来。当协程执行到await或者yield时，Python解释器暂停执行当前帧，保存当前指令指针位置（即当前字节码执行到哪一步了）。局部变量、操作栈以及执行环境的状态都保存在该帧对象内，这个帧对象作为生成器/协程对象的内部状态，存活在内存中。当事件循环或调度器认为条件满足（比如等待的异步I/O完成），它会调用生成器/协程的
-<code>.send()</code> 或 <code>.__await__()</code>
-方法，让Python解释器加载之前保存的帧对象状态，从断点处继续执行字节码。</p>
-<h3 id="事件循环">事件循环</h3>
-<p><strong>事件循环（Event Loop）</strong>
-是异步编程的核心调度机制，它不断循环监视“任务队列”或“事件源”，并在任务准备好执行时唤醒它们。我们在之前的文章中已经提到，协程对象执行到
-<code>await</code>
-会挂起并返回控制权，而要继续执行，就必须有一个机制来等待
-<code>await</code>
-的异步任务完成，再恢复暂停的协程。这个“等待+恢复”的过程，由事件循环自动调度完成。事件循环由下面四个关键部分组成：</p>
+<p>这就是 <strong>异步编程（Asynchronous Programming）</strong> 的核心思想。异步编程是一种程序设计方式，它允许程序在遇到耗时操作时“暂时挂起当前任务”，去执行其他任务，待耗时操作完成后再回来继续执行。这样，程序不会因为等待某个操作而“卡死”或闲置，特别适合处理大量 I/O 操作的场景。</p>
+<h3 id="协程"><a class="markdownIt-Anchor" href="#协程"></a> 协程</h3>
+<p>协程（Coroutine）是一种程序结构，允许函数在执行过程中暂停（挂起）并在未来某个时间恢复执行。它是一种“可暂停的函数”，实现了非抢占式的多任务协作。通俗来说，协程可以在执行中途“让出控制权”，让其他协程运行，等到时机合适再“继续执行”，而不是像线程那样被操作系统抢占。</p>
+<p>Python中的协程，特别是用 async def 定义的异步协程，实际上是基于<strong>生成器（generator）</strong> 机制演化而来的。生成器是一种特殊的迭代器，它可以在执行过程中暂停，并在需要时恢复执行。生成器函数使用 yield 关键字来生成值，每次调用 yield 时，函数会暂停执行，并返回一个值给调用者。下次调用生成器时，函数会从上次暂停的地方继续执行。这种暂停等待执行的状态成为<strong>挂起</strong>，传统函数调用有自己的调用栈，调用结束后栈帧销毁，而挂起状态的函数并不会销毁内部变量和参数。</p>
+<p>Python中，每次函数调用都会创建一个 帧对象（PyFrameObject，C语言结构体），它包含了函数执行的所有上下文信息：</p>
 <ul>
-<li><p><strong>Task 队列（任务队列）</strong> 一个 Task
-是对协程的封装，用于注册到事件循环中，并自动驱动协程的执行流程。协程对象会被封装为
-asyncio.Task 对象，并加入事件循环管理的队列。</p></li>
-<li><p><strong>Future 对象</strong> 表示一个尚未完成的异步操作，类似于
-JavaScript 的 Promise。Future是Task的父类，而await 的结果通常是
-Future。</p></li>
-<li><p><strong>IO 多路复用器</strong> 使用操作系统的
-select/epoll/kqueue/IOCP 来等待 I/O 事件。每个 await 的对象会注册一个
-I/O 事件（如 socket 可读、定时器到期），这些事件会被提交到
-selector，操作系统会在事件准备好时通知事件循环，事件循环再调用回调函数恢复协程。</p></li>
-<li><p><strong>调度器</strong>
-调度器是事件循环的大脑，它控制协程的暂停与恢复。协程本质是生成器（generator）的拓展，调度行为是调用其
-<code>send()</code> 或 <code>throw()</code> 方法。协程首次执行相当于
-<code>coro.send(None)</code>，遇到 <code>await</code>
-时将控制权交还给事件循环，并返回一个 <code>Future</code>
-对象。事件循环等待 <code>Future</code> 对象完成，然后调用
-<code>task._step()</code> 方法，执行 <code>coro.send(result)</code>
-，恢复协程执行直到下一个 <code>await</code> 或结束。
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">+---------------------------+</span><br><span class="line">| asyncio.Task |</span><br><span class="line">| - 包含一个协程对象 |</span><br><span class="line">+---------------------------+</span><br><span class="line">↓</span><br><span class="line">初始执行 coro.send(<span class="literal">None</span>)</span><br><span class="line">↓</span><br><span class="line">协程执行 → 遇到 <span class="keyword">await</span></span><br><span class="line">↓</span><br><span class="line">返回 Future，挂起协程</span><br><span class="line">↓</span><br><span class="line">Future 注册到底层 IO selector</span><br><span class="line">↓</span><br><span class="line">事件完成 → Future 被标记为 done</span><br><span class="line">↓</span><br><span class="line">唤醒 Task → 再次执行 coro.send(result)</span><br><span class="line">↓</span><br><span class="line">直至结束</span><br></pre></td></tr></table></figure></p></li>
+<li>当前指令指针（程序计数器，PC），指示下一条要执行的字节码位置</li>
+<li>局部变量和参数</li>
+<li>操作数栈状态</li>
+<li>代码对象引用</li>
 </ul>
-<h3 id="示例">示例</h3>
-<h4 id="爬虫">爬虫</h4>
-<p>任务目标：我们有 5
-个网页，要同时请求它们的内容并提取标题。我们希望在不阻塞主线程的情况下完成所有请求。如果使用串行执行的方式：
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line">  </span><br><span class="line">urls = [</span><br><span class="line"><span class="string">&quot;https://1.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://2.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://3.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://4.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://5.com&quot;</span></span><br><span class="line">] </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_title</span>(<span class="params">url</span>):</span><br><span class="line">	response = requests.get(url)</span><br><span class="line">	<span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;url&#125;</span> - status: <span class="subst">&#123;response.status_code&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">	<span class="built_in">print</span>(get_title(url))</span><br></pre></td></tr></table></figure> 所有请求会一个接一个等。
-如果使用异步方式（并发请求，非阻塞）： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> aiohttp</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">get_title</span>(<span class="params">session, url</span>):</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> session.get(url) <span class="keyword">as</span> response:</span><br><span class="line">        text = <span class="keyword">await</span> response.text()</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;url&#125;</span> - status: <span class="subst">&#123;response.status&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> aiohttp.ClientSession() <span class="keyword">as</span> session:</span><br><span class="line">        tasks = [get_title(session, url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">        results = <span class="keyword">await</span> asyncio.gather(*tasks)</span><br><span class="line">        <span class="keyword">for</span> r <span class="keyword">in</span> results:</span><br><span class="line">            <span class="built_in">print</span>(r)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure></p>
-<h4 id="处理大量文件上传">处理大量文件上传</h4>
-<p>你在做一个网站，有很多用户同时上传文件（比如照片），你需要接收上传请求/将文件保存到磁盘或对象存储/同时记录用户上传日志（如用户名、时间、文件名）到数据库或日志文件中。
-如果使用同步方式，所有请求会一个接一个等，用户上传文件时，其他用户只能等待:
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">save_file</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    time.sleep(<span class="number">2</span>)  <span class="comment"># 模拟写文件</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[保存] 用户 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">log_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    time.sleep(<span class="number">1</span>)  <span class="comment"># 模拟写日志</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[日志] 记录 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">handle_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    save_file(user, file_name)</span><br><span class="line">    log_upload(user, file_name)</span><br><span class="line"></span><br><span class="line">users = [(<span class="string">&quot;Alice&quot;</span>, <span class="string">&quot;a.png&quot;</span>), (<span class="string">&quot;Bob&quot;</span>, <span class="string">&quot;b.jpg&quot;</span>), (<span class="string">&quot;Carol&quot;</span>, <span class="string">&quot;c.docx&quot;</span>)]</span><br><span class="line"><span class="keyword">for</span> user, file <span class="keyword">in</span> users:</span><br><span class="line">    handle_upload(user, file)</span><br></pre></td></tr></table></figure></p>
-<p>如果使用异步方式，所有请求可以同时处理，用户上传文件时，其他用户可以继续上传。
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">save_file</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> asyncio.sleep(<span class="number">2</span>)  <span class="comment"># 模拟异步写文件</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[保存] 用户 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">log_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> asyncio.sleep(<span class="number">1</span>)  <span class="comment"># 模拟异步写日志</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[日志] 记录 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">handle_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> save_file(user, file_name)</span><br><span class="line">    <span class="keyword">await</span> log_upload(user, file_name)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    users = [(<span class="string">&quot;Alice&quot;</span>, <span class="string">&quot;a.png&quot;</span>), (<span class="string">&quot;Bob&quot;</span>, <span class="string">&quot;b.jpg&quot;</span>), (<span class="string">&quot;Carol&quot;</span>, <span class="string">&quot;c.docx&quot;</span>)]</span><br><span class="line">    tasks = [handle_upload(user, file) <span class="keyword">for</span> user, file <span class="keyword">in</span> users]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure></p>
-</body>
-</html>
-
+<p>生成器和协程本质上也是函数调用，只不过在挂起时不会销毁帧对象，而是把它冻结保存起来。当协程执行到await或者yield时，Python解释器暂停执行当前帧，保存当前指令指针位置（即当前字节码执行到哪一步了）。局部变量、操作栈以及执行环境的状态都保存在该帧对象内，这个帧对象作为生成器/协程对象的内部状态，存活在内存中。当事件循环或调度器认为条件满足（比如等待的异步I/O完成），它会调用生成器/协程的 <code>.send()</code> 或 <code>.__await__()</code> 方法，让Python解释器加载之前保存的帧对象状态，从断点处继续执行字节码。</p>
+<h3 id="事件循环"><a class="markdownIt-Anchor" href="#事件循环"></a> 事件循环</h3>
+<p><strong>事件循环（Event Loop）</strong> 是异步编程的核心调度机制，它不断循环监视“任务队列”或“事件源”，并在任务准备好执行时唤醒它们。我们在之前的文章中已经提到，协程对象执行到 <code>await</code> 会挂起并返回控制权，而要继续执行，就必须有一个机制来等待 <code>await</code> 的异步任务完成，再恢复暂停的协程。这个“等待+恢复”的过程，由事件循环自动调度完成。事件循环由下面四个关键部分组成：</p>
+<ul>
+<li>
+<p><strong>Task 队列（任务队列）</strong><br />
+一个 Task 是对协程的封装，用于注册到事件循环中，并自动驱动协程的执行流程。协程对象会被封装为 asyncio.Task 对象，并加入事件循环管理的队列。</p>
+</li>
+<li>
+<p><strong>Future 对象</strong><br />
+表示一个尚未完成的异步操作，类似于 JavaScript 的 Promise。Future是Task的父类，而await 的结果通常是 Future。</p>
+</li>
+<li>
+<p><strong>IO 多路复用器</strong><br />
+使用操作系统的 select/epoll/kqueue/IOCP 来等待 I/O 事件。每个 await 的对象会注册一个 I/O 事件（如 socket 可读、定时器到期），这些事件会被提交到 selector，操作系统会在事件准备好时通知事件循环，事件循环再调用回调函数恢复协程。</p>
+</li>
+<li>
+<p><strong>调度器</strong><br />
+调度器是事件循环的大脑，它控制协程的暂停与恢复。协程本质是生成器（generator）的拓展，调度行为是调用其 <code>send()</code> 或 <code>throw()</code> 方法。协程首次执行相当于 <code>coro.send(None)</code>，遇到 <code>await</code> 时将控制权交还给事件循环，并返回一个 <code>Future</code> 对象。事件循环等待 <code>Future</code> 对象完成，然后调用 <code>task._step()</code> 方法，执行 <code>coro.send(result)</code> ，恢复协程执行直到下一个 <code>await</code> 或结束。</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">+---------------------------+</span><br><span class="line">| asyncio.Task |</span><br><span class="line">| - 包含一个协程对象 |</span><br><span class="line">+---------------------------+</span><br><span class="line">↓</span><br><span class="line">初始执行 coro.send(<span class="literal">None</span>)</span><br><span class="line">↓</span><br><span class="line">协程执行 → 遇到 <span class="keyword">await</span></span><br><span class="line">↓</span><br><span class="line">返回 Future，挂起协程</span><br><span class="line">↓</span><br><span class="line">Future 注册到底层 IO selector</span><br><span class="line">↓</span><br><span class="line">事件完成 → Future 被标记为 done</span><br><span class="line">↓</span><br><span class="line">唤醒 Task → 再次执行 coro.send(result)</span><br><span class="line">↓</span><br><span class="line">直至结束</span><br></pre></td></tr></table></figure>
+<h3 id="示例"><a class="markdownIt-Anchor" href="#示例"></a> 示例</h3>
+<h4 id="爬虫"><a class="markdownIt-Anchor" href="#爬虫"></a> 爬虫</h4>
+<p>任务目标：我们有 5 个网页，要同时请求它们的内容并提取标题。我们希望在不阻塞主线程的情况下完成所有请求。如果使用串行执行的方式：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line">  </span><br><span class="line">urls = [</span><br><span class="line"><span class="string">&quot;https://1.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://2.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://3.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://4.com&quot;</span>,</span><br><span class="line"><span class="string">&quot;https://5.com&quot;</span></span><br><span class="line">] </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_title</span>(<span class="params">url</span>):</span><br><span class="line">	response = requests.get(url)</span><br><span class="line">	<span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;url&#125;</span> - status: <span class="subst">&#123;response.status_code&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">	<span class="built_in">print</span>(get_title(url))</span><br></pre></td></tr></table></figure>
+<p>所有请求会一个接一个等。<br />
+如果使用异步方式（并发请求，非阻塞）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> aiohttp</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">get_title</span>(<span class="params">session, url</span>):</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> session.get(url) <span class="keyword">as</span> response:</span><br><span class="line">        text = <span class="keyword">await</span> response.text()</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;url&#125;</span> - status: <span class="subst">&#123;response.status&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> aiohttp.ClientSession() <span class="keyword">as</span> session:</span><br><span class="line">        tasks = [get_title(session, url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">        results = <span class="keyword">await</span> asyncio.gather(*tasks)</span><br><span class="line">        <span class="keyword">for</span> r <span class="keyword">in</span> results:</span><br><span class="line">            <span class="built_in">print</span>(r)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+<h4 id="处理大量文件上传"><a class="markdownIt-Anchor" href="#处理大量文件上传"></a> 处理大量文件上传</h4>
+<p>你在做一个网站，有很多用户同时上传文件（比如照片），你需要接收上传请求/将文件保存到磁盘或对象存储/同时记录用户上传日志（如用户名、时间、文件名）到数据库或日志文件中。<br />
+如果使用同步方式，所有请求会一个接一个等，用户上传文件时，其他用户只能等待:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">save_file</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    time.sleep(<span class="number">2</span>)  <span class="comment"># 模拟写文件</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[保存] 用户 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">log_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    time.sleep(<span class="number">1</span>)  <span class="comment"># 模拟写日志</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[日志] 记录 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">handle_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    save_file(user, file_name)</span><br><span class="line">    log_upload(user, file_name)</span><br><span class="line"></span><br><span class="line">users = [(<span class="string">&quot;Alice&quot;</span>, <span class="string">&quot;a.png&quot;</span>), (<span class="string">&quot;Bob&quot;</span>, <span class="string">&quot;b.jpg&quot;</span>), (<span class="string">&quot;Carol&quot;</span>, <span class="string">&quot;c.docx&quot;</span>)]</span><br><span class="line"><span class="keyword">for</span> user, file <span class="keyword">in</span> users:</span><br><span class="line">    handle_upload(user, file)</span><br></pre></td></tr></table></figure>
+<p>如果使用异步方式，所有请求可以同时处理，用户上传文件时，其他用户可以继续上传。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">save_file</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> asyncio.sleep(<span class="number">2</span>)  <span class="comment"># 模拟异步写文件</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[保存] 用户 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">log_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> asyncio.sleep(<span class="number">1</span>)  <span class="comment"># 模拟异步写日志</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;[日志] 记录 <span class="subst">&#123;user&#125;</span> 上传了 <span class="subst">&#123;file_name&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">handle_upload</span>(<span class="params">user, file_name</span>):</span><br><span class="line">    <span class="keyword">await</span> save_file(user, file_name)</span><br><span class="line">    <span class="keyword">await</span> log_upload(user, file_name)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    users = [(<span class="string">&quot;Alice&quot;</span>, <span class="string">&quot;a.png&quot;</span>), (<span class="string">&quot;Bob&quot;</span>, <span class="string">&quot;b.jpg&quot;</span>), (<span class="string">&quot;Carol&quot;</span>, <span class="string">&quot;c.docx&quot;</span>)]</span><br><span class="line">    tasks = [handle_upload(user, file) <span class="keyword">for</span> user, file <span class="keyword">in</span> users]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
     </div>
 
     
@@ -539,7 +357,7 @@ selector，操作系统会在事件准备好时通知事件循环，事件循环
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="nav-number">1.</span> <span class="nav-text">事件循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.</span> <span class="nav-text">示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%88%AC%E8%99%AB"><span class="nav-number">2.1.</span> <span class="nav-text">爬虫</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E5%A4%A7%E9%87%8F%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">2.2.</span> <span class="nav-text">处理大量文件上传</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%82%E6%AD%A5"><span class="nav-number">1.</span> <span class="nav-text"> 为什么要异步？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text"> 协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.</span> <span class="nav-text"> 事件循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text"> 示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%88%AC%E8%99%AB"><span class="nav-number">4.1.</span> <span class="nav-text"> 爬虫</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E5%A4%A7%E9%87%8F%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">4.2.</span> <span class="nav-text"> 处理大量文件上传</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -607,13 +425,13 @@ selector，操作系统会在事件准备好时通知事件循环，事件循环
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

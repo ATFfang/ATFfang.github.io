@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="挖个坑">
 <meta property="og:type" content="article">
 <meta property="og:title" content="重返统计学0：绪论">
 <meta property="og:url" content="https://atffang.github.io/2025/05/27/%E9%87%8D%E8%BF%94%E7%BB%9F%E8%AE%A1%E5%AD%A60%E7%BB%AA%E8%AE%BA/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="挖个坑">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-27T12:20:35.000Z">
 <meta property="article:modified_time" content="2025-05-27T12:21:22.983Z">
@@ -207,14 +207,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>3.9k</span>
+              <span>1.7k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>7 分钟</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -226,193 +226,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>挖个坑 <span id="more"></span>
-作为一个地理系的学生，诚实的说，我对数学与统计学的认识十分有限而肤浅。唯一的训练是在本科时的基础课程概率论课上，那时正值南京新冠最严重的22年年初，多数的课通过网课的形式完成，或许这里面一多半时间还在睡梦中。在此之后，除了零零碎碎接触的知识，再也没系统性的学习过统计学，以至于现在总是力不从心。因此，打算新开一个坑，从一个小白的角度重新学习面向机器学习与地理的统计学知识，共勉！</p>
-<p>统计学（Statistics）一词源自拉丁语
-status（意为“国家事务”），最早在17世纪的德意志地区，用于指代关于国家人口、土地、税收的系统性数据收集与描述，被称为“政治算术”（Political
-Arithmetic）。随着时代发展，它逐渐脱离行政统计的原始功能，<strong>成为一门研究不确定性、分析数据规律、从样本推断总体的科学</strong>。</p>
+        <p>挖个坑</p>
+<span id="more"></span>
+<p>作为一个地理系的学生，诚实的说，我对数学与统计学的认识十分有限而肤浅。唯一的训练是在本科时的基础课程概率论课上，那时正值南京新冠最严重的22年年初，多数的课通过网课的形式完成，或许这里面一多半时间还在睡梦中。在此之后，除了零零碎碎接触的知识，再也没系统性的学习过统计学，以至于现在总是力不从心。因此，打算新开一个坑，从一个小白的角度重新学习面向机器学习与地理的统计学知识，共勉！</p>
+<p>统计学（Statistics）一词源自拉丁语 status（意为“国家事务”），最早在17世纪的德意志地区，用于指代关于国家人口、土地、税收的系统性数据收集与描述，被称为“政治算术”（Political Arithmetic）。随着时代发展，它逐渐脱离行政统计的原始功能，<strong>成为一门研究不确定性、分析数据规律、从样本推断总体的科学</strong>。</p>
 <p>统计学的形成并非一蹴而就，而是在长期应对不确定性与社会复杂性的历史进程中逐步建立起来的。最初，17世纪的“政治算术”是统计思想的雏形，约翰·格朗特与威廉·配第通过对伦敦死亡票据的分析，首次尝试利用数据揭示人口规律，这种自国家行政管理中抽离出的数量思维，构成了统计学最早的社会实践背景。18世纪，雅各布·伯努利提出了大数定律，强调了样本频率与真实概率之间的趋同关系，拉开了从经验总结向概率理论过渡的序幕。同一时期，贝叶斯定理的提出标志着另一种思维路径的诞生，即将先验知识与数据更新相结合，探索对不确定现象进行概率建模的可能性</p>
-<p>进入19世纪，随着数学分析的发展，统计学逐渐获得更加严密的形式化基础。高斯在误差理论中提出正态分布和最小二乘估计，拉普拉斯则将概率方法应用于天体运动分析，他们的工作将统计方法首次嵌入自然科学建模之中，也开启了参数估计与模型拟合的时代。到20世纪，统计学迎来了系统化的理论建构。罗纳德·费雪被广泛认为是现代统计学的奠基者之一，他不仅提出了极大似然估计、方差分析、设计实验等核心概念，还在哲学上确立了频率派立场，主张在重复试验中定义概率，并强调统计推断的客观性。与之并立的则是以杰弗里斯和萨维奇为代表的贝叶斯学派，强调知识的不确定性来源于认知主体本身，通过主观先验与后验更新，实现具有解释力的模型推理。这一“客观
-vs 主观”、“频率 vs
-信念”的思想分歧，至今仍构成统计方法论上的根本张力。</p>
+<p>进入19世纪，随着数学分析的发展，统计学逐渐获得更加严密的形式化基础。高斯在误差理论中提出正态分布和最小二乘估计，拉普拉斯则将概率方法应用于天体运动分析，他们的工作将统计方法首次嵌入自然科学建模之中，也开启了参数估计与模型拟合的时代。到20世纪，统计学迎来了系统化的理论建构。罗纳德·费雪被广泛认为是现代统计学的奠基者之一，他不仅提出了极大似然估计、方差分析、设计实验等核心概念，还在哲学上确立了频率派立场，主张在重复试验中定义概率，并强调统计推断的客观性。与之并立的则是以杰弗里斯和萨维奇为代表的贝叶斯学派，强调知识的不确定性来源于认知主体本身，通过主观先验与后验更新，实现具有解释力的模型推理。这一“客观 vs 主观”、“频率 vs 信念”的思想分歧，至今仍构成统计方法论上的根本张力。</p>
 <p>到了21世纪，随着计算能力的跃升与数据体量的激增，统计学与人工智能、机器学习逐步融合，形成了以预测精度、模型泛化能力为导向的新范式。在这一背景下，统计学习理论、正则化方法、贝叶斯推理和高维建模成为主流应用技术的理论支柱。统计模型不再仅仅用于科学实验与假设检验，而广泛应用于图像识别、自然语言处理、医疗诊断、政策评估等复杂系统的建模中，进一步模糊了“推断”与“预测”的边界。</p>
 <p><strong>统计学的核心使命，是在面对不确定性和变异性的现实世界中，从有限样本中提取信息、推断总体特征，建立描述或解释变量间关系的模型</strong>。</p>
 <p>频率与概率的区别，是统计学中一个根本而经典的问题，也正是区分统计学两大主要流派——频率派（Frequentist）和贝叶斯派（Bayesian）的核心所在。</p>
 <p>在频率派统计学中，概率被严格定义为在大量重复独立试验中某事件发生的相对频率的极限。也就是说，概率是一个长期稳定出现的频率值，它是客观存在且可通过反复实验验证的数值。例如，抛硬币时正面朝上的概率是0.5，是在无限次抛掷中正面次数与总次数的比值趋近的极限。这种定义强调概率的客观性和实验可重复性，概率不存在于单次试验，而是长期统计规律的体现。</p>
 <p>而在贝叶斯派中，概率则被解释为个体对某一事件发生不确定性的主观信念程度。概率是描述“知识状态”或“信息”的工具，可以用来表达对单个事件的可信度。贝叶斯概率不需要重复试验的物理基础，而是通过先验知识与新观测的结合，利用贝叶斯定理动态更新。比如，你对某个病人患病概率的估计，既包含医学知识，也包含个人观察结果，这种概率更像是“信念”的度量。</p>
 <p>总结而言，频率派认为，参数是自然界固定的未知常数，数据是随机变量。统计推断的目标是利用样本数据来估计这些固定参数。而贝叶斯派则认为，参数本身就是随机变量，参数的不确定性通过一个先验分布来描述。在下一章中，我们将首先对这两个概念进行介绍，作为整个系列的引子。</p>
-</body>
-</html>
 
     </div>
 
@@ -560,13 +385,13 @@ vs 主观”、“频率 vs
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

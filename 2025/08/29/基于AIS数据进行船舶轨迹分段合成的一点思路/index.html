@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+  <meta name="description" content="介绍一下本科毕设里关于基于AIS数据进行船舶轨迹合成部分的一点思路，非专业，仅分享">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于AIS数据进行船舶轨迹分段合成的一点思路">
 <meta property="og:url" content="https://atffang.github.io/2025/08/29/%E5%9F%BA%E4%BA%8EAIS%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E8%88%B9%E8%88%B6%E8%BD%A8%E8%BF%B9%E5%88%86%E6%AE%B5%E5%90%88%E6%88%90%E7%9A%84%E4%B8%80%E7%82%B9%E6%80%9D%E8%B7%AF/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="dummy        html {       color: #1a1a1a;       background-color: #fdfdfd;     }     body {       margin: 0 auto;       max-width: 36em;       padding-left: 50px;       padding-right: 50">
+<meta property="og:description" content="介绍一下本科毕设里关于基于AIS数据进行船舶轨迹合成部分的一点思路，非专业，仅分享">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/001.jpg">
 <meta property="og:image" content="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/002.jpg">
@@ -222,14 +222,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>5.6k</span>
+              <span>3.5k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>10 分钟</span>
+              <span>6 分钟</span>
             </span>
 
         </div>
@@ -241,194 +241,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-<head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>dummy</title>
-  <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-<p>介绍一下本科毕设里关于基于AIS数据进行船舶轨迹合成部分的一点思路，非专业，仅分享
-<span id="more"></span> ### 写在前面
-契机是我一位老师最近中了关于海运的面上，突然想起我本科毕业论文做的也是相关的数据分析。当然只是一点很简单的工作，毕竟只是本科的毕业设计。</p>
-<h3 id="ais数据获取">AIS数据获取</h3>
-<p>自动识别系统（Automatic Identification
-System，AIS）是安装在船舶上的一套自动追踪系统，通过岸基或星基设备接收船舶唯一标识符号、坐标、类型以及航行状态等数据，并且由连续的船舶AIS数据可合成船舶轨迹。</p>
-<p>第一步数据获取就卡了很久。定毕设题目那会儿，即2023年冬天，有幸参加了第一届的信息地理学大会，听了三四个关于AIS数据和船舶轨迹分析的报告，都有提到他们获取的AIS数据，一些研究人员手里一年的数据量都是十亿级别的，让我有种莫名的错觉，觉得获取局部一段时间内的AIS数据并不是什么难事。
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/001.jpg"/>
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/002.jpg"/>
-事实证明，我想的太简单了。先是尝试寻找开源数据未果，开始咨询数据供应商。但是这些商业公司的服务对象一般是船运相关企业和少量的科研人员，对我这样的个体户，上千上万的起步价尚且不能接受，何况数据需求在起步价内无法满足。兜兜转转十天，终于让我找到了活菩萨网站https://datalastic.com/</p>
+        <p>介绍一下本科毕设里关于基于AIS数据进行船舶轨迹合成部分的一点思路，非专业，仅分享</p>
+<span id="more"></span>
+<h3 id="写在前面"><a class="markdownIt-Anchor" href="#写在前面"></a> 写在前面</h3>
+<p>契机是我一位老师最近中了关于海运的面上，突然想起我本科毕业论文做的也是相关的数据分析。当然只是一点很简单的工作，毕竟只是本科的毕业设计。</p>
+<h3 id="ais数据获取"><a class="markdownIt-Anchor" href="#ais数据获取"></a> AIS数据获取</h3>
+<p>自动识别系统（Automatic Identification System，AIS）是安装在船舶上的一套自动追踪系统，通过岸基或星基设备接收船舶唯一标识符号、坐标、类型以及航行状态等数据，并且由连续的船舶AIS数据可合成船舶轨迹。</p>
+<p>第一步数据获取就卡了很久。定毕设题目那会儿，即2023年冬天，有幸参加了第一届的信息地理学大会，听了三四个关于AIS数据和船舶轨迹分析的报告，都有提到他们获取的AIS数据，一些研究人员手里一年的数据量都是十亿级别的，让我有种莫名的错觉，觉得获取局部一段时间内的AIS数据并不是什么难事。<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/001.jpg"/><br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/002.jpg"/><br />
+事实证明，我想的太简单了。先是尝试寻找开源数据未果，开始咨询数据供应商。但是这些商业公司的服务对象一般是船运相关企业和少量的科研人员，对我这样的个体户，上千上万的起步价尚且不能接受，何况数据需求在起步价内无法满足。兜兜转转十天，终于让我找到了活菩萨网站<a target="_blank" rel="noopener" href="https://datalastic.com/">https://datalastic.com/</a></p>
 <p>其实他们的定价同样贵的离谱，月订阅费用高达数千欧元，但他提供了一个几十欧元的一周体验计划，我没有犹豫就买了这根救命稻草。有了api一切都好说，唯一的问题是其相关API只能请求一个坐标特定范围内的AIS数据，这给数据获取的策略与后期数据合成都增加了不小的难度。我只能先将研究区域划分为几十个圆，在获取这些圆心范围内的数据。大概爬取了3-4天后，从datalastic网站获取了区域内AIS记录72,9499条，包含船舶的uuid（唯一标识符）、mmsi、坐标以及速度等有效信息，并汇总数据集包含的船舶，获取了每条船舶的国籍、类型、排水量等信息，具体下表所示。</p>
 <table>
-<colgroup>
-<col style="width: 28%" />
-<col style="width: 20%" />
-<col style="width: 26%" />
-<col style="width: 24%" />
-</colgroup>
 <thead>
 <tr>
 <th>AIS记录字段</th>
@@ -518,45 +342,43 @@ System，AIS）是安装在船舶上的一套自动追踪系统，通过岸基�
 </tr>
 </tbody>
 </table>
-<p>大概分布如下图：
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/003.jpg"/>
+<p>大概分布如下图：<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/003.jpg"/><br />
 将其注入数据库，并通过uuid字段与船舶信息数据库建立连接。</p>
-<h3 id="船舶轨迹合成">船舶轨迹合成</h3>
+<h3 id="船舶轨迹合成"><a class="markdownIt-Anchor" href="#船舶轨迹合成"></a> 船舶轨迹合成</h3>
 <p>由于用于合成船舶轨迹的AIS记录时间跨度较长，绝大多数船舶在区域内并不仅完成了一次航行任务，而是涵盖了多条航线。因此，通过AIS记录直接合成的船舶轨迹存在航迹复杂、重复等问题。为了更好地获得航行特征，研究将轨迹从港口出发，直至到达另一港口的航段定义为船舶的一条分段轨迹。而在给定的时间内，可能无法捕捉到一些船舶的起始港口或终点港口，因此被起始时间或终止时间截断的轨迹，也被称为该船舶的一条分段轨迹。</p>
-<p>因此，通过AIS记录合成分段轨迹的前提是区分船舶的状态，即航行状态或驻留状态。在某一船舶的一组根据时间排序的AIS记录中，有四种可能的分段轨迹：
--
-由该组数据最早的AIS记录点开始，至下一个处于驻留状态的AIS记录点结束的分段轨迹。
--
-由该组数据最早的AIS记录点开始，至该组数据最晚的AIS记录点结束的分段轨迹。
--
-该组某个处于驻留状态，且下一个记录点处于航行状态的AIS记录点开始，至下一个处于驻留状态的AIS记录点结束的分段轨迹。
--
-该组某个处于驻留状态，且下一个记录点处于航行状态的AIS记录点开始，至该组数据最晚的AIS记录点结束的分段轨迹。
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/004.jpg"/>
-上图展示了通过判断某一船舶AIS记录点航行状态，从而合成船舶分段轨迹的步骤。虽然AIS记录提供了导航状态字段，用以判断船舶是否处于航行状态，但该字段存在大量数据缺失、错误问题。此外，研究认为，虽然在港口附近的上传的AIS记录点显示船舶处于航行状态，但该船舶的实际行为多表现为停留或在较小的范围内徘徊，因此应当被归类为驻留。因此，AIS记录的导航状态字段并不能提供准确的判别依据，研究采用支持向量机（Support
-Vector Machine, 下文简称SVM）方法判定AIS记录点的状态。</p>
+<p>因此，通过AIS记录合成分段轨迹的前提是区分船舶的状态，即航行状态或驻留状态。在某一船舶的一组根据时间排序的AIS记录中，有四种可能的分段轨迹：</p>
+<ul>
+<li>由该组数据最早的AIS记录点开始，至下一个处于驻留状态的AIS记录点结束的分段轨迹。</li>
+<li>由该组数据最早的AIS记录点开始，至该组数据最晚的AIS记录点结束的分段轨迹。</li>
+<li>该组某个处于驻留状态，且下一个记录点处于航行状态的AIS记录点开始，至下一个处于驻留状态的AIS记录点结束的分段轨迹。</li>
+<li>该组某个处于驻留状态，且下一个记录点处于航行状态的AIS记录点开始，至该组数据最晚的AIS记录点结束的分段轨迹。<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/004.jpg"/><br />
+上图展示了通过判断某一船舶AIS记录点航行状态，从而合成船舶分段轨迹的步骤。虽然AIS记录提供了导航状态字段，用以判断船舶是否处于航行状态，但该字段存在大量数据缺失、错误问题。此外，研究认为，虽然在港口附近的上传的AIS记录点显示船舶处于航行状态，但该船舶的实际行为多表现为停留或在较小的范围内徘徊，因此应当被归类为驻留。因此，AIS记录的导航状态字段并不能提供准确的判别依据，研究采用支持向量机（Support Vector Machine, 下文简称SVM）方法判定AIS记录点的状态。</li>
+</ul>
 <p>SVM是一种可以有效处理分类问题的机器学习算法，目标是在数据集中找到一个最优的决策边界（亦称为超平面），这个决策边界能够以最大间隔分开不同类别的数据点。</p>
-<p>由于SVM是一种监督分类方法，因此，研究手动标注了2000个AIS数据点的航行状态，并使用坐标、航速、航向以及船首向作为特征向量，使用70%的标注数据集作为训练集训练SVM模型，同时通过比较剩下30%的数据构成的测试集检测各个核函数的区分效果，包括线性核函数、多项式核函数、径向基函数核以及Sigmoid核函数，并确定了最佳核函数。
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/005.jpg"/>
+<p>由于SVM是一种监督分类方法，因此，研究手动标注了2000个AIS数据点的航行状态，并使用坐标、航速、航向以及船首向作为特征向量，使用70%的标注数据集作为训练集训练SVM模型，同时通过比较剩下30%的数据构成的测试集检测各个核函数的区分效果，包括线性核函数、多项式核函数、径向基函数核以及Sigmoid核函数，并确定了最佳核函数。<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/005.jpg"/><br />
 从图中可以看出，船舶驻留记录点多聚集于海岸港口，与实际情况相符。然而，由于模型仍存在一些误差，可能将一些处于航行状态的AIS记录点被识别为驻留状态，而一些处于驻留状态的航行点被识别为航行状态，导致原本连续的航行AIS记录被打断，导致船舶的分段轨迹错误地在该节点上分裂，或是从船舶驻留在港口及周边区域时识别出多余轨迹。因此，研究需要识别并修正这些错误的状态点。研究使用一个大小为3x1的滑动窗口遍历按时间排序的船舶状态记录点，如果窗口内第一个状态记录与第三个状态记录相同，但第二个状态记录与前后都不同，则修正该记录。</p>
-<p>在完成数据修正后，即可合成船舶轨迹,即分段的坐标时间序列。图中(c)展示了某船舶的AIS记录分段轨迹合成，在合成过程中，研究删除了船舶状态为驻留的记录，并连接连续的船舶状态为航行的记录，完成了一段完整轨迹的分割。使用该方法完成2023年9月27日至10月6日，以及10月10日至10月19日区域的全部AIS记录分段轨迹合成，其效果如下图所示。
+<p>在完成数据修正后，即可合成船舶轨迹,即分段的坐标时间序列。图中©展示了某船舶的AIS记录分段轨迹合成，在合成过程中，研究删除了船舶状态为驻留的记录，并连接连续的船舶状态为航行的记录，完成了一段完整轨迹的分割。使用该方法完成2023年9月27日至10月6日，以及10月10日至10月19日区域的全部AIS记录分段轨迹合成，其效果如下图所示。<br />
 <img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/006.png"/></p>
-<h3 id="船舶轨迹压缩">船舶轨迹压缩</h3>
-<p>Douglas-Peucker算法（以下简称DP算法）是一种用于曲线近似和抽稀的算法。它的主要思想是在给定的曲线中，通过保留一些重要的数据点，来近似表示原始曲线，从而实现曲线的简化。由于研究提供的轨迹数据集数据量较大，轨迹节点较多，因此在轨迹聚类前，对轨迹数据集进行压缩处理能够有效提高聚类效率，而大量实验证明，DP算法适用于轨迹数据的压缩。下图展示了DP算法对于一条轨迹压缩的过程。
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/007.png"/>
-DP算法的基本思路如下： -
-在目标曲线的起点和终点之间，找到一条直线，作为曲线的初始近似。 -
-计算其他所有点到该直线的距离，找到距离最大的点（即垂直距离最大的点）。 -
-如果这个最大距离超过了预先设定的阈值（即所谓的抽稀阈值），则将该点加入到结果集合中，并将曲线划分为两个子曲线。
-- 对两个子曲线分别递归地应用上述过程，直到所有点都被处理完毕。 -
-通过这个过程，DP算法可以在一定程度上保留曲线的形状特征，同时减少数据点的数量，从而实现曲线的简化。DP算法的阈值决定了简化后的曲线与原始曲线之间的最大允许误差，是影响算法压缩结果的唯一参数。</p>
-<p>Zhao等人的实验]表明，对于统一阈值压缩而言，在以一个固定的步长增加阈值的过程中，使用轨迹节点数变化率相对较低、较为平稳的一定范围内的阈值，对相似度量性能有一定程度的提升，他们称该范围为“稳定阶段”。为此，研究计算了0-1000米阈值范围内，以10米为步长的轨迹平均节点数负增长率以及轨迹平均长度负增长率，得到数据集的6个“稳定阶段”，如下图所示。
-<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/008.jpg"/>
+<h3 id="船舶轨迹压缩"><a class="markdownIt-Anchor" href="#船舶轨迹压缩"></a> 船舶轨迹压缩</h3>
+<p>Douglas-Peucker算法（以下简称DP算法）是一种用于曲线近似和抽稀的算法。它的主要思想是在给定的曲线中，通过保留一些重要的数据点，来近似表示原始曲线，从而实现曲线的简化。由于研究提供的轨迹数据集数据量较大，轨迹节点较多，因此在轨迹聚类前，对轨迹数据集进行压缩处理能够有效提高聚类效率，而大量实验证明，DP算法适用于轨迹数据的压缩。下图展示了DP算法对于一条轨迹压缩的过程。<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/007.png"/><br />
+DP算法的基本思路如下：</p>
+<ul>
+<li>在目标曲线的起点和终点之间，找到一条直线，作为曲线的初始近似。</li>
+<li>计算其他所有点到该直线的距离，找到距离最大的点（即垂直距离最大的点）。</li>
+<li>如果这个最大距离超过了预先设定的阈值（即所谓的抽稀阈值），则将该点加入到结果集合中，并将曲线划分为两个子曲线。</li>
+<li>对两个子曲线分别递归地应用上述过程，直到所有点都被处理完毕。</li>
+<li></li>
+</ul>
+<p>通过这个过程，DP算法可以在一定程度上保留曲线的形状特征，同时减少数据点的数量，从而实现曲线的简化。DP算法的阈值决定了简化后的曲线与原始曲线之间的最大允许误差，是影响算法压缩结果的唯一参数。</p>
+<p>Zhao等人的实验]表明，对于统一阈值压缩而言，在以一个固定的步长增加阈值的过程中，使用轨迹节点数变化率相对较低、较为平稳的一定范围内的阈值，对相似度量性能有一定程度的提升，他们称该范围为“稳定阶段”。为此，研究计算了0-1000米阈值范围内，以10米为步长的轨迹平均节点数负增长率以及轨迹平均长度负增长率，得到数据集的6个“稳定阶段”，如下图所示。<br />
+<img src="https://atffang.github.io/2025/08/29/基于AIS数据进行船舶轨迹分段合成的一点思路/008.jpg"/><br />
 为了尽可能保全轨迹结构，研究选取了处于第一个稳定阶段的压缩阈值350m。在该阈值下，经压缩，数据集中每条轨迹的平均节点数减少至原来的44%，但平均轨迹长度仍保持在原来的98%，这说明该压缩算法在大幅度减少轨迹节点数量的同时，较好地保存了轨迹原有的形态特征。</p>
-<h3 id="后记">后记</h3>
+<h3 id="后记"><a class="markdownIt-Anchor" href="#后记"></a> 后记</h3>
 <p>上述的AIS数据获取-分段轨迹合成-轨迹压缩构成是当时毕业设计的数据预处理部分，后续继续进行了聚类、分析等操作，这部分以后有机会再讲吧。现在回看我的毕业设计的后续部分也是稀奇古怪的，譬如修改DTW距离计算方式来消除长度导致的相关性，用一堆概率分布拟合计算最优聚类参数等等，现在觉得似乎不够严谨，但也不太清楚有什么更好的改进方法，看来水平没有进步。</p>
-</body>
-</html>
 
     </div>
 
@@ -637,7 +459,7 @@ DP算法的基本思路如下： -
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ais%E6%95%B0%E6%8D%AE%E8%8E%B7%E5%8F%96"><span class="nav-number">1.</span> <span class="nav-text">AIS数据获取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%88%B9%E8%88%B6%E8%BD%A8%E8%BF%B9%E5%90%88%E6%88%90"><span class="nav-number">2.</span> <span class="nav-text">船舶轨迹合成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%88%B9%E8%88%B6%E8%BD%A8%E8%BF%B9%E5%8E%8B%E7%BC%A9"><span class="nav-number">3.</span> <span class="nav-text">船舶轨迹压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">4.</span> <span class="nav-text">后记</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text"> 写在前面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ais%E6%95%B0%E6%8D%AE%E8%8E%B7%E5%8F%96"><span class="nav-number">2.</span> <span class="nav-text"> AIS数据获取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%88%B9%E8%88%B6%E8%BD%A8%E8%BF%B9%E5%90%88%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text"> 船舶轨迹合成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%88%B9%E8%88%B6%E8%BD%A8%E8%BF%B9%E5%8E%8B%E7%BC%A9"><span class="nav-number">4.</span> <span class="nav-text"> 船舶轨迹压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">5.</span> <span class="nav-text"> 后记</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -705,13 +527,13 @@ DP算法的基本思路如下： -
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">176k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">8:36</span>
+    <span title="站点阅读时长">5:21</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
   </div>

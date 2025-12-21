@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前端对于地理流数据进行可视化。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JS实现地理流可视化">
+<meta property="og:url" content="https://atffang.github.io/2023/07/06/JS%E5%AE%9E%E7%8E%B0%E5%9C%B0%E7%90%86%E6%B5%81%E5%8F%AF%E8%A7%86%E5%8C%96/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="前端对于地理流数据进行可视化。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.loli.net/2023/08/16/dMDqrkQty71zNLI.gif">
+<meta property="og:image" content="https://s2.loli.net/2023/08/16/ugZfTRaCh87bWJx.jpg">
+<meta property="og:image" content="https://s2.loli.net/2023/08/16/GsXR5UATWij7ZDO.png">
+<meta property="og:image" content="https://s2.loli.net/2023/08/16/LPjHkU46cCOu1Qh.gif">
+<meta property="article:published_time" content="2023-07-06T05:42:38.000Z">
+<meta property="article:modified_time" content="2023-08-16T13:49:12.000Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.loli.net/2023/08/16/dMDqrkQty71zNLI.gif">
+
+<link rel="canonical" href="https://atffang.github.io/2023/07/06/JS%E5%AE%9E%E7%8E%B0%E5%9C%B0%E7%90%86%E6%B5%81%E5%8F%AF%E8%A7%86%E5%8C%96/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JS实现地理流可视化 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2023/07/06/JS%E5%AE%9E%E7%8E%B0%E5%9C%B0%E7%90%86%E6%B5%81%E5%8F%AF%E8%A7%86%E5%8C%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JS实现地理流可视化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-06 13:42:38" itemprop="dateCreated datePublished" datetime="2023-07-06T13:42:38+08:00">2023-07-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-16 21:49:12" itemprop="dateModified" datetime="2023-08-16T21:49:12+08:00">2023-08-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/" itemprop="url" rel="index"><span itemprop="name">编程学习-Python</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前端对于地理流数据进行可视化。 <span id="more"></span>
+地理流是一种地理对象间交互的表现形式，一般来说，地理流是单向的，如北京向上海的人口流动，而两个地理流构成了一对地理对象之间的交互，如北京-上海人口流动由北京向上海的人口流动与上海向北京的人口流动构成。由此，在一组地理对象间的地理流数据可以表示为一个OD(origin-destination)矩阵。基于一些需求，我需要将地理流数据展现在网页地图上，下面给出一个基于mapbox的原生解决方案。
+#### 正文</p>
+<h5 id="一.-贝塞尔曲线">一.  <strong>贝塞尔曲线</strong></h5>
+<p><img align="left" width=50% src="https://s2.loli.net/2023/08/16/dMDqrkQty71zNLI.gif" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;">  贝塞尔曲线是一种<strong>使用数学方法描述的曲线</strong>，被广泛用于计算机图形学和动画中。一般来说，除起点与终点外，贝塞尔曲线拥有两个控制点，确定控制点与终末点的位置关系即可得到设想中的曲线。
+   能力有限我们无法直接得到一条曲线公式，故使用点集替代，再将其转化为弧段。</p>
+<p>  &amp;emsp定义一个函数<code>getCurvedLine</code>,输入ps（起始点）,pe（结束点）,arci（弧度），返回一个点集，表示包含500个点的贝塞尔曲线：
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">getCurvedLine</span>(<span class="params">ps,pe,arci</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(ps==pe)&#123;</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> <span class="title function_">computeControlPoint1</span> = (<span class="params">ps, pe, arc = arci</span>) =&gt; &#123;</span><br><span class="line">        <span class="keyword">const</span> deltaX = pe[<span class="number">0</span>] - ps[<span class="number">0</span>];</span><br><span class="line">        <span class="keyword">const</span> deltaY = pe[<span class="number">1</span>] - ps[<span class="number">1</span>];</span><br><span class="line">        <span class="keyword">const</span> theta = <span class="title class_">Math</span>.<span class="title function_">atan</span>(deltaY / deltaX);</span><br><span class="line">        <span class="keyword">const</span> len = <span class="title class_">Math</span>.<span class="title function_">sqrt</span>((deltaX * deltaX) + (deltaY * deltaY)) / <span class="number">2</span> * arc;</span><br><span class="line">        <span class="keyword">const</span> newTheta = theta - <span class="title class_">Math</span>.<span class="property">PI</span> / <span class="number">2</span>;</span><br><span class="line">        <span class="keyword">return</span> [</span><br><span class="line">          (ps[<span class="number">0</span>] + pe[<span class="number">0</span>]) / <span class="number">2</span> - len * <span class="title class_">Math</span>.<span class="title function_">cos</span>(newTheta),</span><br><span class="line">          (ps[<span class="number">1</span>] + pe[<span class="number">1</span>]) / <span class="number">2</span> - len * <span class="title class_">Math</span>.<span class="title function_">sin</span>(newTheta),</span><br><span class="line">        ];</span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">var</span> controlpoint1=<span class="title function_">computeControlPoint1</span>(ps,pe)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> linePoints=[ps,controlpoint1,pe];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> line = turf.<span class="title function_">lineString</span>(linePoints);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> curved = turf.<span class="title function_">bezierSpline</span>(line);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> curveCoordinates = curved.<span class="property">geometry</span>.<span class="property">coordinates</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> curveCoordinates;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="二.-生成featurecollection">二.
+ <strong>生成featureCollection</strong></h5>
+<p>   FeatureCollection 是 GeoJSON
+格式中的一种，它用于组织多个地理要素（features）。其基本格式如下：
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;type&quot;</span>: <span class="string">&quot;FeatureCollection&quot;</span>,</span><br><span class="line">  <span class="string">&quot;features&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="string">&quot;type&quot;</span>: <span class="string">&quot;Feature&quot;</span>,</span><br><span class="line">      <span class="string">&quot;geometry&quot;</span>: &#123;...&#125;,   <span class="comment">// 地理要素的几何信息</span></span><br><span class="line">      <span class="string">&quot;properties&quot;</span>: &#123;...&#125;  <span class="comment">// 地理要素的属性信息</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// 可以有更多的 features</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  FeatureCollection包含了地理要素的类型、几何信息与属性信息。在本项目中，使用mapbox展示弧线段。将点集转化为FeatureCollection的代码如下：
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">getArcFeature</span>(<span class="params">lineList, valueList, arc</span>)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">var</span> curveCoordinatesList=[];</span><br><span class="line">      lineList.<span class="title function_">forEach</span>(<span class="function">(<span class="params">line</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="comment">// 在回调函数中使用 line 进行操作</span></span><br><span class="line">        curveCoordinatesList.<span class="title function_">push</span>(<span class="title function_">getCurvedLine</span>(line[<span class="number">0</span>],line[<span class="number">1</span>],arc))</span><br><span class="line">      &#125;);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">const</span> featureCollection = &#123;</span><br><span class="line">    <span class="attr">type</span>: <span class="string">&#x27;FeatureCollection&#x27;</span>,</span><br><span class="line">    <span class="attr">features</span>: []</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; curveCoordinatesList.<span class="property">length</span>; i++) &#123;</span><br><span class="line">      <span class="keyword">const</span> curveCoordinates = curveCoordinatesList[i];</span><br><span class="line">      <span class="keyword">const</span> feature = &#123;</span><br><span class="line">        <span class="attr">type</span>: <span class="string">&#x27;Feature&#x27;</span>,</span><br><span class="line">        <span class="attr">geometry</span>: &#123;</span><br><span class="line">          <span class="attr">type</span>: <span class="string">&#x27;LineString&#x27;</span>,</span><br><span class="line">          <span class="attr">coordinates</span>: curveCoordinates</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">properties</span>: &#123;</span><br><span class="line">          <span class="string">&#x27;value&#x27;</span>:valueList[i]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    featureCollection.<span class="property">features</span>.<span class="title function_">push</span>(feature);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> featureCollection;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  其中，LineList包含多个点集，valueList是这些点集对应的地理流强度。本项目中使用的数据格式具体如下：
+<img align="left" width=50%  src="https://s2.loli.net/2023/08/16/ugZfTRaCh87bWJx.jpg" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;">
+<br> <br> <br></p>
+<h5 id="三.-在mapbox上添加弧段">三.
+ <strong>在Mapbox上添加弧段</strong></h5>
+<p>   将填充好的featureCollection加载在map的source中。mapbox的初始化本文不再赘述。
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//添加线图层</span></span><br><span class="line">map1.<span class="title function_">addSource</span>(<span class="string">&#x27;line_flow&#x27;</span>+drawnum, &#123;</span><br><span class="line">  <span class="string">&#x27;type&#x27;</span>: <span class="string">&#x27;geojson&#x27;</span>,</span><br><span class="line">  <span class="attr">lineMetrics</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="string">&#x27;data&#x27;</span>: featureCollection</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+  其中，drawnum是每个featureCollection唯一标识符，需要保证每次添加时唯一标识符不同，否咋将导致冲突。
+  按照赋予的id将弧线作为图层添加到map中。 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">map1.<span class="title function_">addLayer</span>(&#123;</span><br><span class="line">    <span class="string">&#x27;id&#x27;</span>: <span class="string">&#x27;line_flow&#x27;</span>+drawnum,</span><br><span class="line">    <span class="string">&#x27;type&#x27;</span>: <span class="string">&#x27;line&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;source&#x27;</span>: <span class="string">&#x27;line_flow&#x27;</span>+drawnum,</span><br><span class="line">    <span class="string">&#x27;layout&#x27;</span>: &#123;</span><br><span class="line">      <span class="string">&#x27;line-join&#x27;</span>: <span class="string">&#x27;round&#x27;</span>,</span><br><span class="line">      <span class="string">&#x27;line-cap&#x27;</span>: <span class="string">&#x27;round&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">paint</span>: &#123;</span><br><span class="line">      <span class="string">&#x27;line-width&#x27;</span>: [</span><br><span class="line">        <span class="string">&#x27;interpolate&#x27;</span>,</span><br><span class="line">        [<span class="string">&#x27;linear&#x27;</span>],</span><br><span class="line">        [<span class="string">&#x27;get&#x27;</span>, <span class="string">&#x27;value&#x27;</span>], <span class="comment">// 使用 feature 的 value 字段作为插值属性</span></span><br><span class="line">        min, <span class="comment">// 最小值</span></span><br><span class="line">        <span class="number">0.5</span>, <span class="comment">// 最小线宽</span></span><br><span class="line">        max, <span class="comment">// 最大值</span></span><br><span class="line">        <span class="number">5</span> <span class="comment">// 最大线宽</span></span><br><span class="line">      ],</span><br><span class="line">      <span class="string">&#x27;line-gradient&#x27;</span>: [</span><br><span class="line">        <span class="string">&#x27;interpolate&#x27;</span>,</span><br><span class="line">        [<span class="string">&#x27;linear&#x27;</span>],</span><br><span class="line">        [<span class="string">&#x27;line-progress&#x27;</span>],</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        colorList[<span class="number">0</span>],</span><br><span class="line">        <span class="number">0.4</span>,</span><br><span class="line">        colorList[<span class="number">1</span>],</span><br><span class="line">        <span class="number">1</span>,</span><br><span class="line">        colorList[<span class="number">2</span>]</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<img align="left" width=50% src="https://s2.loli.net/2023/08/16/GsXR5UATWij7ZDO.png" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;">  在paint中使用line-width与line-gradient设置颜色与宽度的插值。添加起点和终点数据，作为点图层添加在map中，大致效果如左图所示
+   至此，归纳一下总体流程。首先需要将OD数据与OD点对间地理流的强度存储于数据库中，在显示时读取并生成贝塞尔曲线，将曲线作为geometry，地理流强度作为properties生成弧线类型的FeatureCollection，并显示在地图上。此外，mapbox还可以实现对于属性的筛选，这就可以帮助我们做两件事：一是根据流动强度筛选要显示的高于或地域某一阈值的地理流；二是通过单击基础的geojson面，通过其反馈的地级市名称，查询该地的流入，例如：
+<code>'filter': ['==','NAME', states[0].properties.NAME]</code></p>
+<h5 id="四.-添加动画">四.  <strong>添加动画</strong></h5>
+<p><img align="left" width=50% src="https://s2.loli.net/2023/08/16/LPjHkU46cCOu1Qh.gif" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;">  在展示单个城市的流入，可以适当添加动画以提升美观性。例如，通过递归调用绘制点的函数，来展示点扩散，以体现”向外传播“的视觉效果。动画的代码网上种类繁多，我作为前端开发业余爱好者的工作便不做展示。
+  值得注意的是，在添加新的数据时，最好将先前的source和layer清除，以减轻内存负担。动画的添加也可能会导致卡顿、丢帧等问题，故需要兼容性能，不过这个领域的工作我就完全不了解了T.T<br />
+<br><br> ##### 五.  <strong>项目介绍</strong>
+   该项目爬取了2019、2020及2023年城市在五一期间的两种有向OD流数据:高德迁徙平台地级市间与人口流入流出数量正相关的迁徙指数数据共
+889,375
+条；百度指数平台地级市间PC端搜索量、手机端搜索量、网络搜索总量数据共
+5,595,450
+条。对比不同年份五一节假日虚（搜索数据）实（迁徙数据）两种地理流的空间格局，以得出相关结论。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/25/GCJ02toWGS84/" rel="prev" title="GCJ02toWGS84">
+      <i class="fa fa-chevron-left"></i> GCJ02toWGS84
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/05/python%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%9F%BA%E7%A1%80/" rel="next" title="python数据结构基础">
+      python数据结构基础 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%80.-%E8%B4%9D%E5%A1%9E%E5%B0%94%E6%9B%B2%E7%BA%BF"><span class="nav-number">1.</span> <span class="nav-text">一.  贝塞尔曲线</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8C.-%E7%94%9F%E6%88%90featurecollection"><span class="nav-number">2.</span> <span class="nav-text">二.
+ 生成featureCollection</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%89.-%E5%9C%A8mapbox%E4%B8%8A%E6%B7%BB%E5%8A%A0%E5%BC%A7%E6%AE%B5"><span class="nav-number">3.</span> <span class="nav-text">三.
+ 在Mapbox上添加弧段</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9B%9B.-%E6%B7%BB%E5%8A%A0%E5%8A%A8%E7%94%BB"><span class="nav-number">4.</span> <span class="nav-text">四.  添加动画</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

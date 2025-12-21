@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="利用python的Flask库将脚本打包成api，实现通过url实现前端sql查询，访问数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="flask提供python脚本api查询数据库">
+<meta property="og:url" content="https://atffang.github.io/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="利用python的Flask库将脚本打包成api，实现通过url实现前端sql查询，访问数据库">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.loli.net/2023/12/28/zaARsTgGNEPtIOc.png">
+<meta property="og:image" content="https://s2.loli.net/2023/12/28/nefamgV3FP5xdqL.png">
+<meta property="article:published_time" content="2023-12-28T02:55:33.000Z">
+<meta property="article:modified_time" content="2023-12-28T07:18:46.000Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.loli.net/2023/12/28/zaARsTgGNEPtIOc.png">
+
+<link rel="canonical" href="https://atffang.github.io/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>flask提供python脚本api查询数据库 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2023/12/28/flask%E6%8F%90%E4%BE%9Bpython%E8%84%9A%E6%9C%ACapi%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%BA%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          flask提供python脚本api查询数据库
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-12-28 10:55:33 / 修改时间：15:18:46" itemprop="dateCreated datePublished" datetime="2023-12-28T10:55:33+08:00">2023-12-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/" itemprop="url" rel="index"><span itemprop="name">编程学习-Python</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>利用python的Flask库将脚本打包成api，实现通过url实现前端sql查询，访问数据库
+<span id="more"></span>
+起因是《GIS综合实验》这门课要求一个大作业，其中一项为WebGIS开发。对于接受了过多地学原理性课程教学而疏于计算机水平训练的学生来说，即使简单的Web开发也是一件比较头疼的事情，况且为了必须使用一个国产平台，在众多服务与文档中饶了很久的圈子。原本以为，将postgis数据库部署到平台上后，通过REST请求或者是WFS协议能够方便地实现增删改查，至少GET数据不是一件难事，但实现与设想相去甚远。和工作人员交流才知道，该平台上传的postgis数据库一般作为一个数据源为发布文件型的工作空间服务，直接查询该数据库是非常规的操作。这让我非常郁闷，原本实现的逻辑中包括读取数据库中几十万个点数据，通过deck.gl为mapbox开发的高效率点图层渲染到底图上，以及使用postgis特有的一些空间查询语句等等，如果不能直接访问数据库，那么这些设计好的逻辑、代码都要修改甚至报废。无奈之下，只能自己上手连接后端数据库，下面是实现的过程。
+不知道答辩的时候能不能耍小聪明，堂而皇之的告诉评委这是用该国产平台实现的。
+Flask 是一个轻量级的 Python Web 框架，用于构建 Web 应用程序，使用 Flask
+可以通过定义路由来映射 URL 到相应的处理函数。这使得开发者能够轻松地构建
+Web
+应用的不同页面和功能（GPT语）首先在后端代码定义一个类Database，因为我的需求中暂时不需要对数据库的增删改，因此仅在该类中定义基础的打开关闭与查询功能。创建api.py，引入依赖库并进行基础定义：
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> psql.postsqlConnect <span class="keyword">import</span> Database</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> flask_cors <span class="keyword">import</span> CORS</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line">CORS(app, supports_credentials=<span class="literal">True</span>)</span><br><span class="line">app.config[<span class="string">&#x27;JSON_AS_ASCII&#x27;</span>] = <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+其中Database是我预先写好的数据库查询类，<code>CORS(app, supports_credentials=True)</code>是为了保障跨端口调用时不出现浏览器安全协议问题，而<code>app.config['JSON_AS_ASCII'] = False</code>用于约束查询返回的json不以二进制的形式出现。
+接下来我们定义一个sql查询，在url中加入m_id, area_id,
+rating三个约束字段，以查询数据库： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/api/sqlSearch&#x27;</span>, methods = [<span class="string">&#x27;GET&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sqlSearch</span>():</span><br><span class="line">    m_id = request.args.get(<span class="string">&#x27;m_id&#x27;</span>,<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">    area_id = request.args.get(<span class="string">&#x27;area_id&#x27;</span>,<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">    rating = request.args.get(<span class="string">&#x27;rating&#x27;</span>,<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    DB = Database(name=<span class="string">&quot;restaurant&quot;</span>, username=<span class="string">&quot;postgres&quot;</span>, password=<span class="string">&quot;20020405&quot;</span>, host=<span class="string">&quot;10.20.72.101&quot;</span>, port=<span class="string">&quot;5432&quot;</span>)</span><br><span class="line">    DB.connect()</span><br><span class="line"></span><br><span class="line">    baseSql = <span class="string">&quot;SELECT id, ST_X(geom) AS lon, ST_Y(geom) AS lat FROM public.shanghai_restaurants&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> m_id != <span class="string">&quot;&quot;</span> <span class="keyword">or</span> area_id != <span class="string">&quot;&quot;</span> <span class="keyword">or</span> rating != <span class="string">&quot;&quot;</span>:</span><br><span class="line">        m_idSql, area_idSql, ratingSql = <span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> m_id != <span class="string">&quot;&quot;</span>:</span><br><span class="line">            m_idSql = <span class="string">&quot;m_id = &quot;</span> + <span class="built_in">str</span>(m_id)</span><br><span class="line">        <span class="keyword">if</span> area_id != <span class="string">&quot;&quot;</span>:</span><br><span class="line">            area_idSql = <span class="string">&quot;area_id = &quot;</span> + <span class="built_in">str</span>(area_id)</span><br><span class="line">        <span class="keyword">if</span> rating != <span class="string">&quot;&quot;</span>:</span><br><span class="line">            <span class="keyword">match</span> = re.<span class="keyword">match</span>(<span class="string">r&quot;\((\d+),(\d+)\)&quot;</span>, rating)</span><br><span class="line">            a, b = <span class="built_in">map</span>(<span class="built_in">str</span>, <span class="keyword">match</span>.groups())</span><br><span class="line">            ratingSql = <span class="string">f&quot;rating BETWEEN <span class="subst">&#123;a&#125;</span> AND <span class="subst">&#123;b&#125;</span>&quot;</span></span><br><span class="line">            </span><br><span class="line">        whereSql = <span class="string">&quot; WHERE &quot;</span>+<span class="string">&#x27; AND &#x27;</span>.join(s <span class="keyword">for</span> s <span class="keyword">in</span> [m_idSql, area_idSql, ratingSql] <span class="keyword">if</span> s)</span><br><span class="line">        finalSql = baseSql + whereSql</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        finalSql = baseSql</span><br><span class="line">        </span><br><span class="line">    json_data = DB.select(finalSql)</span><br><span class="line">    DB.close()</span><br><span class="line">    <span class="keyword">return</span> json_data</span><br></pre></td></tr></table></figure>
+由于我的需求仅限于查找，因此在定义时设置的是 methods =
+[‘GET’]，如果需要增删改，那么请使用POST请求。对于这个功能，我们定义的基础的url是端口+/api/sqlSearch，其中api是我这个python脚本的文件名，sqlSearch是我接下来要定义的函数名。
+在sqlSearch函数中，首先通过request.args.get方法获取url中的参数，随后连接数据库，将这些参数解析为sql语句并提交查找，返回json文件。
+运行该程序，会返回给你一个端口，例如我的终端提示为：<code>Running on http://127.0.0.1:5000</code>。在这个url后面再加上<code>/api/sqlSearch</code>，浏览器就会返回数据库所有记录的json。在<code>Running on http://127.0.0.1:5000/api/sqlSearch</code>后用<code>?</code>（英文）拼接查询语句，可以实现sql查询，其固定句式为<code>?参数一=x&amp;参数二=y</code>，当然，不写某个参数（数据库里的字段）的查询条件也可以，这完全取决于上面的查询函数中是如何定义的，<code>parameter = request.args.get('参数一','')</code>获取的就是上述url中的x，一般来说，可以设计为当x非空时，加入sql查询中的WHERE语句。
+运行程序开启服务后，在web中输入url：<code>http://127.0.0.1:5000/api/sqlSearch?m_id=116&amp;area_id=3&amp;rating=(3,3)</code>,返回的页面如下所示：
+<img align="center" width=100% src="https://s2.loli.net/2023/12/28/zaARsTgGNEPtIOc.png" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;">
+在JavaScript中，只需解析用户输入的参数为url，就可渐变快速地查询访问数据库，使用deck.gl渲染在底图上：
+<img width=50% src="https://s2.loli.net/2023/12/28/nefamgV3FP5xdqL.png" style="margin-right: 20px;margin-top: 10px;margin-buttom:20px;"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/12/python%E5%B9%B6%E8%A1%8C%E8%BF%90%E7%AE%97/" rel="prev" title="python并行运算">
+      <i class="fa fa-chevron-left"></i> python并行运算
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/10/29/%E7%99%BE%E5%BA%A6%E6%8C%87%E6%95%B0%E7%88%AC%E5%8F%9602-%E5%B9%B4%E5%9D%87%E5%80%BC%E7%88%AC%E5%8F%96/" rel="next" title="百度指数爬取02 年均值爬取">
+      百度指数爬取02 年均值爬取 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="2022ESRI大赛参赛作品（一等奖）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于群体智慧的中国人口多情景时空仿真建模与预测">
+<meta property="og:url" content="https://atffang.github.io/2023/03/14/%E5%9F%BA%E4%BA%8E%E7%BE%A4%E4%BD%93%E6%99%BA%E6%85%A7%E7%9A%84%E4%B8%AD%E5%9B%BD%E4%BA%BA%E5%8F%A3%E5%A4%9A%E6%83%85%E6%99%AF%E6%97%B6%E7%A9%BA%E4%BB%BF%E7%9C%9F%E5%BB%BA%E6%A8%A1%E4%B8%8E%E9%A2%84%E6%B5%8B/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="2022ESRI大赛参赛作品（一等奖）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-03-14T11:24:51.000Z">
+<meta property="article:modified_time" content="2024-11-25T04:14:06.000Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2023/03/14/%E5%9F%BA%E4%BA%8E%E7%BE%A4%E4%BD%93%E6%99%BA%E6%85%A7%E7%9A%84%E4%B8%AD%E5%9B%BD%E4%BA%BA%E5%8F%A3%E5%A4%9A%E6%83%85%E6%99%AF%E6%97%B6%E7%A9%BA%E4%BB%BF%E7%9C%9F%E5%BB%BA%E6%A8%A1%E4%B8%8E%E9%A2%84%E6%B5%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>基于群体智慧的中国人口多情景时空仿真建模与预测 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2023/03/14/%E5%9F%BA%E4%BA%8E%E7%BE%A4%E4%BD%93%E6%99%BA%E6%85%A7%E7%9A%84%E4%B8%AD%E5%9B%BD%E4%BA%BA%E5%8F%A3%E5%A4%9A%E6%83%85%E6%99%AF%E6%97%B6%E7%A9%BA%E4%BB%BF%E7%9C%9F%E5%BB%BA%E6%A8%A1%E4%B8%8E%E9%A2%84%E6%B5%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于群体智慧的中国人口多情景时空仿真建模与预测
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-03-14 19:24:51" itemprop="dateCreated datePublished" datetime="2023-03-14T19:24:51+08:00">2023-03-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-11-25 12:14:06" itemprop="dateModified" datetime="2024-11-25T12:14:06+08:00">2024-11-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BD%9C%E5%93%81/" itemprop="url" rel="index"><span itemprop="name">作品</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>2022ESRI大赛参赛作品（一等奖）。 <span id="more"></span> ### 1 设计思想</p>
+<h4 id="作品背景">1.1 作品背景</h4>
+<p>作为人口大国，人口问题始终是中国高度关注的重要战略问题，深刻影响着国家政治改革、经济发展、社会进步和文化建设等方面。然而，目前中国人口发展面临着深刻而复杂的形势变化，人口负增长下“少子老龄化”将成为常态。因此，推动人口长期均衡、可持续发展成为国家急需解决的问题，各类政策调整与社会经济因素变动对人口发展的影响亟待探索。</p>
+<p>目前学界对于人口的研究多基于现有多期人口普查数据，从宏观、综合的视角对人口发展基本状况进行统计分析和预测模拟。研究方法多为Malthus指数模型和Logistic阻滞增长模型等数学方法；研究对象多为人口的<strong>总体</strong>或多个人口<strong>群体</strong>，缺乏对个体差异的深入考量；研究尺度多聚焦国家总体或特定地区，视角较为单一，未能全面地探讨人口的地域性特征。</p>
+<p>为从地理学的视角解决社会问题、完善人口研究，本作品运用群体智慧与复杂系统建模的方法，从单一的智能体（即人口<strong>个体</strong>）的视角出发，自下而上地对中国各等级城市单元人口动态发展过程进行仿真建模，构建三大民生关切的场景，探究人口对于不同情景下社会决策的响应；同时，根据多项人口发展指标分别创建时空立方体，总结人口时空演变规律，并进行人口发展可持续性综合评价及分区，为区域人口发展规划提供参考。总体上，本作品运用创新的模型构建、空间分析方法，从数据层、特征层和决策层实现对中国人口发展的深入探索，从地理学的视角为缓解人口与政治、经济、社会的矛盾提供区域化解决思路，对中国人口可持续发展路径探索具有重要意义。</p>
+<h4 id="方法设计">1.2 方法设计</h4>
+如图1的技术路线所示，设计流程总体上可概括为数据获取、模型构建、情景模拟与规律探索四部分，最终在应用层面实现<strong>人口多情景决策模拟与推演</strong>以及<strong>人口时空演变规律探索</strong>。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplzRUA"><img
+src="https://s1.ax1x.com/2023/03/14/pplzRUA.jpg"
+alt="pplzRUA.jpg" /></a> 图1 作品技术流程图
+<div data-align="left">
+<p>第一部分为基础数据的获取与处理，通过多种手段为后续模型构建完成了数据准备；第二部分为基于群体智慧和复杂系统方法的人口动态仿真建模，运用涵盖了个人基本属性、地区特性、健康状况、经济状况及婚育状况的多主题多时期人口数据，构建了仿真的智能体属性库和智能体行为逻辑链，并进行实验验证模型的可行性；第三部分为人口多情景社会决策模拟与推演及时空演变规律探索，结合社会实际问题设定三类情景，通过不同情景下对具体参数的推演，模拟人口动态响应过程，并使用3D时空立方体模型可视化展现不同情景下多项人口指标发展过程，总结人口时空演变规律；第四部分为人口发展可持续性评估及区域划分，此部分综合城市人口自然增长率、性别比例及总抚养比评估人口发展可持续性，以此进行顾及空间约束的多要素地理分区，总结人口可持续发展区域化路径。</p>
+<h5 id="数据获取与处理">1.2.1 数据获取与处理</h5>
+本作品将中国全域（除港澳台）的所有地市纳入研究范围，综合城市的人口和经济指标，如图2所示，所有城市被划分成0、1、2共三个等级，将属于同一省份同一等级的城市集合作为基本城市等级单元进行研究。<a
+target="_blank" rel="noopener" href="https://imgse.com/i/pplzrjO"></a> 图2 城市等级分类及人口总量统计图
+<div data-align="left">
+<p>本作品所使用的数据包含统计数据、文献数据及流动数据，主要数据来源为《中国统计年鉴》《中国2010年人口普查资料》《中国2020年人口普查资料》等官方统计资料及人口研究相关文献。其中，对获得的各省各等级城市单元多主题多时期等人口统计数据进行分类处理，以便后续机理分析与模型构建；使用文献研究法，综合文献与经验数据，归纳得出模型构建中的相关参数，如参与匹配概率、生育年龄阈值等。</p>
+<h5 id="基于群体智慧与复杂系统方法的人口动态仿真建模">1.2.2
+基于群体智慧与复杂系统方法的人口动态仿真建模</h5>
+<p><strong>复杂系统</strong>泛指规模大、变量多、各部分关系和运动规律复杂或具有较大不确定性的动态系统，人口发展便是人口总体通过婚育行为决策、个人生命发展及人与环境交互等组成的动态复杂过程。目前，动态事件仿真建模主要有三种方法：离散事件、基于智能体以及系统动力学建模。在多方法仿真建模过程中，针对系统不同部分采用不同的建模方法进行详细描述，能够综合不同方法的优点，构建高效且可管理的模型，对现实世界复杂案例进行有效模拟。</p>
+本作品结合离散事件和基于智能体的方法，对中国人口动态发展过程进行时空仿真建模。一方面，如图3(a)所示，分别构建<strong>城市智能体</strong>和<strong>个人智能体</strong>，设置地理坐标、城市人口总数等城市属性以及年龄、性别等个人属性，关注智能体的个性行为及其之间的交互关系，城市智能体间的交互的现实表现为人口跨区域流动行为，个人智能体间的交互的现实表现为适龄异性间的匹配及婚育行为；另一方面，如图3(b)所示将每个个体的人生历程视为完整流程，基于未成年、成年、匹配、生育、死亡等人生状态构建系统流程，模拟个人对于婚育等的行为选择。即本作品采用离散事件模型描述个人智能体的内部流程，个人作为智能体显示在其所属城市范围内，城市作为智能体显示在中国全域范围内。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplz6De"><img
+src="https://s1.ax1x.com/2023/03/14/pplz6De.jpg"
+alt="pplz6De.jpg" /></a> 图3 基于复杂系统的人口发展过程建模示意图
+<section id="时空立方体格局分析法与多要素地理分区分析法"
+data-align="left">
+<h5>1.2.3 时空立方体格局分析法与多要素地理分区分析法</h5>
+<p>人口发展具有区域性、动态性、综合性，兼具了丰富的时间和空间内涵。而传统的空间分析并不能全面、深入地刻画中国城市人口变化及其未来发展，因此，需要从时空综合的视角对重要人口指标进行演变发展的规律性总结。</p>
+<strong>时空立方体</strong>由若干个具有行、列和时间步长属性的立方图格组成，如图4(a)所示，通过创建时空立方体，可对动态发展数据进行可视化和分析。对于既定的行列位置可获得相应条柱时间序列，以此可分析变量时间变化差异。如图4(b)所示，基于同一位置可获取感兴趣变量的时序变化特征。基于多个目标要素的特征值，设置预期分类数量，可实现多元数据的聚类分析；顾及地理空间连续性，需要进一步对已经实现的聚类结果结构化，得到如图4(c)所示结果，整个研究区域被划分为三个分别空间连续的分区，从而实现多元数据的地理分区。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplzcHH"><img
+src="https://s1.ax1x.com/2023/03/14/pplzcHH.jpg"
+alt="pplzcHH.jpg" /></a> 图4 时空立方体格局与多要素地理分区分析过程
+<section id="主要功能" data-align="left">
+<h3>2 主要功能</h3>
+<h4 id="多情景社会决策模拟与推演">2.1 多情景社会决策模拟与推演</h4>
+基于人口发展原始情景，调整社会经济、文化环境，通过提高就业率与工资水平、降低失业率、缩短工作时长、延长婚产假等改善工作环境，通过完善医疗设施、提升医疗水平等提升医疗条件，通过降低房价、提升住房公积金等缓解住房压力，以此构建三类生育友好情景，从而将影响个人生育决策及总体人口发展，为分析提供数据支持。如图5为人口仿真模型构建的部分逻辑图，社会情景的变动将直接影响个人行为选择，进而影响人口总体发展。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplz48P"><img
+src="https://s1.ax1x.com/2023/03/14/pplz48P.jpg"
+alt="pplz48P.jpg" /></a> 图5 模型构建逻辑图
+<section id="人口演变响应模式挖掘" data-align="left">
+<h4>2.2人口演变响应模式挖掘</h4>
+<p>基于原始及多情景模拟过程，选取2020-2030十年间共120期人口发展指标数据，从人口发展演变过程与人口结构变化挖掘人口发展对不同情景的响应模式，并通过时空立方体及人口金字塔实现人口演变过程可视化。</p>
+<h5 id="分情景人口时空演变规律">2.2.1 分情景人口时空演变规律</h5>
+<p>基于模型预测结果，根据人口发展指标的时间序列创建多情景时空立方体，下如图6所示，各项指标均具有显著的空间异质性特征和邻近时空域中的自相关性特征，性别比例及劳动人口占比存在显著的时间异质性，且在不同情景下人口发展具有显著响应。</p>
+人口总量整体呈现“东多西少”
+的空间特征，东部沿海及川渝地区持续存在人口总量热点；性别比例与地区性别偏好相关性强，地区差异显著但相关性强，各情景下均呈现西北-东南-东北“倒三角点状”性别比例热点，其中在医疗情景下西北地区预测结果高值聚集显著性更强；老龄人口占比总体呈现“东北高-西南低”的空间格局，存在东北及华北地区的老龄占比热点，老龄化问题严重，东北地区预计将成为新增老龄占比热点，而南方城市老龄化将得到一定程度缓解；劳动人口占比时间异质性显著，呈现西部-华中-东部沿海及东北的“H型”劳动力占比热点，云南、海南及广西等地区劳动人口占比将逐渐提升，激发地区活力，同时相较原始情景，住房情景下新疆地区高值聚集现象弱化，工作情景下新疆及东北地区劳动力占比高值聚集更显著，社会劳动力将更为充足。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplz2Ed"><img
+src="https://s1.ax1x.com/2023/03/14/pplz2Ed.jpg"
+alt="pplz2Ed.jpg" /></a> 图6 人口发展时空立方体（社会情景-人口发展指标）
+<section id="人口结构动态变化趋势" data-align="left">
+<h5>2.2.2 人口结构动态变化趋势</h5>
+年龄结构是人口发展和社会劳动生产的关键因素，会随着人口发展动态变化，为清晰反映人口结构情况，选取多时段全国总体人口预测结果，并进行多情景分析。如图7所示，横向为同一时段中不同情景预测结果，纵向为同一情景下不同时段人口结构预测。从时间发展角度看，受上世纪70年代“计划生育”政策影响，2023年41-50岁人口占比小，且中国人口总体老龄化程度加深；而随着近年来二孩、三孩政策的落实，生育潜力释放，青少年占比逐步升高，并具有继续增加的趋势，老龄人口占比短暂上升后保持相对稳定状态；此外在各类情景下，人口结构整体将更加趋于稳定，各年龄占比较为均衡，更有利于社会发展。从社会情景变动视角看，在工作环境改善、医疗条件提升、购房压力减小等生育友好情景下，青少年人口增长趋势更加显著，生育意愿提升。人口发展对外部环境变化响应显著，生育政策调整及社会环境优化能够缓解人口老龄化问题，促进人口长期均衡发展。
+<div data-align="center">
+<a target="_blank" rel="noopener" href="https://imgse.com/i/pplzW4I"><img
+src="https://s1.ax1x.com/2023/03/14/pplzW4I.jpg"
+alt="pplzW4I.jpg" /></a> 图7 多情景下人口金字塔结构动态变化预测图
+<div data-align="left">
+<h4
+id="区域视角下人口发展可持续性综合评价">2.3区域视角下人口发展可持续性综合评价</h4>
+<p>人口可持续发展要求人口能够源源不断地适度增长，考虑各项人口指标，自然增长率反映地区人口总量变化幅度及发展趋势；性别比例为男性人数与女性之比，对婚姻及人口再生产具有重要意义，性别比失衡将导致婚姻挤压等问题，阻碍人口健康发展；总抚养比为非劳动人口与劳动人口的比值，反映劳动人口抚养负担及社会年龄结构，过重的负担将对生育产生负面影响。基于上述指标，从<strong>总量平稳性</strong>、<strong>性别平衡性</strong>、<strong>年龄均衡性</strong>三个角度综合评价人口发展可持续性，并进行多情景下顾及空间约束的多要素地理分区，探索区域现阶段人口可持续发展相似性，为区域人口决策规划提供建议。</p>
+基于多情景模拟结果，计算各地市三项人口指标，并调整设定聚类数进行多要素地理分区，如图8(a)-(d)所示，中国全域可基本划分为九大人口发展区域，按照自然增长率可分为增长、平稳与衰退三大类型，综合性别比例及总抚养比评估未来短期生育及人口发展潜力，可分为潜力型、稳定型及隐患型，在原始情景中，III区域包含上海、江苏、山东等省市部分地区，其三项指标均较低，属于衰退-潜力型，人口增长缓慢或出现负增长，但性别较为平衡且劳动人口抚养压力小，生育潜力较大，通过适当引导即可实现人口增长。在各类生育友好情景下，区域人口可持续类型发生变化，人口发展可持续性区域划分结果存在显著差异，表明社会情景动对人口发展区域相似性有重大影响。结合人口发展类型及具体指标情况，地区可根据发展<a
+target="_blank" rel="noopener" href="https://imgse.com/i/pplzhCt"></a> 图8
+多情景人口发展可持续评价区域化结果图
+<div data-align="left">
+<h3 id="作品特点">3 作品特点</h3>
+<h4 id="仿真性">3.1 仿真性</h4>
+<p>在本作品中，人被视作拥有特有属性和情感智慧的真实个体，个体的行为决策构成了整体的共享决策，基于此构建的模型自下而上地还原了人类个体的生命进程和人类社会总体发展的真实情境。</p>
+<h4 id="社会现实性">3.2 社会现实性</h4>
+<p>本作品面向人口问题进行仿真建模，并设置多个民生关切的现实情景，通过政策模拟与推演来探索人口响应规律，为国家战略制定与调整提供启示性参考，具有丰富的现实意义与应用价值。</p>
+<h4 id="直观可视性">3.2 直观可视性</h4>
+<p>作品中运用的时空立方体2D及3D可视化技术将时空数据用多维立体的形式展现出来，直观地展现了时间序列的变化趋势，便于使用者厘清时空数据的结构、变化趋势和时空分异特征。</p>
+<h3 id="意义及展望">4 意义及展望</h3>
+<p>本作品为科学把握人口发展规律，促进人口可持续发展提供参考。政策鼓励与国民福利保障方面，优化生育政策，加强生育家庭医保、购房租房等福利保障；经济支持与婚育压力缓解方面，完善假期用工成本分担机制，提高居民收入，延长假期，缓解积蓄少与时间紧带来的生育压力；在设施健全与公共服务提质方面，完善住房、医疗等基础设施条件，加快发展普惠托育服务体系，构建全面生育友好的社会环境。</p>
+<p>后续研究拟深入挖掘个体交互行为，拓宽模型适用范围以用于解决其他人口问题；在现有分析基础上，将进一步探索基于人口动态发展时间序列的聚类分析，并顾及空间约束进行地理分区，为国家政策实施与管理提供便利。</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/13/VS2019-AnalysisService%E9%83%A8%E7%BD%B2%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E6%97%A0%E6%B3%95%E8%BF%9E%E6%8E%A5%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E9%97%AE%E9%A2%98/" rel="prev" title="VS2019-AnalysisService部署数据挖掘无法连接服务器的问题">
+      <i class="fa fa-chevron-left"></i> VS2019-AnalysisService部署数据挖掘无法连接服务器的问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/03/25/GCJ02toWGS84/" rel="next" title="GCJ02toWGS84">
+      GCJ02toWGS84 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%9C%E5%93%81%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">1.1 作品背景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.</span> <span class="nav-text">1.2 方法设计</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E8%8E%B7%E5%8F%96%E4%B8%8E%E5%A4%84%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">1.2.1 数据获取与处理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E7%BE%A4%E4%BD%93%E6%99%BA%E6%85%A7%E4%B8%8E%E5%A4%8D%E6%9D%82%E7%B3%BB%E7%BB%9F%E6%96%B9%E6%B3%95%E7%9A%84%E4%BA%BA%E5%8F%A3%E5%8A%A8%E6%80%81%E4%BB%BF%E7%9C%9F%E5%BB%BA%E6%A8%A1"><span class="nav-number">2.2.</span> <span class="nav-text">1.2.2
+基于群体智慧与复杂系统方法的人口动态仿真建模</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%97%B6%E7%A9%BA%E7%AB%8B%E6%96%B9%E4%BD%93%E6%A0%BC%E5%B1%80%E5%88%86%E6%9E%90%E6%B3%95%E4%B8%8E%E5%A4%9A%E8%A6%81%E7%B4%A0%E5%9C%B0%E7%90%86%E5%88%86%E5%8C%BA%E5%88%86%E6%9E%90%E6%B3%95"><span class="nav-number">2.3.</span> <span class="nav-text">1.2.3 时空立方体格局分析法与多要素地理分区分析法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD"><span class="nav-number"></span> <span class="nav-text">2 主要功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E6%83%85%E6%99%AF%E7%A4%BE%E4%BC%9A%E5%86%B3%E7%AD%96%E6%A8%A1%E6%8B%9F%E4%B8%8E%E6%8E%A8%E6%BC%94"><span class="nav-number">1.</span> <span class="nav-text">2.1 多情景社会决策模拟与推演</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%BA%E5%8F%A3%E6%BC%94%E5%8F%98%E5%93%8D%E5%BA%94%E6%A8%A1%E5%BC%8F%E6%8C%96%E6%8E%98"><span class="nav-number">2.</span> <span class="nav-text">2.2人口演变响应模式挖掘</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%86%E6%83%85%E6%99%AF%E4%BA%BA%E5%8F%A3%E6%97%B6%E7%A9%BA%E6%BC%94%E5%8F%98%E8%A7%84%E5%BE%8B"><span class="nav-number">2.1.</span> <span class="nav-text">2.2.1 分情景人口时空演变规律</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%BA%E5%8F%A3%E7%BB%93%E6%9E%84%E5%8A%A8%E6%80%81%E5%8F%98%E5%8C%96%E8%B6%8B%E5%8A%BF"><span class="nav-number">2.2.</span> <span class="nav-text">2.2.2 人口结构动态变化趋势</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8C%BA%E5%9F%9F%E8%A7%86%E8%A7%92%E4%B8%8B%E4%BA%BA%E5%8F%A3%E5%8F%91%E5%B1%95%E5%8F%AF%E6%8C%81%E7%BB%AD%E6%80%A7%E7%BB%BC%E5%90%88%E8%AF%84%E4%BB%B7"><span class="nav-number">3.</span> <span class="nav-text">2.3区域视角下人口发展可持续性综合评价</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%9C%E5%93%81%E7%89%B9%E7%82%B9"><span class="nav-number"></span> <span class="nav-text">3 作品特点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%BF%E7%9C%9F%E6%80%A7"><span class="nav-number">1.</span> <span class="nav-text">3.1 仿真性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BE%E4%BC%9A%E7%8E%B0%E5%AE%9E%E6%80%A7"><span class="nav-number">2.</span> <span class="nav-text">3.2 社会现实性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B4%E8%A7%82%E5%8F%AF%E8%A7%86%E6%80%A7"><span class="nav-number">3.</span> <span class="nav-text">3.2 直观可视性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%84%8F%E4%B9%89%E5%8F%8A%E5%B1%95%E6%9C%9B"><span class="nav-number"></span> <span class="nav-text">4 意义及展望</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

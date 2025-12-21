@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Python 两种并发机制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="threading or multiprocessing?">
+<meta property="og:url" content="https://atffang.github.io/2025/02/26/threading%20or%20multiprocessing/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="Python 两种并发机制">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-26T02:06:23.000Z">
+<meta property="article:modified_time" content="2025-05-09T02:35:29.499Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2025/02/26/threading%20or%20multiprocessing/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>threading or multiprocessing? | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/02/26/threading%20or%20multiprocessing/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          threading or multiprocessing?
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-02-26 10:06:23" itemprop="dateCreated datePublished" datetime="2025-02-26T10:06:23+08:00">2025-02-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-09 10:35:29" itemprop="dateModified" datetime="2025-05-09T10:35:29+08:00">2025-05-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/" itemprop="url" rel="index"><span itemprop="name">编程学习-Python</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Python 两种并发机制 <span id="more"></span> #### Threading</p>
+<p><strong>threading（线程编程）</strong>
+是一种通过在程序中创建多个执行单元（线程），来实现并发执行的技术。线程共享同一个进程的内存空间，并且可以并行处理任务，因此能够更好地利用多核CPU资源。</p>
+<p><strong>线程</strong>是进程中的一个轻量级执行单元，一个进程可以包含多个线程。这些线程共享相同的内存和资源（如文件句柄），但每个线程有自己的栈和指令指针。由于共享内存，线程间通信非常快速，但也更容易出现竞争条件、死锁等同步问题。</p>
+<p><strong>threading经典应用场景</strong> +
+<strong>I/O操作</strong>：在等待I/O操作完成（如文件读写、网络请求）时，其他线程可以继续执行任务，提高程序响应速度。
++
+<strong>并发任务</strong>：例如图形界面的响应式编程、并行数据处理。</p>
+<p><strong>An Example</strong>： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fetch_data</span>(<span class="params">url</span>):</span><br><span class="line">	response = request.get(url)</span><br><span class="line">	<span class="built_in">print</span>(<span class="string">f&#x27;<span class="subst">&#123;response.status_code&#125;</span>&#x27;</span>)</span><br><span class="line"></span><br><span class="line">urls = [url1, url2……]</span><br><span class="line"></span><br><span class="line">threads = []</span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">	t = threading.Thread(target=fetch_data, args=(url,))</span><br><span class="line">	threads.append(t)</span><br><span class="line">	t.start()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> threads:</span><br><span class="line">	t.join()</span><br></pre></td></tr></table></figure>
+多进程虽然能够处理并行任务，但每个进程的上下文切换会有额外的开销，这会影响程序的性能。因此，此类简单的请求工作更加适合使用多线程。</p>
+<p><strong>optimize</strong>： concurrent 是 Python
+标准库中的一个模块，专门用于支持
+<strong>并发编程</strong>。它提供了高层次的接口来管理多个任务的并发执行，主要包括线程和进程池的管理。
+如果存在大量需要访问的url，可以使用concurrent.futures进行线程池创建。通过线程池，可以控制同时运行的线程数，避免一次性创建过多的线程。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> concurrent.futures</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="comment"># 任务函数：访问URL</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fetch_data</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        response = requests.get(url)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Finished download from: <span class="subst">&#123;url&#125;</span>, Status Code: <span class="subst">&#123;response.status_code&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">except</span> requests.RequestException <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Error downloading <span class="subst">&#123;url&#125;</span>: <span class="subst">&#123;e&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># URL列表（假设有1000个）</span></span><br><span class="line">urls = [<span class="string">&quot;http://example.com&quot;</span> <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1000</span>)]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用ThreadPoolExecutor</span></span><br><span class="line"><span class="keyword">with</span> concurrent.futures.ThreadPoolExecutor(max_workers=<span class="number">20</span>) <span class="keyword">as</span> executor:</span><br><span class="line">    <span class="comment"># 提交所有任务</span></span><br><span class="line">    futures = [executor.submit(fetch_data, url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 等待任务完成</span></span><br><span class="line">    <span class="keyword">for</span> future <span class="keyword">in</span> concurrent.futures.as_completed(futures):</span><br><span class="line">        future.result()  <span class="comment"># 可以获取返回结果，若不关心结果，可以省略这行</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;All downloads complete.&quot;</span>)</span><br></pre></td></tr></table></figure> #### Multiprocessing</p>
+<p><strong>multiprocessing（多进程编程）</strong>
+是通过在程序中创建多个独立的进程，每个进程都有自己的内存空间、资源和执行单元，以实现并行处理。多进程能够避免线程竞争带来的问题，因为各个进程之间是独立的。</p>
+<p><strong>进程</strong>是操作系统中资源分配的基本单位。每个进程都有自己的地址空间、文件句柄、栈、堆等资源。不同于线程，进程之间不共享内存，这意味着它们更加安全，但也需要更复杂的通信方式（如管道、消息队列）来进行数据交换。</p>
+<p><strong>multiprocessing的典型应用场景：</strong> +
+<strong>高可靠性任务</strong>：当某些任务必须完全隔离，不能因为其他任务的崩溃而被干扰时（如服务器进程、数据库进程等）。
++
+<strong>CPU密集型任务</strong>：需要大量的计算资源时（如图像处理、科学计算），使用多进程可以充分利用多核CPU的性能。</p>
+<p>关于multiprocessing的基础应用，在之前的文章《python并行运算》中做过大致介绍。
+<strong>An Example</strong> 并行矩阵运算： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> multiprocessing <span class="keyword">as</span> mp</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义矩阵计算任务</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">matrix_square</span>(<span class="params">matrix</span>):</span><br><span class="line">    <span class="keyword">return</span> np.dot(matrix, matrix)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 创建一个随机矩阵</span></span><br><span class="line">    matrices = [np.random.rand(<span class="number">1000</span>, <span class="number">1000</span>) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">4</span>)]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 使用进程池进行并行计算</span></span><br><span class="line">    <span class="keyword">with</span> mp.Pool(processes=<span class="number">4</span>) <span class="keyword">as</span> pool:</span><br><span class="line">        results = pool.<span class="built_in">map</span>(matrix_square, matrices)</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Matrix calculations completed.&quot;</span>)</span><br></pre></td></tr></table></figure>
+并行蒙特卡洛模拟： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> multiprocessing <span class="keyword">as</span> mp</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义蒙特卡罗模拟任务</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">monte_carlo_pi</span>(<span class="params">num_samples</span>):</span><br><span class="line">    inside_circle = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_samples):</span><br><span class="line">        x, y = random.random(), random.random()</span><br><span class="line">        <span class="keyword">if</span> x**<span class="number">2</span> + y**<span class="number">2</span> &lt;= <span class="number">1</span>:</span><br><span class="line">            inside_circle += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> inside_circle / num_samples * <span class="number">4</span>  <span class="comment"># 估算π值</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 每个进程处理100万次采样</span></span><br><span class="line">    num_samples = <span class="number">1000000</span></span><br><span class="line">    num_processes = <span class="number">4</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 使用进程池并行运行蒙特卡罗模拟</span></span><br><span class="line">    <span class="keyword">with</span> mp.Pool(processes=num_processes) <span class="keyword">as</span> pool:</span><br><span class="line">        pi_estimates = pool.<span class="built_in">map</span>(monte_carlo_pi, [num_samples] * num_processes)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 计算平均值</span></span><br><span class="line">    pi_average = <span class="built_in">sum</span>(pi_estimates) / num_processes</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Estimated Pi: <span class="subst">&#123;pi_average&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure></p>
+<p><strong>optimize</strong>： concurrent.futures的ProcessPoolExecutor
+，类似于multiprocessing.Pool <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> concurrent.futures</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义蒙特卡罗模拟任务</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">monte_carlo_pi</span>(<span class="params">num_samples</span>):</span><br><span class="line">    inside_circle = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_samples):</span><br><span class="line">        x, y = random.random(), random.random()</span><br><span class="line">        <span class="keyword">if</span> x**<span class="number">2</span> + y**<span class="number">2</span> &lt;= <span class="number">1</span>:</span><br><span class="line">            inside_circle += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> inside_circle / num_samples * <span class="number">4</span>  <span class="comment"># 估算π值</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    num_samples = <span class="number">1000000</span>  <span class="comment"># 每个进程采样的数量</span></span><br><span class="line">    num_processes = <span class="number">4</span>      <span class="comment"># 进程数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 使用 ProcessPoolExecutor 并行执行任务</span></span><br><span class="line">    <span class="keyword">with</span> concurrent.futures.ProcessPoolExecutor(max_workers=num_processes) <span class="keyword">as</span> executor:</span><br><span class="line">        futures = [executor.submit(monte_carlo_pi, num_samples) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_processes)]</span><br><span class="line">        pi_estimates = [f.result() <span class="keyword">for</span> f <span class="keyword">in</span> concurrent.futures.as_completed(futures)]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 计算平均估算值</span></span><br><span class="line">    pi_average = <span class="built_in">sum</span>(pi_estimates) / num_processes</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Estimated Pi: <span class="subst">&#123;pi_average&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure></p>
+<h4 id="concurrent.features优势">concurrent.features优势</h4>
+<ol type="1">
+<li><p><strong>统一接口</strong>：无论是使用 ThreadPoolExecutor 还是
+ProcessPoolExecutor，它们的 API
+是统一的，可以很方便地根据任务类型选择是使用线程还是进程。</p></li>
+<li><p><strong>简化代码</strong>：相比
+multiprocessing.Pool，concurrent.futures 提供了更高层的接口，如 submit()
+和 as_completed()，减少了复杂度。</p></li>
+<li><p><strong>Future 对象</strong>：submit() 方法返回 Future
+对象，允许在任务完成后方便地获取结果、检查任务状态或处理异常。</p></li>
+<li><p><strong>自动资源管理</strong>：concurrent.futures
+支持上下文管理（with
+语句），能够自动管理进程或线程池的生命周期，避免资源泄漏。</p></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/22/JavaScript%E5%BC%82%E6%AD%A5%E6%9C%BA%E5%88%B6%E6%B5%85%E6%9E%90/" rel="prev" title="JavaScript异步机制浅析">
+      <i class="fa fa-chevron-left"></i> JavaScript异步机制浅析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/03/06/GNNWR/" rel="next" title="GNNWR">
+      GNNWR <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#concurrent.features%E4%BC%98%E5%8A%BF"><span class="nav-number">1.</span> <span class="nav-text">concurrent.features优势</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

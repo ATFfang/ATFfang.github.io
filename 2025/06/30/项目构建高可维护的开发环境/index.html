@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="浅试docker：为 AI 项目构建高可维护的开发环境">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅试docker：为 AI 项目构建高可维护的开发环境">
+<meta property="og:url" content="https://atffang.github.io/2025/06/30/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%BB%B4%E6%8A%A4%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="浅试docker：为 AI 项目构建高可维护的开发环境">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-30T12:49:55.000Z">
+<meta property="article:modified_time" content="2025-06-30T13:14:28.909Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2025/06/30/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%BB%B4%E6%8A%A4%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>浅试docker：为 AI 项目构建高可维护的开发环境 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/06/30/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%BB%B4%E6%8A%A4%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          浅试docker：为 AI 项目构建高可维护的开发环境
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-06-30 20:49:55 / 修改时间：21:14:28" itemprop="dateCreated datePublished" datetime="2025-06-30T20:49:55+08:00">2025-06-30</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>浅试docker：为 AI 项目构建高可维护的开发环境 <span id="more"></span>
+我的需求是一个带cuda驱动的python容器，redis容器、psql容器、minio容器，因此，我指定docker-compose和dockerfile，他们之间的区别如下表：</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 44%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>方面</th>
+<th>Dockerfile</th>
+<th>Docker Compose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心作用</td>
+<td>定义单个镜像的构建过程，描述从基础镜像开始，安装软件、拷贝文件、配置环境等步骤，生成自定义镜像。</td>
+<td>定义多个容器的编排和运行，指定哪些镜像或 Dockerfile
+要启动，容器之间如何连接、挂载卷、端口映射等。</td>
+</tr>
+<tr>
+<td>工作方式</td>
+<td>通过 docker build 从 Dockerfile 构建镜像。</td>
+<td>通过 docker-compose up 根据配置启动一个或多个容器。</td>
+</tr>
+<tr>
+<td>是否拉取镜像</td>
+<td>可以基于已有镜像（FROM xxx），也可以从头开始构建。</td>
+<td>可以使用已有镜像（image: xxx）或基于 Dockerfile 构建镜像（build:
+xxx）。</td>
+</tr>
+<tr>
+<td>功能范围</td>
+<td>只负责镜像构建（静态），镜像里包含运行环境和文件。</td>
+<td>负责多容器应用的启动与管理（动态），包括网络、依赖关系、环境变量等。</td>
+</tr>
+<tr>
+<td>示例</td>
+<td>写一个 Python 镜像，安装依赖，拷贝代码。</td>
+<td>启动数据库、缓存、Python 服务容器，并让它们协同工作。</td>
+</tr>
+</tbody>
+</table>
+<p>编写<strong>Docker-compose:</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3.8&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">app:</span></span><br><span class="line">    <span class="attr">build:</span> <span class="string">.</span>  </span><br><span class="line">    <span class="attr">runtime:</span> <span class="string">nvidia</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">labsecurity_app</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">redis</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">postgres</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">minio</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./app:/app</span></span><br><span class="line">    <span class="attr">working_dir:</span> <span class="string">/app</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8888:8888&quot;</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&quot;tail&quot;</span>, <span class="string">&quot;-f&quot;</span>, <span class="string">&quot;/dev/null&quot;</span>]</span><br><span class="line"></span><br><span class="line">  <span class="attr">redis:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">redis:7</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">labsecurity_redis</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;6379:6379&quot;</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">minio:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">minio/minio</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">labsecurity_minio</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;9000:9000&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;9001:9001&quot;</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">MINIO_ROOT_USER:</span> <span class="string">minioadmin</span></span><br><span class="line">      <span class="attr">MINIO_ROOT_PASSWORD:</span> <span class="string">minioadmin</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">server</span> <span class="string">/data</span> <span class="string">--console-address</span> <span class="string">&quot;:9001&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">minio_data:/data</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">postgres:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">postgres:17</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">labsecurity_postgres</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">POSTGRES_DB:</span> <span class="string">labdb</span></span><br><span class="line">      <span class="attr">POSTGRES_USER:</span> <span class="string">labuser</span></span><br><span class="line">      <span class="attr">POSTGRES_PASSWORD:</span> <span class="string">labpass</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;5432:5432&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">pgdata:/var/lib/postgresql/data</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">pgdata:</span></span><br><span class="line">  <span class="attr">minio_data:</span></span><br></pre></td></tr></table></figure>
+<p>编写<strong>Dockerfile:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> nvidia<span class="operator">/</span>cuda:<span class="number">12.8</span><span class="number">.0</span><span class="operator">-</span>cudnn<span class="operator">-</span>runtime<span class="operator">-</span>ubuntu22<span class="number">.04</span></span><br><span class="line"></span><br><span class="line">RUN apt<span class="operator">-</span><span class="keyword">get</span> <span class="keyword">update</span> <span class="operator">&amp;&amp;</span> apt<span class="operator">-</span><span class="keyword">get</span> install <span class="operator">-</span>y python3 python3<span class="operator">-</span>pip</span><br><span class="line"></span><br><span class="line">WORKDIR <span class="operator">/</span>app</span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span> requirements.txt .</span><br><span class="line"></span><br><span class="line">RUN pip install torch<span class="operator">=</span><span class="operator">=</span><span class="number">2.6</span><span class="number">.0</span> torchvision<span class="operator">=</span><span class="operator">=</span><span class="number">0.21</span><span class="number">.0</span> torchaudio<span class="operator">=</span><span class="operator">=</span><span class="number">2.6</span><span class="number">.0</span> <span class="comment">--index-url https://download.pytorch.org/whl/cu126</span></span><br><span class="line">RUN pip install <span class="comment">--no-cache-dir -r requirements.txt</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span> .<span class="operator">/</span>app <span class="operator">/</span>app</span><br><span class="line"></span><br><span class="line">CMD [&quot;python3&quot;, &quot;main.py&quot;]</span><br></pre></td></tr></table></figure>
+<p>例如，在python中通过<code>minio:9000</code>，在本机中可以通过<code>http://localhost:9001/</code>访问。</p>
+<h3 id="docker快速构建">docker快速构建</h3>
+<ol type="1">
+<li>下载docker
+desktop，对于分盘的windows电脑，建议迁移一下docker位置</li>
+<li>换源，我这里修改配置文件为：</li>
+</ol>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;builder&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;gc&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;defaultKeepStorage&quot;</span><span class="punctuation">:</span> <span class="string">&quot;20GB&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;experimental&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;https://docker.xuanyuan.me&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<ol start="3" type="1">
+<li><p>构建镜像：<code>docker compose build</code></p></li>
+<li><p>启动容器服务：<code>docker compose up -d</code>
+没有下载过dockert-compose中的容器的会先下载</p></li>
+<li><p>查看服务状态：<code>docker ps</code> -a <img
+src="https://gcnaq17oc64n.feishu.cn/space/api/box/stream/download/asynccode/?code=NGI2NTJlZWU1OTExOGMzODgwMjAzZTM1NGJiMjhkNWNfZnA5ZE9tZHlwdWdhT3BOZjVtcVhzckd2Uk9Ma2pwdVRfVG9rZW46T2hBc2JGaHRHbzAyMEV4ZjAwZWMzSFYxbkloXzE3NTEyODkwNzk6MTc1MTI5MjY3OV9WNA" /></p></li>
+<li><p>进入python容器：<code>docker exec -it labsecurity_app bash</code></p></li>
+<li><p>测试一下cuda环境是否可用，运行脚本：</p></li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.is_available())</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.get_device_name(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
+<ol start="8" type="1">
+<li>结束所有服务： <code>docker-compose stop</code>
+开始所有服务：<code>docker-compose start</code></li>
+<li>我在docker-compose里面挂载了：</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">volumes:</span><br><span class="line">    - ./app:/app</span><br></pre></td></tr></table></figure>
+<p>容器能看到本机的 <code>./app</code>
+目录，点击vscode左下方的&gt;&lt;，选择Attach to Running
+Container，进入python容器，就可以愉快的开发了</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/29/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%AD%A6java2/" rel="prev" title="从0开始学java 02 ：委托与策略模式">
+      <i class="fa fa-chevron-left"></i> 从0开始学java 02 ：委托与策略模式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/07/08/%E8%BF%9B%E7%A8%8B%E5%AE%88%E6%8A%A4/" rel="next" title="进程守护">
+      进程守护 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">docker快速构建</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

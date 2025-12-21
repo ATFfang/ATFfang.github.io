@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="介绍一下Python类的装饰器和魔法方法，以及参数的下划线前缀">
+<meta property="og:type" content="article">
+<meta property="og:title" content="详解Python类的装饰器和魔法方法">
+<meta property="og:url" content="https://atffang.github.io/2025/03/30/%E8%AF%A6%E8%A7%A3Python%E7%B1%BB%E7%9A%84%E8%A3%85%E9%A5%B0%E5%99%A8%E5%92%8C%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="介绍一下Python类的装饰器和魔法方法，以及参数的下划线前缀">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-03-30T07:51:52.000Z">
+<meta property="article:modified_time" content="2025-05-09T02:58:08.496Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2025/03/30/%E8%AF%A6%E8%A7%A3Python%E7%B1%BB%E7%9A%84%E8%A3%85%E9%A5%B0%E5%99%A8%E5%92%8C%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>详解Python类的装饰器和魔法方法 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/03/30/%E8%AF%A6%E8%A7%A3Python%E7%B1%BB%E7%9A%84%E8%A3%85%E9%A5%B0%E5%99%A8%E5%92%8C%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          详解Python类的装饰器和魔法方法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-30 15:51:52" itemprop="dateCreated datePublished" datetime="2025-03-30T15:51:52+08:00">2025-03-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-09 10:58:08" itemprop="dateModified" datetime="2025-05-09T10:58:08+08:00">2025-05-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/" itemprop="url" rel="index"><span itemprop="name">编程学习-Python</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍一下Python类的装饰器和魔法方法，以及参数的下划线前缀
+<span id="more"></span>
+一个记性并不好的人将在工作中学习到的碎片化的知识统筹起来必须要依靠记录，非常不幸的是鄙人在记忆力不强的前提下依然没有良好的记录习惯，加之跑通万岁的实用主义，使得写的代码总是看起来比较低级而缺乏优雅的气息，与本人气质强烈不符。痛定思痛，痛改前非，先从一个相对基础但极其重要的机制开始记起：Python中类的装饰器与魔法方法。
+### 引言 #### 类 在 Python
+中，类是面向对象编程（OOP）的核心概念，它用于定义对象的蓝图。类封装了数据（属性）和行为（方法），通过类可以创建多个具有相同结构的实例对象。通过使用类，代码可以更具组织性和模块化，易于扩展和维护。</p>
+<p>在 Python 中定义一个基本的类非常简单，使用关键字 <code>class</code>
+进行定义。以下是一个简单的类定义的示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line">    <span class="comment"># 这是一个类属性</span></span><br><span class="line">    class_variable = <span class="string">&quot;I am a class variable&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这是初始化方法（构造函数），当类实例化时会自动调用</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, value</span>):</span><br><span class="line">        <span class="comment"># 这是实例属性</span></span><br><span class="line">        self.instance_variable = value</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这是一个实例方法</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">instance_method</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;This is an instance method and instance_variable is: <span class="subst">&#123;self.instance_variable&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这是一个类方法，使用 @classmethod 装饰器定义</span></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">class_method</span>(<span class="params">cls</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;This is a class method and class_variable is: <span class="subst">&#123;cls.class_variable&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这是一个静态方法，使用 @staticmethod 装饰器定义</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">static_method</span>():</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;This is a static method&quot;</span></span><br></pre></td></tr></table></figure></p>
+<p>在上述代码中，展现了类的各个组成部分为： - <strong>类属性</strong>：
+-
+类属性是类级别的属性，它们对于所有实例都是共享的。类属性通常定义在类体中，独立于任何方法。
+- 在上例中，<code>class_variable</code>
+就是一个类属性，所有对象共享同一个值。</p>
+<ul>
+<li><strong>实例属性</strong>：
+<ul>
+<li>实例属性是在类的实例化过程中通过 <code>__init__()</code>
+方法（也叫构造函数）动态创建的，每个实例有独立的属性值。</li>
+<li>通过
+<code>self.instance_variable = value</code>，我们为每个实例赋予不同的
+<code>instance_variable</code> 值。</li>
+</ul></li>
+<li><strong>实例方法</strong>：
+<ul>
+<li>实例方法是类中定义的普通方法，它们操作实例属性，且必须接受参数
+<code>self</code>，<code>self</code> 代表的是实例本身。</li>
+<li>实例方法通常用于定义对象的行为。</li>
+</ul></li>
+<li><strong>类方法</strong>：
+<ul>
+<li>类方法是作用于类本身的方法，使用 <code>@classmethod</code>
+装饰器定义。它接收 <code>cls</code>
+参数，表示类对象，而不是实例对象。</li>
+<li>类方法可以访问和修改类属性。</li>
+</ul></li>
+<li><strong>静态方法</strong>：
+<ul>
+<li>静态方法是类中的方法，但它既不依赖类属性也不依赖实例属性。静态方法使用<code>@staticmethod</code>
+装饰器定义，通常用于执行与类相关但不需要访问类或实例的逻辑。</li>
+</ul></li>
+</ul>
+<p>通过实例化类，可以获得对象： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 实例化类，创建对象</span></span><br><span class="line">obj1 = MyClass(<span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">obj2 = MyClass(<span class="string">&quot;World&quot;</span>)</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><strong>类</strong>
+是抽象的模板，用于创建对象，它定义了对象的属性和行为。</li>
+<li><strong>对象</strong>
+是类的实例，每个对象都有自己独立的属性值和行为表现。</li>
+</ul>
+<h4 id="类的继承inheritance">类的继承（Inheritance）</h4>
+<p>继承是面向对象编程的核心概念之一，它允许一个类继承另一个类的属性和方法，从而避免代码重复，并能够对现有的类进行扩展。被继承的类称为<strong>父类（基类或超类）</strong>，继承的类称为<strong>子类（派生类）</strong>。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义父类</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Animal</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, name</span>):</span><br><span class="line">        self.name = name</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;self.name&#125;</span> makes a sound.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义子类，继承父类 Animal</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Dog</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;self.name&#125;</span> barks.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cat</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;self.name&#125;</span> meows.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 实例化子类</span></span><br><span class="line">dog = Dog(<span class="string">&quot;Buddy&quot;</span>)</span><br><span class="line">cat = Cat(<span class="string">&quot;Whiskers&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(dog.speak())  <span class="comment"># 输出: Buddy barks.</span></span><br><span class="line"><span class="built_in">print</span>(cat.speak())  <span class="comment"># 输出: Whiskers meows.</span></span><br></pre></td></tr></table></figure></p>
+<p>继承的特点： -
+子类继承父类的所有属性和方法，并且可以<strong>重写</strong>（override）父类的方法。
+- 可以通过 <code>super()</code> 调用父类的方法。 -
+支持多重继承，子类可以从多个父类继承。</p>
+<h4 id="类的多态polymorphism">类的多态（Polymorphism）</h4>
+<p>多态允许不同的类实现相同的方法，而表现出不同的行为。它是一种编程能力，能够让相同的接口对不同的数据类型做出不同的响应，具体行为由具体的对象来决定。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Animal</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError(<span class="string">&quot;Subclass must implement this method.&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Dog</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Woof!&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cat</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Meow!&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">animal_sound</span>(<span class="params">animal</span>):</span><br><span class="line">    <span class="built_in">print</span>(animal.speak())</span><br><span class="line"></span><br><span class="line">dog = Dog()</span><br><span class="line">cat = Cat()</span><br><span class="line"></span><br><span class="line">animal_sound(dog)  <span class="comment"># 输出: Woof!</span></span><br><span class="line">animal_sound(cat)  <span class="comment"># 输出: Meow!</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="抽象类abstract-class">抽象类（Abstract Class）</h4>
+<p>抽象类是不能被实例化的类，它用于定义方法的模板，而子类必须实现这些方法。Python
+通过 <code>abc</code> 模块中的 <code>ABC</code> 类和
+<code>abstractmethod</code> 装饰器来实现抽象类。 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Animal</span>(<span class="title class_ inherited__">ABC</span>):</span><br><span class="line"><span class="meta">    @abstractmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Dog</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Woof!&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cat</span>(<span class="title class_ inherited__">Animal</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">speak</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Meow!&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># animal = Animal()  # 这会抛出错误，因为抽象类不能实例化</span></span><br><span class="line">dog = Dog()</span><br><span class="line"><span class="built_in">print</span>(dog.speak())  <span class="comment"># 输出: Woof!</span></span><br></pre></td></tr></table></figure> -
+抽象类定义了抽象方法，子类必须实现这些抽象方法。 -
+抽象类提供了代码结构的基础框架，具体实现由子类负责。</p>
+<h4 id="组合composition">组合（Composition）</h4>
+<p>组合是一种设计原则，通过将对象的实例作为其他类的属性来实现。这种方法允许类之间的松散耦合。相比继承，组合通常提供了更大的灵活性。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Engine</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">start</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Engine started&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Car</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        self.engine = Engine()  <span class="comment"># 将 Engine 类实例作为 Car 的属性</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">start</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> self.engine.start()</span><br><span class="line"></span><br><span class="line">car = Car()</span><br><span class="line"><span class="built_in">print</span>(car.start())  <span class="comment"># 输出: Engine started</span></span><br></pre></td></tr></table></figure> ### 装饰器 #### 装饰器的定义 在 Python
+中，<strong>装饰器</strong>（Decorator）是一种函数，允许你在不修改原有函数代码的情况下，动态地增加或修改该函数的功能。简单来说，装饰器是用来”包装”其他函数的函数，它允许你在运行时增加函数的功能，通常用于日志记录、权限检查、缓存、计时等功能。</p>
+<p>装饰器本质上是一个函数，它接受一个函数作为输入，并返回一个新的函数（通常是原函数的增强版本）。这种方式可以帮助我们在不改变原函数代码的前提下，对其进行修改或扩展。</p>
+<p>在 Python 中，装饰器使用 <code>@decorator_name</code>
+语法应用到一个函数上。这个语法等价于调用装饰器函数并将目标函数作为参数传递给它。</p>
+<p>下面是一系列针对装饰器的例子： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> functools</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个装饰器函数decorator</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">decorator</span>(<span class="params">func</span>):</span><br><span class="line">    <span class="comment"># 我们用函数wrapper来代表被装饰后的func函数，最后返回wrapper</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">*args, **kwargs</span>):</span><br><span class="line">        start_time = time.time()</span><br><span class="line">        result = func(*args, **kwargs)</span><br><span class="line">        end_time = time.time()</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&#x27;<span class="subst">&#123;end_time - start_time&#125;</span>&#x27;</span>)</span><br><span class="line">        <span class="keyword">return</span> result</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br><span class="line"></span><br><span class="line"><span class="comment"># 上面这段代码在wrapper函数外面包裹了一个装饰器函数decorator，</span></span><br><span class="line"><span class="comment"># 使得wrapper函数的运行时间可以被检测。(*args, **kwargs)这两个参数可以代表传入的一切参数。</span></span><br><span class="line"><span class="comment"># 我们来看看如何使用它：</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 先定义一个square函数：</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">square</span>(<span class="params">a, b</span>):</span><br><span class="line">    <span class="keyword">return</span>  a*b</span><br><span class="line"></span><br><span class="line"><span class="comment"># 随后，使用装饰器装饰他，生成一个新的函数</span></span><br><span class="line">decorated_square = decorator(square)</span><br><span class="line"><span class="comment">#print(decorated_square(10,10))</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 实际上，python提供了一个更简单的方法：</span></span><br><span class="line"><span class="meta">@decorator</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">square</span>(<span class="params">a, b</span>):</span><br><span class="line">    <span class="keyword">return</span>  a*b</span><br><span class="line"><span class="comment"># 这样，直接执行square(10,10)，就能输出运行的时间</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 当然，我们也可以定义一个装饰器生成器:</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">timer</span>(<span class="params">threshold</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decorator</span>(<span class="params">func</span>):</span><br><span class="line">        <span class="comment"># 这是一个python中自带的装饰器，可以使得wrapper函数继承func的名字等</span></span><br><span class="line"><span class="meta">        @functools.wraps(<span class="params">func</span>)</span></span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">*args, **kwargs</span>):</span><br><span class="line">            start_time = time.time()</span><br><span class="line">            result = func(*args, **kwargs)</span><br><span class="line">            end_time = time.time()</span><br><span class="line">            <span class="keyword">if</span> start_time - end_time &gt; threshold:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;超时&quot;</span>)</span><br><span class="line">            <span class="keyword">return</span> result</span><br><span class="line">        <span class="keyword">return</span> wrapper</span><br><span class="line">    <span class="keyword">return</span> decorator</span><br><span class="line"></span><br><span class="line"><span class="comment"># 装饰这个函数</span></span><br><span class="line"><span class="meta">@timer(<span class="params"><span class="number">0.1</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sleep_04</span>():</span><br><span class="line">    time.sleep(<span class="number">0.4</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># sleep_04()</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 或者生成一个新函数</span></span><br><span class="line">sleep_04 = timer(<span class="number">0.1</span>)(sleep_04)</span><br><span class="line"><span class="built_in">print</span>(sleep_04.__name__)</span><br></pre></td></tr></table></figure></p>
+<p>装饰器概念：用来装饰其他函数的，即为其他函数添加特定功能的函数
+装饰器的基本原则： 1. 不能修改被装饰函数的源码 2.
+不能修改被装饰函数的调用方式</p>
+<h4 id="类中内置装饰器">类中内置装饰器</h4>
+<p>ython
+类中自带的装饰器是一些内置的、专门用于修改类行为的装饰器。这些装饰器可以帮助你更方便地实现特定的类行为或功能扩展。常见的内置类装饰器包括
+<code>@staticmethod</code>、<code>@classmethod</code>、<code>@property</code>
+和 <code>@abstractmethod</code> 等。</p>
+<h5 id="staticmethod"><span class="citation"
+data-cites="staticmethod">@staticmethod</span></h5>
+<p><code>@staticmethod</code>
+装饰器用于将一个方法声明为静态方法。静态方法属于类本身，而不是类的实例。它不需要访问类实例或类本身，因此不需要传递
+<code>self</code> 或 <code>cls</code>
+参数。静态方法通常用于执行一些与类本身相关的任务，但不需要访问类的属性或实例数据。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">a, b</span>):</span><br><span class="line">        <span class="keyword">return</span> a + b</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调用静态方法</span></span><br><span class="line">result = MyClass.add(<span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(result)  <span class="comment"># 输出: 5</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>特点</strong>： - 静态方法不依赖于类的实例化。 -
+可以通过类名或实例来调用静态方法，但通常通过类名调用。 -
+适用于那些不需要访问实例或类属性的方法。</p>
+<h5 id="classmethod"><span class="citation"
+data-cites="classmethod">@classmethod</span></h5>
+<p><code>@classmethod</code>
+装饰器用于将一个方法声明为类方法。类方法第一个参数是类本身（通常命名为
+<code>cls</code>），而不是实例对象。类方法通常用于访问类属性或修改类状态，而不是实例状态。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line">    count = <span class="number">0</span></span><br><span class="line">    </span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">increment_count</span>(<span class="params">cls</span>):</span><br><span class="line">        cls.count += <span class="number">1</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Count: <span class="subst">&#123;cls.count&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 调用类方法</span></span><br><span class="line">MyClass.increment_count()  <span class="comment"># 输出: Count: 1</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>特点</strong>： -
+类方法不需要类的实例，可以通过类本身直接调用。 - 类方法第一个参数是类
+<code>cls</code>，而不是实例 <code>self</code>。 -
+类方法适用于操作类级别的数据或状态。</p>
+<h5 id="property"><span class="citation"
+data-cites="property">@property</span></h5>
+<p><code>@property</code>
+装饰器用于将一个方法定义为属性。这意味着你可以像访问属性一样访问这个方法，而无需显式调用它。<code>@property</code>
+是一种将类的方法转换为只读属性的方式。 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Circle</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, radius</span>):</span><br><span class="line">        self._radius = radius</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @property</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">radius</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> self._radius</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @radius.setter</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">radius</span>(<span class="params">self, value</span>):</span><br><span class="line">        <span class="keyword">if</span> value &lt; <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">&quot;Radius cannot be negative.&quot;</span>)</span><br><span class="line">        self._radius = value</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @property</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">area</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="number">3.14</span> * self._radius * self._radius</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建圆对象</span></span><br><span class="line">circle = Circle(<span class="number">5</span>)</span><br><span class="line"><span class="built_in">print</span>(circle.area)  <span class="comment"># 输出: 78.5</span></span><br><span class="line">circle.radius = <span class="number">10</span>  <span class="comment"># 使用setter修改半径</span></span><br><span class="line"><span class="built_in">print</span>(circle.area)  <span class="comment"># 输出: 314.0</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>特点</strong> - <code>@property</code> 使方法像属性一样访问。
+- 可以使用 <code>@property</code> 和 <code>@property.setter</code>
+来定义可读和可写的属性。 - 用于将计算逻辑封装成属性访问的形式。</p>
+<h5 id="abstractmethod"><span class="citation"
+data-cites="abstractmethod">@abstractmethod</span></h5>
+<p>详见上文</p>
+<h3 id="魔法方法">魔法方法</h3>
+<h4 id="重要的魔法方法">重要的魔法方法</h4>
+<p>在 Python 中，<strong>魔法方法</strong>（Magic Methods）又称为
+<strong>特殊方法</strong>（Special Methods），是类中以双下划线
+<code>__</code>
+开头和结尾的方法。这些方法允许你对对象进行特定的操作或赋予对象特殊行为，从而让你可以定制
+Python 对象的内建操作，比如加法、字符串表示、索引操作等。</p>
+<p>魔法方法使得 Python
+对象能够参与各种语言层面的操作，如算术运算、比较运算、类型转换、函数调用等，通常这些方法被
+Python 内部调用，但你也可以自定义实现它们以修改对象行为。</p>
+<p><strong><code>__new__(cls)</code></strong>： -
+用于创建对象实例的方法。它通常与 <code>__init__</code>
+一起使用，在实例化对象时首先被调用。<code>__new__</code>
+返回一个新的对象实例，而 <code>__init__</code> 则用来初始化该实例。 -
+当你继承 <code>__new__</code> 方法时，你可以控制对象创建的过程。</p>
+<p><strong><code>__init__(self, ...)</code></strong>： -
+构造器，用于初始化对象实例。<code>__init__</code> 在
+<code>__new__</code> 方法之后调用，并且在对象实例创建后立即执行。 -
+它允许你在对象创建时设置初始属性。</p>
+<p><strong><code>__str__(self)</code></strong>： -
+用于定义对象的字符串表示。当使用 <code>print()</code> 打印对象或使用
+<code>str()</code> 函数时，<code>__str__</code> 方法被调用。 -
+这个方法应该返回一个友好的、可读性强的字符串，用于展示对象的内容。</p>
+<p><strong><code>__getitem__(self, key)</code></strong>： -
+用于定义对象的索引访问（例如 <code>obj[key]</code>）。
+<strong><code>__setitem__(self, key, value)</code></strong>： -
+用于定义对象的索引赋值（例如 <code>obj[key] = value</code>）。
+<strong><code>__delitem__(self, key)</code></strong>： -
+用于定义删除索引元素（例如 <code>del obj[key]</code>）。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyList</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, data</span>):</span><br><span class="line">        self.data = data</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, index</span>):</span><br><span class="line">        <span class="keyword">return</span> self.data[index]</span><br><span class="line"></span><br><span class="line">my_list = MyList([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])</span><br><span class="line"><span class="built_in">print</span>(my_list[<span class="number">1</span>])  <span class="comment"># 输出: 2</span></span><br></pre></td></tr></table></figure></p>
+<p><strong><code>__call__(self, ...)</code></strong>： -
+使对象成为可调用的（例如
+<code>obj()</code>）。当对象像函数一样被调用时，Python 会调用
+<code>obj.__call__()</code> 方法。 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Adder</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, value</span>):</span><br><span class="line">        self.value = value</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> self.value + x</span><br><span class="line"></span><br><span class="line">add_five = Adder(<span class="number">5</span>)</span><br><span class="line"><span class="built_in">print</span>(add_five(<span class="number">3</span>))  <span class="comment"># 输出: 8</span></span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><strong><code>__enter__(self)</code></strong>：
+<ul>
+<li>用于定义进入 <code>with</code> 语句时的行为。</li>
+</ul></li>
+<li><strong><code>__exit__(self, exc_type, exc_val, exc_tb)</code></strong>：
+<ul>
+<li>用于定义退出 <code>with</code> 语句时的行为，处理异常等。
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyContextManager</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__enter__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;Entering the context&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> self</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__exit__</span>(<span class="params">self, exc_type, exc_val, exc_tb</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;Exiting the context&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> exc_type:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;Exception: <span class="subst">&#123;exc_val&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> MyContextManager():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Inside the context&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+</ul></li>
+</ul>
+<h3 id="类的参数下划线前缀">类的参数下划线前缀</h3>
+<h4 id="单下划线-_-前缀">单下划线 <code>_</code> 前缀</h4>
+<p>单下划线是 Python
+的一种约定，用来标识一个变量或方法是“内部使用的”，即它不应该被外部直接访问。这种标识并不影响属性或方法的访问权限，但它是对其他开发者的一种提醒，告诉他们这些属性或方法是属于类的实现细节，应该尽量避免直接使用。</p>
+<h4 id="双下划线-__-前缀">双下划线 <code>__</code> 前缀</h4>
+<p>双下划线前缀通常用于表示变量或方法是类的“私有”成员。它使得这些属性或方法不会被外部直接访问，而是通过名称修饰（name
+mangling）进行修改，使其在外部不可直接访问。这种命名约定旨在避免类的子类或外部代码意外覆盖或访问这些“私有”成员。</p>
+<p><strong>用途：</strong> - 强制私有化（name mangling）——Python
+在名称前加上 <code>_ClassName</code>，使得外部不容易访问这些变量或方法。
+- 通过这种方式，Python
+希望防止类的外部代码直接访问和修改这些变量，但仍然允许子类通过继承来访问和修改这些变量。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        self.__private_value = <span class="number">100</span>  <span class="comment"># 私有属性</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__private_method</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;This is a private method.&quot;</span>)</span><br><span class="line"></span><br><span class="line">obj = MyClass()</span><br><span class="line"><span class="built_in">print</span>(obj.__private_value)  <span class="comment"># 报错: AttributeError</span></span><br><span class="line">obj.__private_method()  <span class="comment"># 报错: AttributeError</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/29/%E5%B1%80%E5%9F%9F%E7%BD%91%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1%E5%99%A8Docker%E4%B8%8Bpsql%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98/" rel="prev" title="局域网访问服务器Docker下psql数据库的若干问题">
+      <i class="fa fa-chevron-left"></i> 局域网访问服务器Docker下psql数据库的若干问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/05/09/%E5%B7%A5%E5%8E%82%E5%87%BD%E6%95%B0/" rel="next" title="工厂函数与工厂方法">
+      工厂函数与工厂方法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E7%BB%A7%E6%89%BFinheritance"><span class="nav-number">1.</span> <span class="nav-text">类的继承（Inheritance）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E5%A4%9A%E6%80%81polymorphism"><span class="nav-number">2.</span> <span class="nav-text">类的多态（Polymorphism）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BBabstract-class"><span class="nav-number">3.</span> <span class="nav-text">抽象类（Abstract Class）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%84%E5%90%88composition"><span class="nav-number">4.</span> <span class="nav-text">组合（Composition）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E4%B8%AD%E5%86%85%E7%BD%AE%E8%A3%85%E9%A5%B0%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">类中内置装饰器</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#staticmethod"><span class="nav-number">5.1.</span> <span class="nav-text">@staticmethod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#classmethod"><span class="nav-number">5.2.</span> <span class="nav-text">@classmethod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#property"><span class="nav-number">5.3.</span> <span class="nav-text">@property</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#abstractmethod"><span class="nav-number">5.4.</span> <span class="nav-text">@abstractmethod</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95"><span class="nav-number"></span> <span class="nav-text">魔法方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%9A%84%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">重要的魔法方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E5%8F%82%E6%95%B0%E4%B8%8B%E5%88%92%E7%BA%BF%E5%89%8D%E7%BC%80"><span class="nav-number"></span> <span class="nav-text">类的参数下划线前缀</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E4%B8%8B%E5%88%92%E7%BA%BF-_-%E5%89%8D%E7%BC%80"><span class="nav-number">1.</span> <span class="nav-text">单下划线 _ 前缀</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%8C%E4%B8%8B%E5%88%92%E7%BA%BF-__-%E5%89%8D%E7%BC%80"><span class="nav-number">2.</span> <span class="nav-text">双下划线 __ 前缀</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

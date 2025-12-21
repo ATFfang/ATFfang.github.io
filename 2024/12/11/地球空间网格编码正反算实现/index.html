@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="三维网格码计算思路分享。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="地球空间网格编码正反算实现">
+<meta property="og:url" content="https://atffang.github.io/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="三维网格码计算思路分享。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-12-11T11:41:43.000Z">
+<meta property="article:modified_time" content="2024-12-12T08:12:15.000Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>地球空间网格编码正反算实现 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2024/12/11/%E5%9C%B0%E7%90%83%E7%A9%BA%E9%97%B4%E7%BD%91%E6%A0%BC%E7%BC%96%E7%A0%81%E6%AD%A3%E5%8F%8D%E7%AE%97%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          地球空间网格编码正反算实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-12-11 19:41:43" itemprop="dateCreated datePublished" datetime="2024-12-11T19:41:43+08:00">2024-12-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-12-12 16:12:15" itemprop="dateModified" datetime="2024-12-12T16:12:15+08:00">2024-12-12</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>三维网格码计算思路分享。 <span id="more"></span>
+似乎这两年低空经济成为了潮流方向，多了一些政策倾斜。前阵子刚有公司来交流相关事宜，16日华师大又要新成立低空经济研究中心，这两天组里为了这些事情鞍前马后，竟然有些仿佛过年的热闹。我负责的工作是探索其中一小个部分，也是一个非常小众的应用方向：地球空间网格码，该工作目前的理论基础为国标<strong>GBT
+40087-2021 地球空间网格编码规则</strong>。 地球空间网格基于
+GeoSOT(Geographical coordinate global Subdivision based on
+One-dimensioninteger and Two
+ton”power)地球剖分模型,将地球空间统一剖分成不同尺度的网格单元,并按统一编码规则进行标识和表达,构建了网格化的地球空间数据组织参考框架。该框架支持地球表面空间和地球立体空间与地理空间信息的聚合,可有效解决物联网、大数据、云计算中海量空间信息在标识和表达上的唯一性、可读性、尺度性、关联性的瓶颈,实现了多源,多尺度数据网格化高效组织、处理和应用,突破了地理空间信息跨行业应用的技术壁垒,推动地球系统科学的发展。
+具体来说，网格剖分分为经纬度的水平面剖分和高程的垂直剖分。具体过程相对复杂，参见上述国家标准，本文仅分享一些实现步骤。
+#### 1. 经纬度网格剖分 根据国标，经纬度剖分的步骤如下所示： 1.
+将该点经、纬度坐标表示成GB/T16831规定的形式,即A’B’C.D”; 2.
+将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数。即将度|A|由十进制数转换成8
+bit 定长二进制数(A)2, 将分B由一进制数转换成6bit定长二进制数(B)2,
+将秒C由十进制数转换成6bit定长二进制数(C)2,
+将秒以下数D由一进制数转换成11bit定长二进制数(D)2; 3.
+分别将经、纬度坐标度、分、秒及秒以下二进制数(A)2、(B)2、(C)2、(D)2直接拼接成31
+bit定长二进制数(E)2, 即(E)2=(A)2(B)2(C)2(D)2, 分别得到两个 31
+bit定长数经度(EL)2, 和纬度(EB)2; 4. 将纬度(EB)2,前置、经度(EL)2后置,
+采用莫顿交叉的方式生成62bit的混合代码(F)2, 例如若(EB)2为100111
+,(EL)2为011010, 则(EB)2在前, (EL)2在后的莫顿交叉运算结果为(F)2为
+100101101110; 5. 将二进制混合代码(F)2转成四进制编码(F)4; 6.
+根据待求网格的级别m, 将(F)4中后32-m位四进制的码元去掉得到(F’)4; 7.
+根据经度和纬度,前加上G0、G1、G2或G3即可得到网格代码。</p>
+<p>代码实现步骤如下： 定义一个类： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">WGS84coordinate</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, latitude, longitude, elevation</span>):</span><br><span class="line">        self.latitude = latitude</span><br><span class="line">        self.longitude = longitude</span><br><span class="line">        self.elevation = elevation</span><br></pre></td></tr></table></figure></p>
+<p>实现步骤1： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 将该点经、纬度坐标表示成GB/T16831规定的形式,即A&#x27;B&#x27;C.D&quot;;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decimal2dms</span>(<span class="params">self, decimal</span>):</span><br><span class="line">        degrees = <span class="built_in">int</span>(decimal)</span><br><span class="line">        minutes = <span class="built_in">int</span>((<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span>)</span><br><span class="line">        seconds = (<span class="built_in">abs</span>(decimal) - <span class="built_in">abs</span>(degrees)) * <span class="number">60</span></span><br><span class="line">        seconds = (seconds - minutes) * <span class="number">60</span></span><br><span class="line">        seconds_fractional, seconds_integer = math.modf(seconds)</span><br><span class="line">        <span class="keyword">return</span> [<span class="built_in">int</span>(degrees), <span class="built_in">int</span>(minutes), <span class="built_in">int</span>(seconds_integer), seconds_fractional]</span><br></pre></td></tr></table></figure></p>
+<p>实现步骤2,3： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 2. 将该点的坐标按度、分、秒、秒小数部分分别转换为二进制数, 拼为31 bit定长数</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">dms2bit</span>(<span class="params">self, dms</span>):</span><br><span class="line">        <span class="comment"># dms = [degrees, seconds_fractional, seconds_integer]</span></span><br><span class="line">        degrees, minutes, seconds_integer, seconds_fractional = dms</span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees&#125;, 分：&#123;minutes&#125;, 秒整数：&#123;seconds_integer&#125;，秒小数：&#123;seconds_fractional&#125;&quot;)</span></span><br><span class="line">        degrees_bin, minutes_bin, seconds_integer_bin = <span class="string">f&quot;<span class="subst">&#123;degrees:08b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;minutes:06b&#125;</span>&quot;</span>, <span class="string">f&quot;<span class="subst">&#123;seconds_integer:06b&#125;</span>&quot;</span></span><br><span class="line">        seconds_fractional_scaled = <span class="built_in">int</span>(seconds_fractional * <span class="number">2048</span>)</span><br><span class="line">        seconds_fractional_bin = <span class="string">f&quot;<span class="subst">&#123;seconds_fractional_scaled:011b&#125;</span>&quot;</span></span><br><span class="line">        <span class="comment"># print(f&quot;度：&#123;degrees_bin&#125;, 分：&#123;minutes_bin&#125;, 秒整数：&#123;seconds_integer_bin&#125;，秒小数：&#123;seconds_fractional_bin&#125;&quot;)</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#x27;</span>.join([degrees_bin, minutes_bin, seconds_integer_bin, seconds_fractional_bin])</span><br></pre></td></tr></table></figure></p>
+<p>实现步骤4,5： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 3. 将经纬度的编码莫顿交叉,转为四进制编码</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">mortoncross</span>(<span class="params">self</span>):</span><br><span class="line">        latbit = self.dms2bit(self.decimal2dms(self.latitude))</span><br><span class="line">        lonbit = self.dms2bit(self.decimal2dms(self.longitude))</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">assert</span> <span class="built_in">len</span>(latbit) == <span class="number">31</span> <span class="keyword">and</span> <span class="built_in">len</span>(lonbit) == <span class="number">31</span>, <span class="string">&quot;Both binary strings must be 31 bits long.&quot;</span></span><br><span class="line">        interleaved_bits = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">31</span>):</span><br><span class="line">            interleaved_bits.append(latbit[i])</span><br><span class="line">            interleaved_bits.append(lonbit[i])</span><br><span class="line">        bit2 = <span class="string">&#x27;&#x27;</span>.join(interleaved_bits)</span><br><span class="line">        bit4 = <span class="string">&#x27;&#x27;</span>.join(<span class="built_in">str</span>(<span class="built_in">int</span>(bit2[i:i+<span class="number">2</span>], <span class="number">2</span>)) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(bit2), <span class="number">2</span>))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> bit4</span><br></pre></td></tr></table></figure></p>
+<p>实现步骤6,7： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 4. 根据待求网格的级别m,将(F)中后32-m位四进制的码元去掉得到(F);</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">gridcode</span>(<span class="params">self, m</span>):</span><br><span class="line">        bit4 = self.mortoncross()</span><br><span class="line">        gridcode = bit4[:m-<span class="number">32</span>]</span><br><span class="line"></span><br><span class="line">        gridcode = <span class="string">&quot;G0&quot;</span> + gridcode</span><br><span class="line">        <span class="comment"># 高度码实现下面讲。</span></span><br><span class="line">        elevationcode = self.elevationcode(m)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> [gridcode, elevationcode]</span><br></pre></td></tr></table></figure> #### 2. 高程网格剖分 <span
+class="math display">$$n = \frac{\theta_0}{\theta} \log_{1 + \theta_0}
+\left( \frac{H + r_0}{r_0} \right) \tag{5}$$</span></p>
+<p>其中：</p>
+<ul>
+<li>( n ) ——
+从地面向上（或向下）数第n层立体网格，n为整数，地面以上n大于等于0，地面以下
+n &lt; 0；</li>
+<li><span class="math inline"><em>θ</em><sub>0</sub></span>——
+初始划分范围定义的基础网格（1°网格）对应的经（纬）跨度差，单位为弧度（rad）
+<span class="math inline">$\theta_0 = \frac{\pi}{180}$</span></li>
+<li><span class="math inline"><em>θ</em></span> ——
+该网格对应的经（纬）跨度差，单位为弧度（rad）；</li>
+<li><span class="math inline"><em>r</em><sub>0</sub></span> ——
+地球长半轴，单位为米（m），<span
+class="math inline"><em>r</em><sub>0</sub> = 6 378 137</span>；
+去掉层数<span class="math inline"><em>n</em></span> 高位的 0
+形成的编码即为高度域编码。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 计算高度的网格码</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">elevationcode</span>(<span class="params">self, m</span>):</span><br><span class="line">        theta_0 = math.pi / <span class="number">180</span></span><br><span class="line">        theta = GridSpanlist[m-<span class="number">1</span>] * math.pi / <span class="number">180</span></span><br><span class="line">        H = self.elevation</span><br><span class="line">        r_0 = <span class="number">6378137</span></span><br><span class="line">  </span><br><span class="line">        <span class="comment"># 计算公式</span></span><br><span class="line">        n = (theta_0 / theta) * math.log((H + r_0) / r_0, (<span class="number">1</span> + theta_0))</span><br><span class="line">        n = math.floor(n)</span><br><span class="line">        <span class="keyword">if</span> n &lt; <span class="number">0</span>:</span><br><span class="line">            n = <span class="number">0</span></span><br><span class="line">        n = <span class="built_in">str</span>(<span class="built_in">bin</span>(n)[<span class="number">2</span>:])</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(n) &lt; m:</span><br><span class="line">            n = <span class="string">&#x27;0&#x27;</span> * (m - <span class="built_in">len</span>(n)) + n</span><br><span class="line">        n = <span class="string">&quot;H&quot;</span> + n</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> n</span><br></pre></td></tr></table></figure>
+<h4 id="网格码反算">3. 网格码反算</h4>
+<p>这一部分的具体求解国标并没有提及，因此只能尝试自行求解，代码准确性为止，仅供参考：
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GridCode</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, grid_code, elevation_code, m</span>):</span><br><span class="line">        self.grid_code = grid_code</span><br><span class="line">        self.elevation_code = elevation_code</span><br><span class="line">        self.m = m</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__str__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;格网编码：<span class="subst">&#123;self.grid_code, self.elevation_code&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">degridcode_bit2dms</span>(<span class="params">self, binary_str</span>):</span><br><span class="line">        degrees_bin = binary_str[<span class="number">0</span>:<span class="number">8</span>]    <span class="comment"># 前8位是度</span></span><br><span class="line">        minutes_bin = binary_str[<span class="number">8</span>:<span class="number">14</span>]   <span class="comment"># 接下来的6位是分</span></span><br><span class="line">        seconds_integer_bin = binary_str[<span class="number">14</span>:<span class="number">20</span>]  <span class="comment"># 接下来的6位是秒的整数部分</span></span><br><span class="line">        seconds_fractional_bin = binary_str[<span class="number">20</span>:<span class="number">31</span>]  <span class="comment"># 最后的11位是秒的小数部分</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将每个二进制子串转换回整数</span></span><br><span class="line">        degrees = <span class="built_in">int</span>(degrees_bin, <span class="number">2</span>)</span><br><span class="line">        minutes = <span class="built_in">int</span>(minutes_bin, <span class="number">2</span>)</span><br><span class="line">        seconds_integer = <span class="built_in">int</span>(seconds_integer_bin, <span class="number">2</span>)</span><br><span class="line">        seconds_fractional_scaled = <span class="built_in">int</span>(seconds_fractional_bin, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将秒的小数部分恢复为原来的小数值</span></span><br><span class="line">        seconds_fractional = seconds_fractional_scaled / <span class="number">2048</span></span><br><span class="line">        total_seconds = seconds_integer + seconds_fractional</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将秒数转换为分的部分（秒/60）</span></span><br><span class="line">        total_minutes = minutes + total_seconds / <span class="number">60</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将分数转换为度的部分（分/60）</span></span><br><span class="line">        decimal = <span class="built_in">abs</span>(degrees) + total_minutes / <span class="number">60</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> decimal</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 编码反算</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">degridcode</span>(<span class="params">self</span>):</span><br><span class="line">        gridcode = self.grid_code</span><br><span class="line">        gridcode = gridcode[<span class="number">2</span>:]</span><br><span class="line">        gridcode = gridcode.ljust(<span class="number">31</span>, <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line"></span><br><span class="line">        bit2 = <span class="string">&#x27;&#x27;</span>.join(<span class="built_in">bin</span>(<span class="built_in">int</span>(c, <span class="number">4</span>))[<span class="number">2</span>:].zfill(<span class="number">2</span>) <span class="keyword">for</span> c <span class="keyword">in</span> gridcode)</span><br><span class="line"></span><br><span class="line">        latbit = []</span><br><span class="line">        lonbit = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">32</span>):</span><br><span class="line">            latbit.append(bit2[i * <span class="number">2</span> - <span class="number">2</span>])</span><br><span class="line">            lonbit.append(bit2[i * <span class="number">2</span> - <span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">        latcode = <span class="string">&#x27;&#x27;</span>.join(latbit)</span><br><span class="line">        loncode = <span class="string">&#x27;&#x27;</span>.join(lonbit)</span><br><span class="line"></span><br><span class="line">        lat = self.degridcode_bit2dms(latcode)</span><br><span class="line">        lon = self.degridcode_bit2dms(loncode)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> lat, lon</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 高度码反算</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">deelevationcode</span>(<span class="params">self</span>):</span><br><span class="line">        n_binary, m = self.elevation_code, self.m</span><br><span class="line"></span><br><span class="line">        theta_0 = math.pi / <span class="number">180</span></span><br><span class="line">        theta = GridSpanlist[m-<span class="number">1</span>] * math.pi / <span class="number">180</span></span><br><span class="line">        r_0 = <span class="number">6378137</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 高度码反算</span></span><br><span class="line">        n_binary = n_binary[<span class="number">1</span>:]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 将二进制的 n 转换回整数</span></span><br><span class="line">        n = <span class="built_in">int</span>(n_binary, <span class="number">2</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 根据公式反向解码，恢复 H</span></span><br><span class="line">        H = r_0 * (math.exp((n * theta) / theta_0 * math.log(<span class="number">1</span> + theta_0)) - <span class="number">1</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> H</span><br><span class="line">        </span><br><span class="line">    <span class="comment"># 整体反算：</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decode</span>(<span class="params">self</span>):</span><br><span class="line">        lat, lon = self.degridcode()</span><br><span class="line">        H = self.deelevationcode()</span><br><span class="line">        <span class="keyword">return</span> lat, lon, H</span><br></pre></td></tr></table></figure>
+这样做的目的是为了得到网格码的代表性坐标，但是这个坐标到底具体代表了网格码六面体的哪个位置，不得而知。本文仅代表个人的一些探索，代码并不一定正确。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/11/28/DTDC2024/" rel="prev" title="DTDC2024">
+      <i class="fa fa-chevron-left"></i> DTDC2024
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/12/12/%E5%9F%BA%E4%BA%8E%E4%B8%89%E7%BB%B4%E7%BD%91%E6%A0%BC%E7%A0%81LAS%E7%82%B9%E4%BA%91%E7%BD%91%E6%A0%BC%E5%8C%96%E5%AD%98%E5%82%A8%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E6%96%B9%E6%A1%88%E4%BB%8B%E7%BB%8D/" rel="next" title="基于三维网格码LAS点云网格化存储与可视化方案介绍">
+      基于三维网格码LAS点云网格化存储与可视化方案介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E6%A0%BC%E7%A0%81%E5%8F%8D%E7%AE%97"><span class="nav-number">1.</span> <span class="nav-text">3. 网格码反算</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

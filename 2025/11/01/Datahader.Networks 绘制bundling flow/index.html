@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Datahader.Networks 绘制bundling flow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Datahader.Networks 绘制bundling flow">
+<meta property="og:url" content="https://atffang.github.io/2025/11/01/Datahader.Networks%20%E7%BB%98%E5%88%B6bundling%20flow/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="Datahader.Networks 绘制bundling flow">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/中国人口流动.png">
+<meta property="og:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/js.png">
+<meta property="og:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/exam.png">
+<meta property="og:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/part.png">
+<meta property="og:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/final.png">
+<meta property="article:published_time" content="2025-11-01T11:16:07.000Z">
+<meta property="article:modified_time" content="2025-11-05T11:00:19.610Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/中国人口流动.png">
+
+<link rel="canonical" href="https://atffang.github.io/2025/11/01/Datahader.Networks%20%E7%BB%98%E5%88%B6bundling%20flow/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Datahader.Networks 绘制bundling flow | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2025/11/01/Datahader.Networks%20%E7%BB%98%E5%88%B6bundling%20flow/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Datahader.Networks 绘制bundling flow
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-11-01 19:16:07" itemprop="dateCreated datePublished" datetime="2025-11-01T19:16:07+08:00">2025-11-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-11-05 19:00:19" itemprop="dateModified" datetime="2025-11-05T19:00:19+08:00">2025-11-05</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Datahader.Networks 绘制bundling flow <span id="more"></span></p>
+<p>详细文档参见 https://datashader.org/user_guide/Networks.html</p>
+<p>我们曾经介绍了绘制普通流的方式，实际上仅仅是基于贝塞尔曲线做了插值，绘制了类似于“飞机航线”的流线。使用简单的arcgis插件，也可以绘制很不错直观的流图，比如下面我画的中国人口流动图：
+<img src="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/中国人口流动.png"/></p>
+<p>但是这种流绘制方式虽然最为直观、表达最为准确，但有时候（特别是边权差异不大的时候）像进了盘丝洞，从图上无法提炼出太多的信息，因此，甲方要求我对小红书上一个博主绘制的具有聚集效应的流图进行复现，我先试了js库d3:
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">generateSegments</span>(<span class="params">nodes, links</span>) &#123;</span><br><span class="line">  <span class="keyword">let</span> bundle = &#123; <span class="attr">nodes</span>: [], <span class="attr">links</span>: [], <span class="attr">paths</span>: [] &#125;;</span><br><span class="line">  bundle.<span class="property">nodes</span> = nodes.<span class="title function_">map</span>(<span class="function"><span class="params">d</span> =&gt;</span> &#123; d.<span class="property">fx</span> = d.<span class="property">x</span>; d.<span class="property">fy</span> = d.<span class="property">y</span>; <span class="keyword">return</span> d; &#125;);</span><br><span class="line"></span><br><span class="line">  links.<span class="title function_">forEach</span>(<span class="function"><span class="params">d</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> length = <span class="title function_">distance</span>(d.<span class="property">source</span>, d.<span class="property">target</span>);</span><br><span class="line">    <span class="keyword">let</span> total = <span class="title class_">Math</span>.<span class="title function_">round</span>(scales.<span class="title function_">segments</span>(length));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> xscale = d3.<span class="title function_">scaleLinear</span>().<span class="title function_">domain</span>([<span class="number">0</span>, total + <span class="number">1</span>]).<span class="title function_">range</span>([d.<span class="property">source</span>.<span class="property">x</span>, d.<span class="property">target</span>.<span class="property">x</span>]);</span><br><span class="line">    <span class="keyword">let</span> yscale = d3.<span class="title function_">scaleLinear</span>().<span class="title function_">domain</span>([<span class="number">0</span>, total + <span class="number">1</span>]).<span class="title function_">range</span>([d.<span class="property">source</span>.<span class="property">y</span>, d.<span class="property">target</span>.<span class="property">y</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> source = d.<span class="property">source</span>;</span><br><span class="line">    <span class="keyword">let</span> local = [source];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">1</span>; j &lt;= total; j++) &#123;</span><br><span class="line">      <span class="keyword">let</span> target = &#123; <span class="attr">x</span>: <span class="title function_">xscale</span>(j), <span class="attr">y</span>: <span class="title function_">yscale</span>(j) &#125;;</span><br><span class="line">      local.<span class="title function_">push</span>(target);</span><br><span class="line">      bundle.<span class="property">nodes</span>.<span class="title function_">push</span>(target);</span><br><span class="line">      bundle.<span class="property">links</span>.<span class="title function_">push</span>(&#123; source, target &#125;);</span><br><span class="line">      source = target;</span><br><span class="line">    &#125;</span><br><span class="line">    local.<span class="title function_">push</span>(d.<span class="property">target</span>);</span><br><span class="line">    bundle.<span class="property">links</span>.<span class="title function_">push</span>(&#123; source, <span class="attr">target</span>: d.<span class="property">target</span> &#125;);</span><br><span class="line">    bundle.<span class="property">paths</span>.<span class="title function_">push</span>(local);</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> bundle;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>大概实现了下面的场景：
+<img src="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/js.png"/></p>
+<p>不过这种绘制方法仍然无法达到类似的效果，遂抛弃之，找到了该博主处理流数据的库：<strong>datashader</strong>，接下来我们详细讲讲如何利用datashader.Networks进行绘制，先看看user
+guide中对该部分的简介：</p>
+<p>The point and line-segment plotting provided by Datashader can be put
+together in different ways to visualize specific types of data. For
+instance, network graph data, i.e., networks of nodes connected by
+edges, can very naturally be represented by points and lines. Here we
+will show examples of using Datashader’s graph-specific plotting tools,
+focusing on how to visualize very large graphs while allowing any
+portion of the rendering pipeline to replaced with components suitable
+for specific problems.</p>
+<p>Datashader 使用 <strong>Hammer et al. (2009)</strong> 提出的
+“Force-Directed Edge Bundling (FDEB)”
+算法的改进版，让相似或空间上邻近的边“靠拢”成平滑的流线（bundles），既保持结构关系，又提升可读性。</p>
+<p>具体来说，对于每条边，他们会被拆分为多个小段（segments），每个
+segment 是一个可移动的控制点。每个控制点会受到几种力的作用： - 1.
+<strong>内部张力 (Tension)</strong> - 2. <strong>相似边吸引力
+(Attractive force)</strong> - 3. <strong>带宽控制
+(Bandwidth)</strong></p>
+<p>通过多次迭代，方法使得带宽逐次变小，使得流互相靠近，形成束状结构。</p>
+<p>我们来复现一下user guide提供的示例代码 导入包 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> datashader <span class="keyword">as</span> ds</span><br><span class="line"><span class="keyword">import</span> datashader.transfer_functions <span class="keyword">as</span> tf</span><br><span class="line"><span class="keyword">from</span> datashader.layout <span class="keyword">import</span> random_layout, circular_layout, forceatlas2_layout</span><br><span class="line"><span class="keyword">from</span> datashader.bundling <span class="keyword">import</span> connect_edges, hammer_bundle</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> itertools <span class="keyword">import</span> chain</span><br></pre></td></tr></table></figure></p>
+<p>随机生成边与节点 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">np.random.seed(<span class="number">0</span>)</span><br><span class="line">n=<span class="number">100</span></span><br><span class="line">m=<span class="number">20000</span></span><br><span class="line"></span><br><span class="line">nodes = pd.DataFrame([<span class="string">&quot;node&quot;</span>+<span class="built_in">str</span>(i) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(n)], columns=[<span class="string">&#x27;name&#x27;</span>])</span><br><span class="line">edges = pd.DataFrame(np.random.randint(<span class="number">0</span>,<span class="built_in">len</span>(nodes), size=(m, <span class="number">2</span>)), columns=[<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;target&#x27;</span>])</span><br><span class="line"></span><br><span class="line">circular = circular_layout(nodes, uniform=<span class="literal">False</span>)</span><br><span class="line">randomloc = random_layout(nodes)</span><br></pre></td></tr></table></figure></p>
+<p>生成布局与定义一些绘制函数 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">cvsopts = <span class="built_in">dict</span>(plot_height=<span class="number">400</span>, plot_width=<span class="number">400</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">nodesplot</span>(<span class="params">nodes, name=<span class="literal">None</span>, canvas=<span class="literal">None</span>, cat=<span class="literal">None</span></span>):</span><br><span class="line">    canvas = ds.Canvas(**cvsopts) <span class="keyword">if</span> canvas <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> canvas</span><br><span class="line">    aggregator=<span class="literal">None</span> <span class="keyword">if</span> cat <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> ds.count_cat(cat)</span><br><span class="line">    agg=canvas.points(nodes,<span class="string">&#x27;x&#x27;</span>,<span class="string">&#x27;y&#x27;</span>,aggregator)</span><br><span class="line">    <span class="keyword">return</span> tf.spread(tf.shade(agg, cmap=[<span class="string">&quot;#FF3333&quot;</span>]), px=<span class="number">3</span>, name=name)</span><br><span class="line">    </span><br><span class="line">forcedirected = forceatlas2_layout(nodes, edges)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">edgesplot</span>(<span class="params">edges, name=<span class="literal">None</span>, canvas=<span class="literal">None</span></span>):</span><br><span class="line">    canvas = ds.Canvas(**cvsopts) <span class="keyword">if</span> canvas <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">else</span> canvas</span><br><span class="line">    <span class="keyword">return</span> tf.shade(canvas.line(edges, <span class="string">&#x27;x&#x27;</span>,<span class="string">&#x27;y&#x27;</span>, agg=ds.count()), name=name)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">graphplot</span>(<span class="params">nodes, edges, name=<span class="string">&quot;&quot;</span>, canvas=<span class="literal">None</span>, cat=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="keyword">if</span> canvas <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        xr = nodes.x.<span class="built_in">min</span>(), nodes.x.<span class="built_in">max</span>()</span><br><span class="line">        yr = nodes.y.<span class="built_in">min</span>(), nodes.y.<span class="built_in">max</span>()</span><br><span class="line">        canvas = ds.Canvas(x_range=xr, y_range=yr, **cvsopts)</span><br><span class="line"></span><br><span class="line">    np = nodesplot(nodes, name + <span class="string">&quot; nodes&quot;</span>, canvas, cat)</span><br><span class="line">    ep = edgesplot(edges, name + <span class="string">&quot; edges&quot;</span>, canvas)</span><br><span class="line">    <span class="keyword">return</span> tf.stack(ep, np, how=<span class="string">&quot;over&quot;</span>, name=name)</span><br></pre></td></tr></table></figure></p>
+<p>绘制： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cd = circular</span><br><span class="line">fd = forcedirected</span><br><span class="line"></span><br><span class="line">cd_d = graphplot(cd, connect_edges(cd,edges), <span class="string">&quot;Circular layout&quot;</span>)</span><br><span class="line">fd_d = graphplot(fd, connect_edges(fd,edges), <span class="string">&quot;Force-directed&quot;</span>)</span><br><span class="line">cd_b = graphplot(cd, hammer_bundle(cd,edges), <span class="string">&quot;Circular layout, bundled&quot;</span>)</span><br><span class="line">fd_b = graphplot(fd, hammer_bundle(fd,edges), <span class="string">&quot;Force-directed, bundled&quot;</span>)</span><br><span class="line"></span><br><span class="line">tf.Images(cd_d,fd_d,cd_b,fd_b).cols(<span class="number">2</span>)</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/exam.png"/></p>
+<p>还是挺方便的。接下来我们使用自己的数据进行绘制。必要的数据包括node（包含name与xy坐标）和edge（包含代表od的source和target，可自行选择是否加上weight）。
+导入包： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> datashader.bundling <span class="keyword">import</span> hammer_bundle</span><br><span class="line"><span class="keyword">import</span> pyproj</span><br><span class="line"><span class="keyword">import</span> geopandas <span class="keyword">as</span> gpd</span><br><span class="line"><span class="keyword">from</span> shapely.geometry <span class="keyword">import</span> LineString</span><br></pre></td></tr></table></figure>
+加载数据，并映射一下字段名到其要求的值，并且投影坐标以绘制。这里有一个非常坑的要点：
+<strong>node 的 index（pandas.dataframe的index）才是和 edge 的 source 与
+target 匹配的 key ，而不是 name 字段。</strong> <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">china_edge = pd.read_csv(<span class="string">&quot;/Users/fangtianyao/Desktop/其他/flowdata/edge_1.csv&quot;</span>)</span><br><span class="line">china_node = pd.read_csv(<span class="string">&quot;/Users/fangtianyao/Desktop/其他/flowdata/node_with_name.csv&quot;</span>)</span><br><span class="line">nodes = china_node[[<span class="string">&#x27;iata&#x27;</span>, <span class="string">&#x27;longitude&#x27;</span>, <span class="string">&#x27;latitude&#x27;</span>]].rename(</span><br><span class="line">    columns=&#123;<span class="string">&#x27;iata&#x27;</span>: <span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;longitude&#x27;</span>: <span class="string">&#x27;x84&#x27;</span>, <span class="string">&#x27;latitude&#x27;</span>: <span class="string">&#x27;y84&#x27;</span>&#125;</span><br><span class="line">)</span><br><span class="line">edges = china_edge[[<span class="string">&#x27;origin&#x27;</span>, <span class="string">&#x27;destination&#x27;</span>, <span class="string">&#x27;count&#x27;</span>]].rename(</span><br><span class="line">    columns=&#123;<span class="string">&#x27;origin&#x27;</span>: <span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;destination&#x27;</span>: <span class="string">&#x27;target&#x27;</span>, <span class="string">&#x27;count&#x27;</span>: <span class="string">&#x27;weight&#x27;</span>&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">proj = pyproj.Transformer.from_crs(<span class="string">&quot;EPSG:4326&quot;</span>, <span class="string">&quot;EPSG:3857&quot;</span>, always_xy=<span class="literal">True</span>)</span><br><span class="line">nodes[<span class="string">&#x27;x&#x27;</span>], nodes[<span class="string">&#x27;y&#x27;</span>] = proj.transform(nodes[<span class="string">&#x27;x84&#x27;</span>], nodes[<span class="string">&#x27;y84&#x27;</span>])</span><br><span class="line">layout = nodes.copy()</span><br><span class="line">layout.index = layout[<span class="string">&#x27;name&#x27;</span>].astype(<span class="built_in">int</span>)</span><br><span class="line">layout.index.name = <span class="literal">None</span></span><br></pre></td></tr></table></figure></p>
+<p>调用<code>hammer_bundle</code>计算： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundled_edges = hammer_bundle(layout, edges, decay=decay, initial_bandwidth=bw)</span><br></pre></td></tr></table></figure> 这里的
+<code>decay</code> 和 <code>bw</code>
+是两个0-1的参数，这里我们先分别取0.5。</p>
+<p>计算得到的 <code>bundled_edges</code>
+是一个包含所有扭曲过后的边的所有构成点的df，每条边的点之间用一个空行相隔。打印给你看看。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>x</th>
+<th>y</th>
+<th>weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1301138</td>
+<td>1.257390e+07</td>
+<td>2.951534e+06</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>1301139</td>
+<td>1.258085e+07</td>
+<td>2.914048e+06</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>1301140</td>
+<td>1.258971e+07</td>
+<td>2.877599e+06</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>1301141</td>
+<td>1.264494e+07</td>
+<td>2.852891e+06</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>1301142</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>为了绘制，我们使用该数据创建 GeoDataFrame： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">lines = []</span><br><span class="line">current_points = []</span><br><span class="line">current_weight = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> idx, row <span class="keyword">in</span> bundled_edges.iterrows():</span><br><span class="line">    <span class="keyword">if</span> pd.isna(row[<span class="string">&#x27;x&#x27;</span>]) <span class="keyword">or</span> pd.isna(row[<span class="string">&#x27;y&#x27;</span>]):</span><br><span class="line">        <span class="comment"># 遇到空行，生成上一条边</span></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(current_points) &gt;= <span class="number">2</span>:</span><br><span class="line">            line = LineString(current_points)</span><br><span class="line">            lines.append(&#123;<span class="string">&#x27;weight&#x27;</span>: current_weight, <span class="string">&#x27;geometry&#x27;</span>: line&#125;)</span><br><span class="line">        current_points = []</span><br><span class="line">        current_weight = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        current_points.append((row[<span class="string">&#x27;x&#x27;</span>], row[<span class="string">&#x27;y&#x27;</span>]))</span><br><span class="line">        <span class="comment"># 假设 weight 相同，取第一个点的 weight</span></span><br><span class="line">        <span class="keyword">if</span> current_weight <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            current_weight = row[<span class="string">&#x27;weight&#x27;</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(current_points) &gt;= <span class="number">2</span>:</span><br><span class="line">    line = LineString(current_points)</span><br><span class="line">    lines.append(&#123;<span class="string">&#x27;weight&#x27;</span>: current_weight, <span class="string">&#x27;geometry&#x27;</span>: line&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 GeoDataFrame</span></span><br><span class="line">gdf = gpd.GeoDataFrame(lines, crs=<span class="string">&quot;EPSG:3857&quot;</span>)</span><br></pre></td></tr></table></figure></p>
+<p>我们用这个数据绘制流在地图上： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> geopandas <span class="keyword">as</span> gpd</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">from</span> shapely.geometry <span class="keyword">import</span> Point</span><br><span class="line"><span class="keyword">import</span> contextily <span class="keyword">as</span> ctx</span><br><span class="line"></span><br><span class="line">nodes_gdf = gpd.GeoDataFrame(</span><br><span class="line">    nodes,</span><br><span class="line">    geometry=[Point(xy) <span class="keyword">for</span> xy <span class="keyword">in</span> <span class="built_in">zip</span>(nodes[<span class="string">&#x27;x&#x27;</span>], nodes[<span class="string">&#x27;y&#x27;</span>])],</span><br><span class="line">    crs=<span class="string">&quot;EPSG:3857&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">edges_gdf = gdf.copy()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 计算线宽</span></span><br><span class="line">min_width = <span class="number">0.2</span></span><br><span class="line">max_width = <span class="number">5.0</span></span><br><span class="line">weights = edges_gdf[<span class="string">&#x27;weight&#x27;</span>].astype(<span class="built_in">float</span>)</span><br><span class="line">line_widths = min_width + (weights - weights.<span class="built_in">min</span>()) / (weights.<span class="built_in">max</span>() - weights.<span class="built_in">min</span>()) * (max_width - min_width)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 绘图</span></span><br><span class="line">fig, ax = plt.subplots(figsize=(<span class="number">12</span>, <span class="number">10</span>), dpi=<span class="number">300</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 画边</span></span><br><span class="line">edges_gdf.plot(ax=ax, linewidth=line_widths, edgecolor=<span class="string">&#x27;#305669&#x27;</span>, alpha=<span class="number">0.6</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 画节点</span></span><br><span class="line">nodes_gdf.plot(ax=ax, color=<span class="string">&#x27;#0C2B4E&#x27;</span>, markersize=<span class="number">15</span>, alpha=<span class="number">0.9</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加底图</span></span><br><span class="line">ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, crs=nodes_gdf.crs)</span><br><span class="line"></span><br><span class="line">ax.set_title(<span class="string">&quot;fty&quot;</span>, fontsize=<span class="number">16</span>)</span><br><span class="line">ax.set_xlabel(<span class="string">&quot;Longitude&quot;</span>)</span><br><span class="line">ax.set_ylabel(<span class="string">&quot;Latitude&quot;</span>)</span><br><span class="line">plt.axis(<span class="string">&#x27;equal&#x27;</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/part.png"/></p>
+<p>为了比较不同 <code>decay</code> 和 <code>bw</code>
+参数组合的效果，我做了一个小组合测试，读者可以自己进行测试，亦可以参考下user
+guide里面基于随机数据做的测试。
+<img src="https://atffang.github.io/2025/11/01/Datahader.Networks 绘制bundling flow/final.png"/></p>
+<p>还是不错的吧😌</p>
+<p>最后给出封装好的函数，该函数用于对空间网络数据执行基于 Hammer 算法
+的边捆绑（Edge
+Bundling）操作，以减少边的视觉交叉并增强整体结构的空间可读性。 输入参数
+• edge_path (str)：边数据文件路径，要求为 CSV
+格式，包含源节点、目标节点及权重等字段。 • node_path
+(str)：节点数据文件路径，要求为 CSV
+格式，包含节点唯一标识及经纬度坐标字段。 • nodes_id_col
+(str)：节点文件中表示节点唯一编号的列名，默认 “node_id”
+<strong>务必是int类型！！！</strong>。 • node_lon_col
+(str)：节点经度列名，默认 “lon”。 • node_lat_col
+(str)：节点纬度列名，默认 “lat”。 • edge_source_col
+(str)：边文件中表示起点节点的列名，默认 “source”
+和上面的node_id匹配，<strong>务必是int类型！！！</strong>。 •
+edge_target_col (str)：边文件中表示终点节点的列名，默认 “target”
+和上面的node_id匹配，<strong>务必是int类型！！！</strong>。 • weight_col
+(str)：边文件中表示权重（如流量、强度）的列名，默认 “weight”。 • decay
+(float)：Hammer 算法的衰减参数，控制边的收敛速度（0–1之间）。 • bw
+(float)：初始带宽参数，控制捆绑的紧密程度（0–1之间）。 • input_crs
+(str)：输入数据的坐标参考系，默认 “EPSG:4326”（WGS84）。 • output
+(bool)：是否输出文件，默认 True。 • output_format (Literal[“geojson”,
+“shp”])：输出文件格式，默认 “geojson”。 • output_path
+(Optional[str])：输出文件保存路径，若为 None，则仅返回结果不保存。
+输出结果 • 返回值 (geopandas.GeoDataFrame)：
+函数返回一个包含边捆绑后几何结果的
+GeoDataFrame，其属性包括原始边的全部字段及对应的空间几何
+(LineString)。结果的坐标参考系为 “EPSG:4326”，可直接用于 GIS
+可视化或空间分析。 若设置 output=True，则函数还会在指定路径下导出相应的
+GeoJSON 或 Shapefile 文件。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> geopandas <span class="keyword">as</span> gpd</span><br><span class="line"><span class="keyword">import</span> pyproj</span><br><span class="line"><span class="keyword">from</span> datashader.bundling <span class="keyword">import</span> hammer_bundle</span><br><span class="line"><span class="keyword">from</span> shapely.geometry <span class="keyword">import</span> LineString</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Literal</span>, <span class="type">Optional</span></span><br><span class="line"><span class="keyword">import</span> copy</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br></pre></td><td class="code"><pre><span class="line">def <span class="title function_">perform_edge_bundling</span><span class="params">(</span></span><br><span class="line"><span class="params">    edge_path: str,</span></span><br><span class="line"><span class="params">    node_path: str,</span></span><br><span class="line"><span class="params">    nodes_id_col: str = <span class="string">&quot;node_id&quot;</span>,</span></span><br><span class="line"><span class="params">    node_lon_col: str = <span class="string">&quot;lon&quot;</span>,</span></span><br><span class="line"><span class="params">    node_lat_col: str = <span class="string">&quot;lat&quot;</span>,</span></span><br><span class="line"><span class="params">    edge_source_col: str = <span class="string">&quot;source&quot;</span>,</span></span><br><span class="line"><span class="params">    edge_target_col: str = <span class="string">&quot;target&quot;</span>,</span></span><br><span class="line"><span class="params">    weight_col: str = <span class="string">&quot;weight&quot;</span>,</span></span><br><span class="line"><span class="params">    decay: <span class="type">float</span> = <span class="number">0.5</span>,</span></span><br><span class="line"><span class="params">    bw: <span class="type">float</span> = <span class="number">0.5</span>,</span></span><br><span class="line"><span class="params">    input_crs: str = <span class="string">&quot;EPSG:4326&quot;</span>,</span></span><br><span class="line"><span class="params">    output: bool = True,</span></span><br><span class="line"><span class="params">    output_format: Literal[<span class="string">&quot;geojson&quot;</span>, <span class="string">&quot;shp&quot;</span>] = <span class="string">&quot;geojson&quot;</span>,</span></span><br><span class="line"><span class="params">    output_path: Optional[str] = None,</span></span><br><span class="line"><span class="params">)</span> -&gt; gpd.GeoDataFrame:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    Perform force-directed edge bundling using the Hammer algorithm</span></span><br><span class="line"><span class="string">    on spatial graph data, and export the result as a geospatial file.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Parameters</span></span><br><span class="line"><span class="string">    ----------</span></span><br><span class="line"><span class="string">    edge_path : str</span></span><br><span class="line"><span class="string">        Path to the CSV file containing edge data.</span></span><br><span class="line"><span class="string">    node_path : str</span></span><br><span class="line"><span class="string">        Path to the CSV file containing node data.</span></span><br><span class="line"><span class="string">    nodes_id_col : str, default &quot;node_id&quot;</span></span><br><span class="line"><span class="string">        Column name for node identifiers in the node CSV.</span></span><br><span class="line"><span class="string">    node_lon_col : str, default &quot;lon&quot;</span></span><br><span class="line"><span class="string">        Column name for node longitude.</span></span><br><span class="line"><span class="string">    node_lat_col : str, default &quot;lat&quot;</span></span><br><span class="line"><span class="string">        Column name for node latitude.</span></span><br><span class="line"><span class="string">    edge_source_col : str, default &quot;source&quot;</span></span><br><span class="line"><span class="string">        Column name for edge source node ID.</span></span><br><span class="line"><span class="string">    edge_target_col : str, default &quot;target&quot;</span></span><br><span class="line"><span class="string">        Column name for edge target node ID.</span></span><br><span class="line"><span class="string">    weight_col : str, default &quot;weight&quot;</span></span><br><span class="line"><span class="string">        Column name for edge weights.</span></span><br><span class="line"><span class="string">    decay : float, default 0.5</span></span><br><span class="line"><span class="string">        Decay parameter of the hammer_bundle algorithm (0 &lt; decay &lt; 1).</span></span><br><span class="line"><span class="string">    bw : float, default 0.5</span></span><br><span class="line"><span class="string">        Initial bandwidth parameter of hammer_bundle (controls bundle tightness).</span></span><br><span class="line"><span class="string">    input_crs : str, default &quot;EPSG:4326&quot;</span></span><br><span class="line"><span class="string">        Coordinate reference system (CRS) of the input node coordinates.</span></span><br><span class="line"><span class="string">        Usually &quot;EPSG:4326&quot; for WGS84 or &quot;EPSG:3857&quot; for Web Mercator.</span></span><br><span class="line"><span class="string">    output : bool, default True</span></span><br><span class="line"><span class="string">        Whether to save the output file.</span></span><br><span class="line"><span class="string">    output_format : &#123;&quot;geojson&quot;, &quot;shp&quot;&#125;, default &quot;geojson&quot;</span></span><br><span class="line"><span class="string">        Desired output file format.</span></span><br><span class="line"><span class="string">    output_path : str, optional</span></span><br><span class="line"><span class="string">        Path to save the output file. If None, the file will not be written.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns</span></span><br><span class="line"><span class="string">    -------</span></span><br><span class="line"><span class="string">    gdf : geopandas.GeoDataFrame</span></span><br><span class="line"><span class="string">        GeoDataFrame containing bundled edge geometries and their weights,</span></span><br><span class="line"><span class="string">        projected in WGS84 (EPSG:4326).</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Raises</span></span><br><span class="line"><span class="string">    ------</span></span><br><span class="line"><span class="string">    FileNotFoundError</span></span><br><span class="line"><span class="string">        If either `edge_path` or `node_path` does not exist.</span></span><br><span class="line"><span class="string">    ValueError</span></span><br><span class="line"><span class="string">        If required columns are missing in the provided CSVs.</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    print(<span class="string">&quot;[1/6] 读取节点与边文件...&quot;</span>)</span><br><span class="line">    edges = pd.read_csv(edge_path)</span><br><span class="line">    edges_copy = copy.deepcopy(edges)</span><br><span class="line">    nodes = pd.read_csv(node_path)</span><br><span class="line"></span><br><span class="line">    print(f<span class="string">&quot;节点数: &#123;len(nodes)&#125;, 边数: &#123;len(edges)&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">    print(<span class="string">&quot;[2/6] 检查输入字段有效性...&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> col in [nodes_id_col, node_lon_col, node_lat_col]:</span><br><span class="line">        <span class="keyword">if</span> col not in nodes.columns:</span><br><span class="line">            raise <span class="title function_">ValueError</span><span class="params">(f<span class="string">&quot;Missing required column &#x27;&#123;col&#125;&#x27; in node file.&quot;</span>)</span></span><br><span class="line">    <span class="keyword">for</span> col in [edge_source_col, edge_target_col, weight_col]:</span><br><span class="line">        <span class="keyword">if</span> col not in edges.columns:</span><br><span class="line">            raise <span class="title function_">ValueError</span><span class="params">(f<span class="string">&quot;Missing required column &#x27;&#123;col&#125;&#x27; in edge file.&quot;</span>)</span></span><br><span class="line"></span><br><span class="line">    edges = edges[[edge_source_col, edge_target_col, weight_col]].rename(</span><br><span class="line">        columns=&#123;edge_source_col: <span class="string">&#x27;source&#x27;</span>, edge_target_col: <span class="string">&#x27;target&#x27;</span>, weight_col: <span class="string">&#x27;weight&#x27;</span>&#125;</span><br><span class="line">    )</span><br><span class="line">    nodes = nodes[[nodes_id_col, node_lon_col, node_lat_col]]</span><br><span class="line"></span><br><span class="line">    edges[<span class="string">&quot;source&quot;</span>] = edges[<span class="string">&quot;source&quot;</span>].astype(<span class="type">int</span>)</span><br><span class="line">    edges[<span class="string">&quot;target&quot;</span>] = edges[<span class="string">&quot;target&quot;</span>].astype(<span class="type">int</span>)</span><br><span class="line"></span><br><span class="line">    print(<span class="string">&quot;[3/6] 坐标转换为 EPSG:3857 ...&quot;</span>)</span><br><span class="line">    proj_to_3857 = pyproj.Transformer.from_crs(input_crs, <span class="string">&quot;EPSG:3857&quot;</span>, always_xy=True)</span><br><span class="line">    nodes[<span class="string">&quot;x&quot;</span>], nodes[<span class="string">&quot;y&quot;</span>] = proj_to_3857.transform(nodes[node_lon_col], nodes[node_lat_col])</span><br><span class="line"></span><br><span class="line">    layout = nodes.rename(columns=&#123;nodes_id_col: <span class="string">&quot;name&quot;</span>&#125;)[[<span class="string">&quot;name&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="string">&quot;y&quot;</span>]]</span><br><span class="line">    layout.index = layout[<span class="string">&quot;name&quot;</span>].astype(<span class="type">int</span>)</span><br><span class="line">    layout.index.name = None</span><br><span class="line"></span><br><span class="line">    <span class="title function_">print</span><span class="params">(<span class="string">&quot;[4/6] 执行 Hammer 边捆绑算法 ...&quot;</span>)</span></span><br><span class="line">    bundled = hammer_bundle(layout, edges, decay=decay, initial_bandwidth=bw)</span><br><span class="line"></span><br><span class="line">    print(<span class="string">&quot;[5/6] 构造捆绑线段 ...&quot;</span>)</span><br><span class="line">    lines = []</span><br><span class="line">    current_points = []</span><br><span class="line">    edge_index = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, row in bundled.iterrows():</span><br><span class="line">        <span class="keyword">if</span> pd.isna(row[<span class="string">&quot;x&quot;</span>]) or pd.isna(row[<span class="string">&quot;y&quot;</span>]):</span><br><span class="line">            <span class="keyword">if</span> <span class="title function_">len</span><span class="params">(current_points)</span> &gt;= <span class="number">2</span> and edge_index &lt; len(edges_copy):</span><br><span class="line">                edge_attrs = edges_copy.iloc[edge_index].to_dict()</span><br><span class="line">                edge_attrs[<span class="string">&quot;geometry&quot;</span>] = LineString(current_points)</span><br><span class="line">                lines.append(edge_attrs)</span><br><span class="line">            current_points = []</span><br><span class="line">            edge_index += <span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            current_points.append((row[<span class="string">&quot;x&quot;</span>], row[<span class="string">&quot;y&quot;</span>]))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="title function_">len</span><span class="params">(current_points)</span> &gt;= <span class="number">2</span> and edge_index &lt; len(edges_copy):</span><br><span class="line">        edge_attrs = edges_copy.iloc[edge_index].to_dict()</span><br><span class="line">        edge_attrs[<span class="string">&quot;geometry&quot;</span>] = LineString(current_points)</span><br><span class="line">        lines.append(edge_attrs)</span><br><span class="line"></span><br><span class="line">    gdf = gpd.GeoDataFrame(lines, crs=<span class="string">&quot;EPSG:3857&quot;</span>)</span><br><span class="line">    gdf = gdf.to_crs(<span class="string">&quot;EPSG:4326&quot;</span>)</span><br><span class="line"></span><br><span class="line">    print(f<span class="string">&quot;生成 GeoDataFrame，共 &#123;len(gdf)&#125; 条边。&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> output:</span><br><span class="line">        print(<span class="string">&quot;[6/6] 输出结果文件&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> output_path:</span><br><span class="line">            <span class="keyword">if</span> output_format == <span class="string">&quot;geojson&quot;</span>:</span><br><span class="line">                gdf.to_file(output_path, driver=<span class="string">&quot;GeoJSON&quot;</span>)</span><br><span class="line">            elif output_format == <span class="string">&quot;shp&quot;</span>:</span><br><span class="line">                gdf.to_file(output_path, driver=<span class="string">&quot;ESRI Shapefile&quot;</span>)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                raise <span class="title function_">ValueError</span><span class="params">(<span class="string">&quot;Unsupported output format. Use &#x27;geojson&#x27; or &#x27;shp&#x27;.&quot;</span>)</span></span><br><span class="line">            </span><br><span class="line">            print(f<span class="string">&quot;文件已保存至: &#123;output_path&#125;&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            print(<span class="string">&quot;未提供输出路径，未保存文件。&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> gdf</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/18/obsidain%E5%9F%BA%E4%BA%8Es3%E7%9A%84%E5%A4%9A%E7%AB%AF%E5%90%8C%E6%AD%A5/" rel="prev" title="obsidain基于s3的多端同步">
+      <i class="fa fa-chevron-left"></i> obsidain基于s3的多端同步
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/11/05/%E5%9F%BA%E4%BA%8E%E4%B8%89%E7%BB%B4%E6%A8%A1%E5%9E%8B%E7%9A%84%E7%9B%91%E6%8E%A7%E7%94%BB%E9%9D%A2%E6%A8%A1%E6%8B%9F%E4%B8%8E%E6%B7%B1%E5%BA%A6%E6%A0%87%E5%AE%9A%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91/" rel="next" title="基于三维模型的监控画面模拟与深度标定工具开发">
+      基于三维模型的监控画面模拟与深度标定工具开发 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">175k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">5:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":25,"vOffset":-30},"mobile":{"show":true},"react":{"opacity":0.9},"log":false});</script></body>
+</html>

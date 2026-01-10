@@ -1,3 +1,5 @@
+https://atffang.github.io/2026/01/10/langchainAgent/
+https://atffang.github.io/2026/01/10/langchainAgent/Agents01/
 https://atffang.github.io/2026/01/09/langchainRAG/
 https://atffang.github.io/2025/11/12/deepsort/
 https://atffang.github.io/2025/11/11/%E8%AE%BA%E6%96%87%E7%B2%BE%E8%AF%BBFMTMCRI/

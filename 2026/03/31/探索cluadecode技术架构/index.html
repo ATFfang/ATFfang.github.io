@@ -22,12 +22,12 @@
     var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="对 Anthropic 开源仓库 claude-code 的技术架构进行源码级深度解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。">
+  <meta name="description" content="对 Anthropic 开源仓库 claude-code 的技术架构进行简单解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="探索 Claude code 技术架构">
 <meta property="og:url" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
-<meta property="og:description" content="对 Anthropic 开源仓库 claude-code 的技术架构进行源码级深度解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。">
+<meta property="og:description" content="对 Anthropic 开源仓库 claude-code 的技术架构进行简单解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/01-overall-architecture.png">
 <meta property="og:image" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/02-agent-loop-full-flow.png">
@@ -51,7 +51,7 @@
 <meta property="og:image" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/20-mcp-tool-registration.png">
 <meta property="og:image" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/21-mcp-elicitation.png">
 <meta property="article:published_time" content="2026-03-31T14:40:51.000Z">
-<meta property="article:modified_time" content="2026-03-31T14:54:43.689Z">
+<meta property="article:modified_time" content="2026-04-01T12:51:09.302Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://atffang.github.io/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/01-overall-architecture.png">
@@ -214,10 +214,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2026-03-31 22:40:51 / 修改时间：22:54:43" itemprop="dateCreated datePublished" datetime="2026-03-31T22:40:51+08:00">2026-03-31</time>
+              <time title="创建时间：2026-03-31 22:40:51" itemprop="dateCreated datePublished" datetime="2026-03-31T22:40:51+08:00">2026-03-31</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-04-01 20:51:09" itemprop="dateModified" datetime="2026-04-01T20:51:09+08:00">2026-04-01</time>
+              </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -251,11 +257,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>对 Anthropic 开源仓库 <code>claude-code</code> 的技术架构进行源码级深度解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。</p>
+        <p>对 Anthropic 开源仓库 <code>claude-code</code> 的技术架构进行简单解析，涵盖代理循环、上下文管理与 Memory 系统、Skill 触发机制、Hook 事件系统、多代理编排与 Worktree 隔离、MCP 集成架构、沙箱安全模型。</p>
 <span id="more"></span>
-<h3 id="intro"><a class="markdownIt-Anchor" href="#intro"></a> Intro</h3>
-<p>最近工作有点忙，做了一点Agent相关的工作，好久没写文章了，今天弥补一下。<span style="color: #BB8ED0; font-weight: bold;">Claude Code</span> 是 Anthropic 推出的<strong>代理型编码工具</strong>（Agentic Coding Tool），运行在终端中，通过自然语言驱动代码理解、生成、审查和 Git 工作流自动化。</p>
-<p>该仓库（<code>github.com/anthropics/claude-code</code>）<strong>并非核心运行时源码</strong>——CLI 引擎以编译后的 npm 包 <code>@anthropic-ai/claude-code</code> 分发，核心代码闭源。仓库中开放的是：<strong>插件系统、Hook 实现、配置示例、GitHub Actions 工作流和 DevContainer 沙箱配置</strong>。但结合 CHANGELOG（2600+ 行）和插件源码，已经足够还原出完整的技术架构。</p>
+<h3 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h3><p>最近工作有点忙，做了一点Agent相关的工作，好久没写文章了，今天弥补一下。<span style="color: #BB8ED0; font-weight: bold;">Claude Code</span> 是 Anthropic 推出的<strong>代理型编码工具</strong>（Agentic Coding Tool），运行在终端中，通过自然语言驱动代码理解、生成、审查和 Git 工作流自动化。</p>
+<p>该仓库（<code>github.com/anthropics/claude-code</code>）<strong>并非核心运行时源码</strong>——CLI 引擎以编译后的 npm 包 <code>@anthropic-ai/claude-code</code> 分发，核心代码闭源。仓库中开放的是：<strong>插件系统、Hook 实现、配置示例、GitHub Actions 工作流和 DevContainer 沙箱配置</strong>。但结合 CHANGELOG（2600+ 行）和插件源码，我们可以还原出一些技术架构。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -298,54 +304,42 @@
 </tr>
 </tbody>
 </table>
-<hr />
-<h3 id="整体架构"><a class="markdownIt-Anchor" href="#整体架构"></a> 整体架构</h3>
-<img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/01-overall-architecture.png" class="" title="sucessful">
+</div>
+<hr>
+<h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/01-overall-architecture.png" class="" title="sucessful">
 <p>Claude Code 的整体架构分为 7 层，自上而下分别是：</p>
 <ol>
-<li>
-<p><strong>用户交互层</strong>：支持 4 种入口——终端 CLI（核心）、VSCode 扩展（嵌入式）、GitHub <code>@claude</code>（CI/CD 集成）、TypeScript/Python SDK（编程式调用）。所有入口最终都汇入同一个代理循环。</p>
+<li><p><strong>用户交互层</strong>：支持 4 种入口——终端 CLI（核心）、VSCode 扩展（嵌入式）、GitHub <code>@claude</code>（CI/CD 集成）、TypeScript/Python SDK（编程式调用）。所有入口最终都汇入同一个代理循环。</p>
 </li>
-<li>
-<p><strong>代理循环</strong>：核心引擎，实现了工具增强的 ReAct 循环。每一轮包含：命令解析 + Skill 语义匹配 → 上下文构建（注入 Memory、Skill、系统提示）→ LLM 推理 → 工具调用 → 结果反馈 → 回到 LLM。循环持续直到模型决定停止或用户中断。</p>
+<li><p><strong>代理循环</strong>：核心引擎，实现了工具增强的 ReAct 循环。每一轮包含：命令解析 + Skill 语义匹配 → 上下文构建（注入 Memory、Skill、系统提示）→ LLM 推理 → 工具调用 → 结果反馈 → 回到 LLM。循环持续直到模型决定停止或用户中断。</p>
 </li>
-<li>
-<p><strong>上下文管理</strong>：最复杂的子系统。负责在有限的上下文窗口（最大 1M tokens）内精确管理信息密度。包含 <a target="_blank" rel="noopener" href="http://MEMORY.md">MEMORY.md</a>（手动记忆）、Auto-Memory（自动记忆提取）、Auto-Compaction（对话压缩）、Skill Loading（按需知识注入）和磁盘持久化（大结果卸载）五个子模块。</p>
+<li><p><strong>上下文管理</strong>：最复杂的子系统。负责在有限的上下文窗口（最大 1M tokens）内精确管理信息密度。包含 MEMORY.md（手动记忆）、Auto-Memory（自动记忆提取）、Auto-Compaction（对话压缩）、Skill Loading（按需知识注入）和磁盘持久化（大结果卸载）五个子模块。</p>
 </li>
-<li>
-<p><strong>工具层</strong>：代理可调用的所有工具。分为文件操作（Read/Write/Edit）、Shell 执行（Bash/PowerShell）、搜索（Glob/Grep/WebSearch）、代理编排（Agent/SubAgent/Task）、MCP 外部工具和辅助工具（TodoWrite/CronCreate）六类。</p>
+<li><p><strong>工具层</strong>：代理可调用的所有工具。分为文件操作（Read/Write/Edit）、Shell 执行（Bash/PowerShell）、搜索（Glob/Grep/WebSearch）、代理编排（Agent/SubAgent/Task）、MCP 外部工具和辅助工具（TodoWrite/CronCreate）六类。</p>
 </li>
-<li>
-<p><strong>扩展层</strong>：插件系统提供的四种扩展原语——Plugin（容器）、Hook（事件拦截）、Skill（知识注入）、Agent（专业代理定义）。</p>
+<li><p><strong>扩展层</strong>：插件系统提供的四种扩展原语——Plugin（容器）、Hook（事件拦截）、Skill（知识注入）、Agent（专业代理定义）。</p>
 </li>
-<li>
-<p><strong>安全层</strong>：五层纵深防御——权限规则、文件沙箱、网络防火墙、凭证保护、企业策略。每一次工具调用都要经过安全层的检查。</p>
+<li><p><strong>安全层</strong>：五层纵深防御——权限规则、文件沙箱、网络防火墙、凭证保护、企业策略。每一次工具调用都要经过安全层的检查。</p>
 </li>
-<li>
-<p><strong>API 层</strong>：底层 LLM 调用。支持 Anthropic 直连、AWS Bedrock、Google Vertex AI、Microsoft Foundry 四种后端，通过环境变量或配置切换。</p>
+<li><p><strong>API 层</strong>：底层 LLM 调用。支持 Anthropic 直连、AWS Bedrock、Google Vertex AI、Microsoft Foundry 四种后端，通过环境变量或配置切换。</p>
 </li>
 </ol>
-<hr />
-<h3 id="代理循环agent-loop"><a class="markdownIt-Anchor" href="#代理循环agent-loop"></a> 代理循环（Agent Loop）</h3>
-<p>Claude Code 的核心是一个<strong>工具增强的 ReAct 代理循环</strong>。从 CHANGELOG 和插件系统的设计可以还原出完整的运行流程：</p>
+<hr>
+<h3 id="代理循环（Agent-Loop）"><a href="#代理循环（Agent-Loop）" class="headerlink" title="代理循环（Agent Loop）"></a>代理循环（Agent Loop）</h3><p>Claude Code 的核心是一个<strong>工具增强的 ReAct 代理循环</strong>。从 CHANGELOG 和插件系统的设计可以还原出完整的运行流程：</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/02-agent-loop-full-flow.png" class="" title="sucessful">
 <p>与简单的 ReAct 循环相比，Claude Code 做了四个关键增强：</p>
 <ol>
-<li>
-<p><strong>15+ 种 Hook 拦截点</strong>：覆盖了代理循环的每一个关键节点。Hook 不仅能拦截，还能<strong>修改</strong>——<code>UserPromptSubmit</code> Hook 可以通过 <code>updatedInput</code> 重写用户输入，<code>PreToolUse</code> Hook 可以修改工具参数，<code>Stop</code> Hook 可以通过 <code>block</code> 强制代理继续工作。</p>
+<li><p><strong>15+ 种 Hook 拦截点</strong>：覆盖了代理循环的每一个关键节点。Hook 不仅能拦截，还能<strong>修改</strong>——<code>UserPromptSubmit</code> Hook 可以通过 <code>updatedInput</code> 重写用户输入，<code>PreToolUse</code> Hook 可以修改工具参数，<code>Stop</code> Hook 可以通过 <code>block</code> 强制代理继续工作。</p>
 </li>
-<li>
-<p><strong>自动上下文压缩</strong>：当对话接近上下文窗口限制时，自动触发 Compaction。压缩前后分别有 <code>PreCompact</code> 和 <code>PostCompact</code> Hook，允许外部系统保存和恢复关键状态。</p>
+<li><p><strong>自动上下文压缩</strong>：当对话接近上下文窗口限制时，自动触发 Compaction。压缩前后分别有 <code>PreCompact</code> 和 <code>PostCompact</code> Hook，允许外部系统保存和恢复关键状态。</p>
 </li>
-<li>
-<p><strong>大结果磁盘卸载</strong>：工具返回超过 50K 字符的结果时，自动持久化到磁盘，上下文中只保留文件引用。这显著延长了对话寿命。</p>
+<li><p><strong>大结果磁盘卸载</strong>：工具返回超过 50K 字符的结果时，自动持久化到磁盘，上下文中只保留文件引用。这显著延长了对话寿命。</p>
 </li>
-<li>
-<p><strong>多代理编排</strong>：通过 <code>Agent</code>/<code>SubAgent</code>/<code>TaskCreate</code> 工具，支持并行派生子代理。每个子代理运行独立的代理循环，拥有独立的上下文窗口。</p>
+<li><p><strong>多代理编排</strong>：通过 <code>Agent</code>/<code>SubAgent</code>/<code>TaskCreate</code> 工具，支持并行派生子代理。每个子代理运行独立的代理循环，拥有独立的上下文窗口。</p>
 </li>
 </ol>
-<h4 id="内置工具体系"><a class="markdownIt-Anchor" href="#内置工具体系"></a> 内置工具体系</h4>
-<p>从 CHANGELOG 和配置文件中可以提取出完整的工具列表：</p>
+<h4 id="内置工具体系"><a href="#内置工具体系" class="headerlink" title="内置工具体系"></a>内置工具体系</h4><p>从 CHANGELOG 和配置文件中可以提取出完整的工具列表：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -454,8 +448,8 @@
 </tr>
 </tbody>
 </table>
-<h4 id="toolsearch延迟加载与动态发现"><a class="markdownIt-Anchor" href="#toolsearch延迟加载与动态发现"></a> ToolSearch：延迟加载与动态发现</h4>
-<p><code>ToolSearch</code> 是一个值得深入分析的设计。传统做法是在系统提示中列出所有可用工具的 schema，但当用户配置了大量 MCP 工具时，工具描述本身就会占据大量上下文。</p>
+</div>
+<h4 id="ToolSearch：延迟加载与动态发现"><a href="#ToolSearch：延迟加载与动态发现" class="headerlink" title="ToolSearch：延迟加载与动态发现"></a>ToolSearch：延迟加载与动态发现</h4><p><code>ToolSearch</code> 是一个值得深入分析的设计。传统做法是在系统提示中列出所有可用工具的 schema，但当用户配置了大量 MCP 工具时，工具描述本身就会占据大量上下文。</p>
 <p>Claude Code 的解决方案是<strong>工具的延迟加载</strong>：</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/03-toolsearch-lazy-loading.png" class="" title="sucessful">
 <p>关键技术细节：</p>
@@ -465,11 +459,9 @@
 <li><strong>Compaction 兼容</strong>：v2.1.76 修复了通过 ToolSearch 延迟加载的工具在 Compaction 后丢失 input schema 的问题，导致数组和数字参数被类型错误拒绝。</li>
 <li><strong>Cache 兼容</strong>：v2.1.84 实现了全局系统提示缓存在 ToolSearch 启用时也能工作。</li>
 </ul>
-<hr />
-<h3 id="上下文管理与-memory-系统"><a class="markdownIt-Anchor" href="#上下文管理与-memory-系统"></a> 上下文管理与 Memory 系统</h3>
-<p>这是 Claude Code 最核心也最复杂的子系统。LLM 的上下文窗口是有限的（Opus 4.6 支持 1M tokens，可通过 <code>CLAUDE_CODE_DISABLE_1M_CONTEXT</code> 禁用），长会话必然面临上下文溢出问题。Claude Code 通过五个机制来管理上下文：<strong>Auto-Compaction</strong>、<strong>Partial Summarization</strong>、<strong><a target="_blank" rel="noopener" href="http://MEMORY.md">MEMORY.md</a></strong>、<strong>Auto-Memory</strong> 和<strong>磁盘持久化</strong>。</p>
-<h4 id="auto-compaction自动上下文压缩"><a class="markdownIt-Anchor" href="#auto-compaction自动上下文压缩"></a> Auto-Compaction（自动上下文压缩）</h4>
-<p>当对话长度接近上下文窗口限制时，Claude Code 会自动触发 Compaction。完整流程：</p>
+<hr>
+<h3 id="上下文管理与-Memory-系统"><a href="#上下文管理与-Memory-系统" class="headerlink" title="上下文管理与 Memory 系统"></a>上下文管理与 Memory 系统</h3><p>这是 Claude Code 最核心也最复杂的子系统。LLM 的上下文窗口是有限的（Opus 4.6 支持 1M tokens，可通过 <code>CLAUDE_CODE_DISABLE_1M_CONTEXT</code> 禁用），长会话必然面临上下文溢出问题。Claude Code 通过五个机制来管理上下文：<strong>Auto-Compaction</strong>、<strong>Partial Summarization</strong>、<strong>MEMORY.md</strong>、<strong>Auto-Memory</strong> 和<strong>磁盘持久化</strong>。</p>
+<h4 id="Auto-Compaction（自动上下文压缩）"><a href="#Auto-Compaction（自动上下文压缩）" class="headerlink" title="Auto-Compaction（自动上下文压缩）"></a>Auto-Compaction（自动上下文压缩）</h4><p>当对话长度接近上下文窗口限制时，Claude Code 会自动触发 Compaction。完整流程：</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/04-auto-compaction-flow.png" class="" title="sucessful">
 <p>Compaction 的关键技术细节（从 CHANGELOG 修复记录中提取）：</p>
 <p><strong>1. Token 估算精度</strong></p>
@@ -487,49 +479,40 @@
 <p><strong>4. 熔断机制</strong></p>
 <p>v2.1.76 引入了 Auto-Compaction 的熔断器——连续失败 3 次后停止重试，避免无限循环。v2.1.59 修复了 auto-compact 失败错误通知被显示给用户的问题。</p>
 <p><strong>5. 恢复行为</strong></p>
-<p>v2.1.69 改变了 Compaction 后恢复对话的行为——不再产生 preamble recap（“让我回顾一下之前的对话…”），而是直接继续。这减少了不必要的 token 消耗。</p>
+<p>v2.1.69 改变了 Compaction 后恢复对话的行为——不再产生 preamble recap（”让我回顾一下之前的对话…”），而是直接继续。这减少了不必要的 token 消耗。</p>
 <p><strong>6. 内存清理</strong></p>
 <p>Compaction 不仅压缩上下文，还触发内存清理——长会话中的 progress messages 在 Compaction 后需要被清除，否则会导致内存持续增长；内部缓存需要在 Compaction 后重置；in-process teammates 的完整对话历史需要在 Compaction 后解除引用，否则会阻止垃圾回收。</p>
 <p>用户也可以通过 <code>/compact</code> 命令手动触发压缩，或通过 <code>/context</code> 命令查看当前上下文使用情况——v2.1.74 增加了 <code>/context</code> 的 actionable suggestions，能识别上下文占用大户（如 MCP 工具描述、memory 膨胀等）并给出优化建议。</p>
-<h4 id="partial-summarization部分对话摘要"><a class="markdownIt-Anchor" href="#partial-summarization部分对话摘要"></a> Partial Summarization（部分对话摘要）</h4>
-<p>v2.1.32 引入了 <strong>“Summarize from here”</strong> 功能——用户可以在消息选择器中选择一个起点，只对该点之后的对话进行摘要，而保留之前的完整历史。</p>
+<h4 id="Partial-Summarization（部分对话摘要）"><a href="#Partial-Summarization（部分对话摘要）" class="headerlink" title="Partial Summarization（部分对话摘要）"></a>Partial Summarization（部分对话摘要）</h4><p>v2.1.32 引入了 <strong>“Summarize from here”</strong> 功能——用户可以在消息选择器中选择一个起点，只对该点之后的对话进行摘要，而保留之前的完整历史。</p>
 <p>这与 Auto-Compaction（压缩全部历史）不同，Partial Summarization 允许用户精确控制哪些对话被压缩、哪些被保留。典型场景：一个长会话中前半部分是重要的架构讨论（需要保留原文），后半部分是琐碎的调试过程（可以压缩为摘要）。</p>
 <p>v2.1.30 的修复记录显示，conversation summarization 也会遇到 token limit 错误，说明摘要生成本身也使用 LLM 调用，受上下文窗口限制。</p>
-<h4 id="memorymd"><a class="markdownIt-Anchor" href="#memorymd"></a> <a target="_blank" rel="noopener" href="http://MEMORY.md">MEMORY.md</a>（手动 Memory）</h4>
-<p>用户通过 <code>/memory</code> 命令管理的持久化记忆文件，存储在 <code>~/.claude/MEMORY.md</code>。这个文件在每次会话开始时被注入到系统提示中，作为 Claude 的&quot;长期记忆&quot;。</p>
+<h4 id="MEMORY-md（手动-Memory）"><a href="#MEMORY-md（手动-Memory）" class="headerlink" title="MEMORY.md（手动 Memory）"></a>MEMORY.md（手动 Memory）</h4><p>用户通过 <code>/memory</code> 命令管理的持久化记忆文件，存储在 <code>~/.claude/MEMORY.md</code>。这个文件在每次会话开始时被注入到系统提示中，作为 Claude 的”长期记忆”。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/05-memory-md-injection.png" class="" title="sucessful">
-<p><a target="_blank" rel="noopener" href="http://MEMORY.md">MEMORY.md</a> 有严格的大小限制——最大 25KB 或 200 行，超出部分会被截断。这是为了防止 Memory 文件无限膨胀导致上下文被挤占。系统还会为 Memory 文件添加 last-modified 时间戳，帮助 Claude 判断哪些记忆是新鲜的、哪些是过时的。<code>/context</code> 命令会将 Skills 作为独立类别显示，帮助用户理解上下文的组成。</p>
-<h4 id="auto-memory自动-memory-提取"><a class="markdownIt-Anchor" href="#auto-memory自动-memory-提取"></a> Auto-Memory（自动 Memory 提取）</h4>
-<p>v2.1.32 引入的核心特性——“Claude automatically records and recalls memories as it works”。Claude 在对话过程中<strong>自动提取有用的上下文并保存到 auto-memory</strong>。</p>
+<p>MEMORY.md 有严格的大小限制——最大 25KB 或 200 行，超出部分会被截断。这是为了防止 Memory 文件无限膨胀导致上下文被挤占。系统还会为 Memory 文件添加 last-modified 时间戳，帮助 Claude 判断哪些记忆是新鲜的、哪些是过时的。<code>/context</code> 命令会将 Skills 作为独立类别显示，帮助用户理解上下文的组成。</p>
+<h4 id="Auto-Memory（自动-Memory-提取）"><a href="#Auto-Memory（自动-Memory-提取）" class="headerlink" title="Auto-Memory（自动 Memory 提取）"></a>Auto-Memory（自动 Memory 提取）</h4><p>v2.1.32 引入的核心特性——“Claude automatically records and recalls memories as it works”。Claude 在对话过程中<strong>自动提取有用的上下文并保存到 auto-memory</strong>。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/06-auto-memory-extraction.png" class="" title="sucessful">
 <p>Auto-Memory 的存储位置默认在 <code>~/.claude/</code> 目录下，可通过 <code>autoMemoryDirectory</code> 设置自定义目录。一个重要的设计决策是 auto-memory 在同一仓库的不同 git worktree 之间共享——这意味着在 worktree A 中学到的知识，在 worktree B 中也能使用。<code>--bare</code> 模式会完全禁用 auto-memory、hooks、LSP、plugin sync 和 skill directory walks。</p>
 <p>Auto-Memory 作为异步后台任务运行，这带来了一个并发问题：它的写入可能与主会话的 transcript 写入冲突，导致 <code>--resume</code> 时丢失最近的对话历史。Session 恢复的内存使用也经过了优化——通过将 session index 替换为基于 stat 的轻量级加载和渐进式丰富，<code>--resume</code> 的内存使用降低了 68%。</p>
-<h4 id="工具结果的磁盘持久化"><a class="markdownIt-Anchor" href="#工具结果的磁盘持久化"></a> 工具结果的磁盘持久化</h4>
-<p>除了 Memory 系统，Claude Code 还有一个重要的上下文管理机制：<strong>大工具结果的磁盘持久化</strong>。</p>
+<h4 id="工具结果的磁盘持久化"><a href="#工具结果的磁盘持久化" class="headerlink" title="工具结果的磁盘持久化"></a>工具结果的磁盘持久化</h4><p>除了 Memory 系统，Claude Code 还有一个重要的上下文管理机制：<strong>大工具结果的磁盘持久化</strong>。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">工具返回结果 → 检查大小 → 超过 50K 字符?</span><br><span class="line">  ├─ 否 → 直接注入上下文</span><br><span class="line">  └─ 是 → 写入磁盘文件 → 上下文中保留文件路径引用</span><br><span class="line">              ↓</span><br><span class="line">         cleanupPeriodDays 后自动清理</span><br></pre></td></tr></table></figure>
 <p>v2.1.51 将阈值从 100K 字符降低到 <strong>50K 字符</strong>。v2.1.50 修复了 <code>cleanupPeriodDays</code> 设置被忽略导致临时文件永远不会被清理的问题。v2.1.84 修复了长会话中大工具结果在处理后未被清理的内存泄漏。</p>
 <p>后台任务（TaskCreate）的输出也有类似机制：v2.1.59 修复了 API context overflow——当后台任务产生大量输出时，自动截断到 30K 字符并附上文件路径引用。</p>
-<h4 id="空闲会话处理"><a class="markdownIt-Anchor" href="#空闲会话处理"></a> 空闲会话处理</h4>
-<p>v2.1.84 增加了一个巧妙的设计：当用户离开超过 75 分钟后返回时，会弹出一个提示建议执行 <code>/clear</code>。这是因为长时间空闲后，之前的上下文可能已经过时，继续在旧上下文上对话会导致不必要的 token re-caching 开销。</p>
-<hr />
-<h3 id="skill-触发与加载机制"><a class="markdownIt-Anchor" href="#skill-触发与加载机制"></a> Skill 触发与加载机制</h3>
-<p>Skill 系统是 Claude Code 实现<strong>领域知识注入</strong>的核心机制。与 Hook（事件驱动）和 Command（用户显式调用）不同，Skill 是<strong>语义驱动的自动触发</strong>。</p>
-<h4 id="三级渐进式加载"><a class="markdownIt-Anchor" href="#三级渐进式加载"></a> 三级渐进式加载</h4>
-<img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/07-skill-three-level-loading.png" class="" title="sucessful">
+<h4 id="空闲会话处理"><a href="#空闲会话处理" class="headerlink" title="空闲会话处理"></a>空闲会话处理</h4><p>v2.1.84 增加了一个巧妙的设计：当用户离开超过 75 分钟后返回时，会弹出一个提示建议执行 <code>/clear</code>。这是因为长时间空闲后，之前的上下文可能已经过时，继续在旧上下文上对话会导致不必要的 token re-caching 开销。</p>
+<hr>
+<h3 id="Skill-触发与加载机制"><a href="#Skill-触发与加载机制" class="headerlink" title="Skill 触发与加载机制"></a>Skill 触发与加载机制</h3><p>Skill 系统是 Claude Code 实现<strong>领域知识注入</strong>的核心机制。与 Hook（事件驱动）和 Command（用户显式调用）不同，Skill 是<strong>语义驱动的自动触发</strong>。</p>
+<h4 id="三级渐进式加载"><a href="#三级渐进式加载" class="headerlink" title="三级渐进式加载"></a>三级渐进式加载</h4><img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/07-skill-three-level-loading.png" class="" title="sucessful">
 <p>这种设计的核心思想是：<strong>不要把所有信息都塞进上下文，而是让 LLM 自己决定什么时候需要什么信息</strong>。</p>
 <p>v2.1.32 引入了 Skill 字符预算的动态缩放——预算为上下文窗口的 2%，这样拥有更大上下文窗口的用户可以看到更多 Skill 描述而不会被截断。v2.1.87 将 <code>/skills</code> 列表中的 description 截断到 <strong>250 字符</strong>。</p>
-<h4 id="触发机制详解"><a class="markdownIt-Anchor" href="#触发机制详解"></a> 触发机制详解</h4>
-<p>Skill 的触发依赖于 <a target="_blank" rel="noopener" href="http://SKILL.md">SKILL.md</a> frontmatter 中的 <code>description</code> 字段。这个字段不是给人看的——它是给 Claude Code 的 Skill 匹配引擎看的。官方文档要求使用<strong>第三人称 + 具体触发短语</strong>的格式：</p>
+<h4 id="触发机制详解"><a href="#触发机制详解" class="headerlink" title="触发机制详解"></a>触发机制详解</h4><p>Skill 的触发依赖于 SKILL.md frontmatter 中的 <code>description</code> 字段。这个字段不是给人看的——它是给 Claude Code 的 Skill 匹配引擎看的。官方文档要求使用<strong>第三人称 + 具体触发短语</strong>的格式：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 好的 description（具体的触发短语）</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&gt;</span></span><br><span class="line"><span class="string">  This skill should be used when the user asks to &quot;create a hook&quot;,</span></span><br><span class="line"><span class="string">  &quot;add a PreToolUse hook&quot;, &quot;validate tool use&quot;, &quot;implement prompt-based hooks&quot;,</span></span><br><span class="line"><span class="string">  or mentions hook events (PreToolUse, PostToolUse, Stop).</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="comment"># 差的 description（模糊、没有触发短语）</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">Provides</span> <span class="string">hook</span> <span class="string">guidance.</span></span><br></pre></td></tr></table></figure>
-<p>当用户输入与某个 Skill 的 description 语义匹配时，Claude Code 会将该 Skill 的 <a target="_blank" rel="noopener" href="http://SKILL.md">SKILL.md</a> 正文加载到上下文中。<a target="_blank" rel="noopener" href="http://SKILL.md">SKILL.md</a> 正文中会引用 <code>references/</code>、<code>examples/</code>、<code>scripts/</code> 目录下的资源，Claude 可以根据需要主动读取这些资源。</p>
+<p>当用户输入与某个 Skill 的 description 语义匹配时，Claude Code 会将该 Skill 的 SKILL.md 正文加载到上下文中。SKILL.md 正文中会引用 <code>references/</code>、<code>examples/</code>、<code>scripts/</code> 目录下的资源，Claude 可以根据需要主动读取这些资源。</p>
 <p>v2.1.59 修复了 Claude 有时会冗余地调用 Skill 工具（即使直接运行斜杠命令时）的问题。v2.1.59 还改进了 Skill 建议的优先级——优先推荐最近和最常使用的 Skill。</p>
-<h4 id="skill-的条件触发"><a class="markdownIt-Anchor" href="#skill-的条件触发"></a> Skill 的条件触发</h4>
-<p>v2.1.84 引入了 <code>paths</code> frontmatter 字段，支持基于文件路径的条件触发：</p>
+<h4 id="Skill-的条件触发"><a href="#Skill-的条件触发" class="headerlink" title="Skill 的条件触发"></a>Skill 的条件触发</h4><p>v2.1.84 引入了 <code>paths</code> frontmatter 字段，支持基于文件路径的条件触发：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">frontend-design</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">This</span> <span class="string">skill</span> <span class="string">should</span> <span class="string">be</span> <span class="string">used</span> <span class="string">when</span> <span class="string">working</span> <span class="string">on</span> <span class="string">frontend</span> <span class="string">components</span></span><br><span class="line"><span class="attr">paths:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;src/components/**&quot;</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;src/pages/**&quot;</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;*.tsx&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
 <p>只有当用户正在操作匹配 glob 模式的文件时，该 Skill 才会被激活。这进一步减少了不相关 Skill 对上下文的污染。</p>
-<p>v2.1.69 还引入了 <code>$&#123;CLAUDE_SKILL_DIR&#125;</code> 变量，允许 Skill 在 <a target="_blank" rel="noopener" href="http://SKILL.md">SKILL.md</a> 中引用自身目录下的文件，实现了 Skill 的自包含性。</p>
-<h4 id="skill-的资源组织"><a class="markdownIt-Anchor" href="#skill-的资源组织"></a> Skill 的资源组织</h4>
-<p>Skill 的资源分为四类，每类有不同的加载语义：</p>
+<p>v2.1.69 还引入了 <code>$&#123;CLAUDE_SKILL_DIR&#125;</code> 变量，允许 Skill 在 SKILL.md 中引用自身目录下的文件，实现了 Skill 的自包含性。</p>
+<h4 id="Skill-的资源组织"><a href="#Skill-的资源组织" class="headerlink" title="Skill 的资源组织"></a>Skill 的资源组织</h4><p>Skill 的资源分为四类，每类有不同的加载语义：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -566,22 +549,20 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p><code>scripts/</code> 和 <code>assets/</code> 的关键优势是：它们可以被使用而不需要被读入上下文窗口。一个 Python 脚本可以直接通过 <code>Bash</code> 工具执行，Claude 只需要知道脚本的路径和参数格式，不需要把整个脚本内容加载到上下文中。</p>
-<h4 id="自动发现机制"><a class="markdownIt-Anchor" href="#自动发现机制"></a> 自动发现机制</h4>
-<p>Claude Code 在启动时自动扫描以下位置的 Skill：</p>
+<h4 id="自动发现机制"><a href="#自动发现机制" class="headerlink" title="自动发现机制"></a>自动发现机制</h4><p>Claude Code 在启动时自动扫描以下位置的 Skill：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 项目级：.claude/skills/*/SKILL.md</span><br><span class="line">2. 插件级：plugins/*/skills/*/SKILL.md</span><br><span class="line">3. 用户级：~/.claude/skills/*/SKILL.md</span><br><span class="line">4. 附加目录：--add-dir 指定的目录中的 .claude/skills/*/SKILL.md</span><br><span class="line">5. 嵌套发现：子目录中的 .claude/skills/ (v2.1.6+)</span><br></pre></td></tr></table></figure>
 <p>Skill 的自动发现需要处理几个安全和性能问题。嵌套发现可能会意外加载 gitignored 目录（如 <code>node_modules</code>）中的 Skill，需要过滤。<code>--setting-sources user</code> 参数需要正确阻止动态发现的项目 Skill。为了提升启动性能，commands、skills 和 agents 会从磁盘缓存加载，无需每次重新扫描文件系统。此外，Skill description 中包含冒号（如 “Triggers include: X, Y, Z”）会导致 YAML frontmatter 解析失败，需要特殊处理。</p>
-<hr />
-<h3 id="插件系统架构"><a class="markdownIt-Anchor" href="#插件系统架构"></a> 插件系统架构</h3>
-<p>插件系统是 Claude Code 最核心的扩展机制，采用<strong>声明式 + 约定式</strong>设计。</p>
-<h4 id="插件目录结构与发现"><a class="markdownIt-Anchor" href="#插件目录结构与发现"></a> 插件目录结构与发现</h4>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">plugin-name/</span><br><span class="line">├── .claude-plugin/</span><br><span class="line">│   └── plugin.json          ← 插件清单（唯一必需文件）</span><br><span class="line">├── commands/                ← 斜杠命令（Markdown + YAML Frontmatter）</span><br><span class="line">├── agents/                  ← 专业代理定义</span><br><span class="line">├── skills/                  ← 技能（语义触发的上下文增强）</span><br><span class="line">├── hooks/                   ← 事件钩子</span><br><span class="line">│   └── hooks.json</span><br><span class="line">├── settings.json            ← 插件默认配置（v2.1.49+）</span><br><span class="line">├── .mcp.json                ← MCP 服务器配置</span><br><span class="line">└── README.md</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="插件系统架构"><a href="#插件系统架构" class="headerlink" title="插件系统架构"></a>插件系统架构</h3><p>插件系统是 Claude Code 最核心的扩展机制，采用<strong>声明式 + 约定式</strong>设计。</p>
+<h4 id="插件目录结构与发现"><a href="#插件目录结构与发现" class="headerlink" title="插件目录结构与发现"></a>插件目录结构与发现</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">plugin-name/</span><br><span class="line">├── .claude-plugin/</span><br><span class="line">│   └── plugin.json          ← 插件清单（唯一必需文件）</span><br><span class="line">├── commands/                ← 斜杠命令（Markdown + YAML Frontmatter）</span><br><span class="line">├── agents/                  ← 专业代理定义</span><br><span class="line">├── skills/                  ← 技能（语义触发的上下文增强）</span><br><span class="line">├── hooks/                   ← 事件钩子</span><br><span class="line">│   └── hooks.json</span><br><span class="line">├── settings.json            ← 插件默认配置（v2.1.49+）</span><br><span class="line">├── .mcp.json                ← MCP 服务器配置</span><br><span class="line">└── README.md</span><br></pre></td></tr></table></figure>
 <p>Claude Code 在启动时的组件发现流程：</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/08-plugin-component-discovery.png" class="" title="sucessful">
 <p><code>plugin.json</code> 最小配置只需一个 <code>name</code> 字段（kebab-case，正则 <code>/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/</code>）。路径必须以 <code>./</code> 开头，不允许 <code>../</code> 或绝对路径。</p>
-<h4 id="markdown-as-codefrontmatter-协议"><a class="markdownIt-Anchor" href="#markdown-as-codefrontmatter-协议"></a> Markdown as Code：Frontmatter 协议</h4>
-<p>命令和代理都是 <strong>Markdown 文件</strong>，通过 YAML Frontmatter 声明元数据。这是 Claude Code 最巧妙的设计——用 Markdown 同时承载了&quot;给 LLM 的 Prompt&quot;和&quot;给系统的配置&quot;。</p>
+<h4 id="Markdown-as-Code：Frontmatter-协议"><a href="#Markdown-as-Code：Frontmatter-协议" class="headerlink" title="Markdown as Code：Frontmatter 协议"></a>Markdown as Code：Frontmatter 协议</h4><p>命令和代理都是 <strong>Markdown 文件</strong>，通过 YAML Frontmatter 声明元数据。这是 Claude Code 最巧妙的设计——用 Markdown 同时承载了”给 LLM 的 Prompt”和”给系统的配置”。</p>
 <p>Frontmatter 支持的完整字段：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -658,9 +639,10 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p><code>allowed-tools</code> 的过滤语法支持多种模式：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 精确命令匹配</span></span><br><span class="line"><span class="attr">allowed-tools:</span> <span class="string">Bash(git:*),</span> <span class="string">Read,</span> <span class="string">Write</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 通配符匹配（v2.1.59+）</span></span><br><span class="line"><span class="attr">allowed-tools:</span> <span class="string">Bash(npm</span> <span class="string">*),</span> <span class="string">Bash(*</span> <span class="string">install),</span> <span class="string">Bash(git</span> <span class="string">*</span> <span class="string">main)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># MCP 工具匹配</span></span><br><span class="line"><span class="attr">allowed-tools:</span> <span class="string">mcp__github_inline_comment__create_inline_comment</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># YAML 列表语法（v2.1.59+）</span></span><br><span class="line"><span class="attr">allowed-tools:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Bash(git:*)</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Read</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Write</span></span><br></pre></td></tr></table></figure>
-<h4 id="插件来源与分发"><a class="markdownIt-Anchor" href="#插件来源与分发"></a> 插件来源与分发</h4>
+<h4 id="插件来源与分发"><a href="#插件来源与分发" class="headerlink" title="插件来源与分发"></a>插件来源与分发</h4><div class="table-container">
 <table>
 <thead>
 <tr>
@@ -697,43 +679,36 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>v2.1.81 引入了 ref-tracked 插件的自动更新——每次加载时重新 clone，确保始终使用上游最新版本。v2.1.14 支持将插件 pin 到特定 git commit SHA。</p>
-<h4 id="插件选项系统"><a class="markdownIt-Anchor" href="#插件选项系统"></a> 插件选项系统</h4>
-<p>v2.1.83 引入了 <code>manifest.userConfig</code>，允许插件声明用户可配置的选项：</p>
+<h4 id="插件选项系统"><a href="#插件选项系统" class="headerlink" title="插件选项系统"></a>插件选项系统</h4><p>v2.1.83 引入了 <code>manifest.userConfig</code>，允许插件声明用户可配置的选项：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;my-plugin&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;userConfig&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;apiKey&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;API key for the service&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;sensitive&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;maxRetries&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;number&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="number">3</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p><code>sensitive: true</code> 的值存储在 macOS Keychain 或其他平台的受保护凭证文件中，而非明文配置。</p>
-<hr />
-<h3 id="hook-事件系统"><a class="markdownIt-Anchor" href="#hook-事件系统"></a> Hook 事件系统</h3>
-<p>Hook 系统是 Claude Code 实现<strong>行为可编程性</strong>的核心机制。它在代理循环的关键节点插入了可编程的拦截点。</p>
-<h4 id="完整事件生命周期"><a class="markdownIt-Anchor" href="#完整事件生命周期"></a> 完整事件生命周期</h4>
-<img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/09-hook-event-lifecycle.png" class="" title="sucessful">
-<p>Hook 事件的生命周期严格遵循代理循环的执行顺序。一次完整的会话从 <code>SessionStart</code> 开始，系统首先加载 <a target="_blank" rel="noopener" href="http://CLAUDE.md">CLAUDE.md</a> 指令文件并触发 <code>InstructionsLoaded</code>，随后进入代理循环的主体。每一轮用户交互都以 <code>UserPromptSubmit</code> 开始——这是用户输入进入系统的第一个拦截点。如果当前上下文已经接近窗口上限，系统会在 LLM 推理之前触发 <code>PreCompact</code> → 压缩 → <code>PostCompact</code> 序列。LLM 推理完成后，如果模型决定调用工具，则进入 <code>PreToolUse</code> → 执行 → <code>PostToolUse</code> 的工具执行管线；工具执行过程中可能触发一系列副作用事件——文件变更触发 <code>FileChanged</code>，创建子代理触发 <code>TaskCreated</code>，创建 Worktree 触发 <code>WorktreeCreate</code>，MCP 服务器请求用户输入触发 <code>Elicitation</code>。如果 LLM 决定停止，则触发 <code>Stop</code>（主代理）或 <code>SubagentStop</code>（子代理），最终以 <code>SessionEnd</code> 结束会话。如果 API 调用本身出错（网络超时、速率限制等），则触发 <code>StopFailure</code> 而非正常的 <code>Stop</code>。</p>
-<p>值得注意的是，<code>ConfigChange</code> 和 <code>Notification</code> 是两个不在主循环中的旁路事件——<code>ConfigChange</code> 在用户修改 settings.json 或 <a target="_blank" rel="noopener" href="http://CLAUDE.md">CLAUDE.md</a> 时触发，<code>Notification</code> 在系统发送桌面通知时触发。它们可以在会话的任何时刻发生，不受代理循环阶段的约束。</p>
-<h4 id="事件分类与控制能力"><a class="markdownIt-Anchor" href="#事件分类与控制能力"></a> 事件分类与控制能力</h4>
-<p>从控制能力的角度，这 20 种事件可以分为三类：</p>
+<hr>
+<h3 id="Hook-事件系统"><a href="#Hook-事件系统" class="headerlink" title="Hook 事件系统"></a>Hook 事件系统</h3><p>Hook 系统是 Claude Code 实现<strong>行为可编程性</strong>的核心机制。它在代理循环的关键节点插入了可编程的拦截点。</p>
+<h4 id="完整事件生命周期"><a href="#完整事件生命周期" class="headerlink" title="完整事件生命周期"></a>完整事件生命周期</h4><img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/09-hook-event-lifecycle.png" class="" title="sucessful">
+<p>Hook 事件的生命周期严格遵循代理循环的执行顺序。一次完整的会话从 <code>SessionStart</code> 开始，系统首先加载 CLAUDE.md 指令文件并触发 <code>InstructionsLoaded</code>，随后进入代理循环的主体。每一轮用户交互都以 <code>UserPromptSubmit</code> 开始——这是用户输入进入系统的第一个拦截点。如果当前上下文已经接近窗口上限，系统会在 LLM 推理之前触发 <code>PreCompact</code> → 压缩 → <code>PostCompact</code> 序列。LLM 推理完成后，如果模型决定调用工具，则进入 <code>PreToolUse</code> → 执行 → <code>PostToolUse</code> 的工具执行管线；工具执行过程中可能触发一系列副作用事件——文件变更触发 <code>FileChanged</code>，创建子代理触发 <code>TaskCreated</code>，创建 Worktree 触发 <code>WorktreeCreate</code>，MCP 服务器请求用户输入触发 <code>Elicitation</code>。如果 LLM 决定停止，则触发 <code>Stop</code>（主代理）或 <code>SubagentStop</code>（子代理），最终以 <code>SessionEnd</code> 结束会话。如果 API 调用本身出错（网络超时、速率限制等），则触发 <code>StopFailure</code> 而非正常的 <code>Stop</code>。</p>
+<p>值得注意的是，<code>ConfigChange</code> 和 <code>Notification</code> 是两个不在主循环中的旁路事件——<code>ConfigChange</code> 在用户修改 settings.json 或 CLAUDE.md 时触发，<code>Notification</code> 在系统发送桌面通知时触发。它们可以在会话的任何时刻发生，不受代理循环阶段的约束。</p>
+<h4 id="事件分类与控制能力"><a href="#事件分类与控制能力" class="headerlink" title="事件分类与控制能力"></a>事件分类与控制能力</h4><p>从控制能力的角度，这 20 种事件可以分为三类：</p>
 <p><strong>可决策事件</strong>——Hook 的返回值直接影响代理的下一步行为。<code>PreToolUse</code> 是最强大的可决策事件：Hook 可以返回 <code>allow</code> 直接放行、<code>deny</code> 拒绝执行并注入 <code>systemMessage</code> 告知模型原因、<code>ask</code> 交由用户审批，还可以通过 <code>updatedInput</code> 修改工具的输入参数（例如将危险的 <code>rm -rf /</code> 改写为 <code>rm -rf ./build/</code>），或通过 <code>additionalContext</code> 向模型注入额外的上下文信息。<code>Stop</code> 和 <code>SubagentStop</code> 同样是可决策事件——Hook 可以返回 <code>block</code> 强制代理继续工作（配合 <code>systemMessage</code> 告诉模型为什么不能停），这在自动化流水线中非常有用，可以确保代理完成所有预定步骤才停止。<code>UserPromptSubmit</code> 可以通过 <code>updatedInput</code> 重写用户的原始输入——典型用途是自动补充上下文、翻译语言或注入安全约束。</p>
 <p><strong>可观测事件</strong>——Hook 可以观察到事件发生并注入信息，但不能改变代理的决策方向。<code>PostToolUse</code> 属于此类：Hook 可以在工具执行完成后通过 <code>systemMessage</code> 向模型注入反馈（例如“这个文件已经被修改，请重新读取”），但不能阻止工具执行或修改其结果。<code>PostCompact</code> 也是可观测事件——它允许 Hook 在上下文压缩完成后通过 <code>systemMessage</code> 重新注入关键信息（例如压缩前的重要决策、未完成的任务列表），确保压缩不会丢失关键状态。</p>
 <p><strong>纯通知事件</strong>——Hook 只能观察，不能注入任何信息。<code>SessionStart</code>、<code>SessionEnd</code>、<code>FileChanged</code>、<code>CwdChanged</code>、<code>TaskCreated</code>、<code>ConfigChange</code>、<code>Notification</code> 等都属于此类。它们的主要用途是审计日志、外部系统同步和环境初始化。其中 <code>SessionStart</code> 是一个特例——它虽然不能通过返回值影响代理行为，但可以通过 <code>$CLAUDE_ENV_FILE</code> 机制持久化环境变量，间接影响整个会话的行为。</p>
-<h4 id="三种-hook-类型与通信协议"><a class="markdownIt-Anchor" href="#三种-hook-类型与通信协议"></a> 三种 Hook 类型与通信协议</h4>
-<p>Claude Code 提供了三种 Hook 实现方式，分别面向不同的使用场景和技术栈。</p>
+<h4 id="三种-Hook-类型与通信协议"><a href="#三种-Hook-类型与通信协议" class="headerlink" title="三种 Hook 类型与通信协议"></a>三种 Hook 类型与通信协议</h4><p>Claude Code 提供了三种 Hook 实现方式，分别面向不同的使用场景和技术栈。</p>
 <p><strong>Command Hook</strong> 是最基础也最灵活的类型——它通过 <code>spawn</code> 启动一个外部子进程，将事件上下文以 JSON 格式写入子进程的 stdin，然后从 stdout 读取 JSON 格式的返回值。子进程的退出码决定了默认行为：退出码 0 表示允许，退出码 2 表示阻止。这意味着即使脚本没有输出任何 JSON，系统也能通过退出码做出决策。所有 Command Hook 都会收到一组共享的上下文字段——<code>session_id</code>（会话标识）、<code>transcript_path</code>（完整对话记录的文件路径，脚本可以读取这个文件来分析对话历史）、<code>cwd</code>（当前工作目录）、<code>permission_mode</code>（当前权限模式）、<code>hook_event_name</code>（事件名称）。如果当前运行在子代理或 Worktree 中，还会附加 <code>agent_id</code>、<code>agent_type</code> 和 <code>worktree</code>（包含 name、path、branch、originalRepoDir 四个字段）信息。Command Hook 可以用任何语言编写——Python、Bash、Node.js、Go 编译的二进制文件都可以，只要它能从 stdin 读取 JSON 并向 stdout 写入 JSON。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/10-hook-command-communication.png" class="" title="sucessful">
-<p><strong>Prompt Hook</strong> 是一种更高层次的抽象——它不执行外部脚本，而是将事件上下文嵌入到一个 prompt 模板中，发送给 LLM 进行智能判断。系统支持 <code>$TOOL_INPUT</code>、<code>$TOOL_RESULT</code>、<code>$USER_PROMPT</code>、<code>$TRANSCRIPT_PATH</code> 等变量插值，这些占位符会在发送前被替换为实际值。LLM 的返回值会被解析为 <code>allow</code>/<code>deny</code>/<code>block</code> 决策。Prompt Hook 的优势在于它能处理模糊的、需要语义理解的判断——例如&quot;这个 Shell 命令是否可能删除重要数据&quot;或&quot;代理的回答是否完整解决了用户的问题&quot;。但它的限制也很明显：每次触发都会产生一次 LLM API 调用，带来额外的延迟和成本；且仅支持 <code>Stop</code>、<code>SubagentStop</code>、<code>UserPromptSubmit</code>、<code>PreToolUse</code> 四种事件。</p>
+<p><strong>Prompt Hook</strong> 是一种更高层次的抽象——它不执行外部脚本，而是将事件上下文嵌入到一个 prompt 模板中，发送给 LLM 进行智能判断。系统支持 <code>$TOOL_INPUT</code>、<code>$TOOL_RESULT</code>、<code>$USER_PROMPT</code>、<code>$TRANSCRIPT_PATH</code> 等变量插值，这些占位符会在发送前被替换为实际值。LLM 的返回值会被解析为 <code>allow</code>/<code>deny</code>/<code>block</code> 决策。Prompt Hook 的优势在于它能处理模糊的、需要语义理解的判断——例如”这个 Shell 命令是否可能删除重要数据”或”代理的回答是否完整解决了用户的问题”。但它的限制也很明显：每次触发都会产生一次 LLM API 调用，带来额外的延迟和成本；且仅支持 <code>Stop</code>、<code>SubagentStop</code>、<code>UserPromptSubmit</code>、<code>PreToolUse</code> 四种事件。</p>
 <p><strong>HTTP Hook</strong> 是面向分布式系统的类型——它将事件上下文以 JSON 格式 POST 到一个远程 HTTP 端点，字段结构与 Command Hook 的 stdin 完全相同。远程服务返回 HTTP 200 + JSON 响应体，响应格式也与 Command Hook 的 stdout 相同。HTTP Hook 的优势在于它可以将审计、合规检查、权限管控等逻辑集中到一个中央服务，而不是分散在每个开发者的本地脚本中——这对企业级部署尤其重要。</p>
-<h4 id="条件触发与并行执行"><a class="markdownIt-Anchor" href="#条件触发与并行执行"></a> 条件触发与并行执行</h4>
-<p>Hook 的触发支持两级过滤。第一级是 <code>matcher</code> 字段——它指定了 Hook 关注的工具名称（仅对 <code>PreToolUse</code> 和 <code>PostToolUse</code> 有效）。第二级是 <code>if</code> 条件字段——它使用与权限规则相同的语法进行更细粒度的过滤。例如，一个 Hook 的 <code>matcher</code> 设为 <code>Bash</code>（匹配所有 Bash 调用），但 <code>if</code> 设为 <code>Bash(git *)</code>（只匹配 git 命令），这样就能精确拦截 git 操作而不影响其他 Shell 命令：</p>
+<h4 id="条件触发与并行执行"><a href="#条件触发与并行执行" class="headerlink" title="条件触发与并行执行"></a>条件触发与并行执行</h4><p>Hook 的触发支持两级过滤。第一级是 <code>matcher</code> 字段——它指定了 Hook 关注的工具名称（仅对 <code>PreToolUse</code> 和 <code>PostToolUse</code> 有效）。第二级是 <code>if</code> 条件字段——它使用与权限规则相同的语法进行更细粒度的过滤。例如，一个 Hook 的 <code>matcher</code> 设为 <code>Bash</code>（匹配所有 Bash 调用），但 <code>if</code> 设为 <code>Bash(git *)</code>（只匹配 git 命令），这样就能精确拦截 git 操作而不影响其他 Shell 命令：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;PreToolUse&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;matcher&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Bash&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;hooks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;command&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;bash validate-git.sh&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;if&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Bash(git *)&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">      <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>此外，<code>once: true</code> 配置可以让 Hook 只在首次匹配时触发一次——典型用途是 SessionStart 时的一次性环境检测，或者首次使用某个工具时的初始化逻辑。</p>
 <p>在执行模型上，Claude Code 做了一个重要的设计决策：<strong>同一事件的所有匹配 Hook 并行执行</strong>。当一个 <code>PreToolUse</code> 事件同时匹配了三个 Hook 时，这三个 Hook 会被同时启动（Command Hook 同时 spawn 三个子进程，HTTP Hook 同时发出三个请求），系统等待所有 Hook 完成后合并结果。这意味着总延迟等于最慢的那个 Hook 的延迟，而非所有 Hook 延迟之和。但这也带来了约束：Hook 之间不能依赖执行顺序，不能假设某个 Hook 先于另一个完成，也不能通过内存共享状态（只能通过文件系统或外部存储）。当多个 Hook 返回冲突的决策时（例如一个返回 <code>allow</code>，另一个返回 <code>deny</code>），系统采用<strong>最严格优先</strong>的合并策略——<code>deny</code> 优先于 <code>ask</code>，<code>ask</code> 优先于 <code>allow</code>。</p>
-<h4 id="sessionstart-的特殊能力"><a class="markdownIt-Anchor" href="#sessionstart-的特殊能力"></a> SessionStart 的特殊能力</h4>
-<p>在所有事件中，<code>SessionStart</code> 拥有一个独特的机制：<strong>环境变量持久化</strong>。系统会为每个会话创建一个临时文件，其路径通过 <code>$CLAUDE_ENV_FILE</code> 环境变量传递给 Hook 脚本。Hook 可以向这个文件写入 <code>export KEY=VALUE</code> 格式的行，这些环境变量会在整个会话期间持续生效——不仅对后续的 Hook 可见，对代理循环中执行的所有 Bash 命令也可见。</p>
+<h4 id="SessionStart-的特殊能力"><a href="#SessionStart-的特殊能力" class="headerlink" title="SessionStart 的特殊能力"></a>SessionStart 的特殊能力</h4><p>在所有事件中，<code>SessionStart</code> 拥有一个独特的机制：<strong>环境变量持久化</strong>。系统会为每个会话创建一个临时文件，其路径通过 <code>$CLAUDE_ENV_FILE</code> 环境变量传递给 Hook 脚本。Hook 可以向这个文件写入 <code>export KEY=VALUE</code> 格式的行，这些环境变量会在整个会话期间持续生效——不仅对后续的 Hook 可见，对代理循环中执行的所有 Bash 命令也可见。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">cd</span> <span class="string">&quot;<span class="variable">$CLAUDE_PROJECT_DIR</span>&quot;</span> || <span class="built_in">exit</span> 1</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f <span class="string">&quot;package.json&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">  <span class="built_in">echo</span> <span class="string">&quot;export PROJECT_TYPE=nodejs&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$CLAUDE_ENV_FILE</span>&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> <span class="string">&quot;export NODE_VERSION=<span class="subst">$(node -v 2&gt;/dev/null)</span>&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$CLAUDE_ENV_FILE</span>&quot;</span></span><br><span class="line"><span class="keyword">elif</span> [ -f <span class="string">&quot;Cargo.toml&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">  <span class="built_in">echo</span> <span class="string">&quot;export PROJECT_TYPE=rust&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$CLAUDE_ENV_FILE</span>&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> <span class="string">&quot;export RUST_VERSION=<span class="subst">$(rustc --version 2&gt;/dev/null)</span>&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$CLAUDE_ENV_FILE</span>&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
 <p>这个机制使得 <code>SessionStart</code> Hook 可以充当<strong>环境探测器</strong>——在会话开始时自动检测项目类型、运行时版本、可用工具链，并将这些信息以环境变量的形式持久化。后续的 Hook 和 Bash 命令可以直接读取这些变量来调整行为，而不需要每次都重新检测。</p>
-<hr />
-<h3 id="多代理编排与-worktree-隔离"><a class="markdownIt-Anchor" href="#多代理编排与-worktree-隔离"></a> 多代理编排与 Worktree 隔离</h3>
-<p>Claude Code 的多代理系统不是简单的&quot;调用多个 API&quot;，而是一套完整的分布式代理协作框架，支持并行执行、模型分级、Worktree 隔离和后台任务。</p>
-<h4 id="agent-工具族与通信模型"><a class="markdownIt-Anchor" href="#agent-工具族与通信模型"></a> Agent 工具族与通信模型</h4>
-<img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/11-multi-agent-tools.png" class="" title="sucessful">
+<hr>
+<h3 id="多代理编排与-Worktree-隔离"><a href="#多代理编排与-Worktree-隔离" class="headerlink" title="多代理编排与 Worktree 隔离"></a>多代理编排与 Worktree 隔离</h3><p>Claude Code 的多代理系统不是简单的”调用多个 API”，而是一套完整的分布式代理协作框架，支持并行执行、模型分级、Worktree 隔离和后台任务。</p>
+<h4 id="Agent-工具族与通信模型"><a href="#Agent-工具族与通信模型" class="headerlink" title="Agent 工具族与通信模型"></a>Agent 工具族与通信模型</h4><img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/11-multi-agent-tools.png" class="" title="sucessful">
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -764,9 +739,10 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>v2.1.77 移除了 Agent 工具的 <code>resume</code> 参数，改为通过 <code>SendMessage(&#123;to: agentId&#125;)</code> 恢复已停止的代理。v2.1.59 改进了子代理——在权限被拒绝后继续工作，允许尝试替代方案。</p>
-<h4 id="模型分级策略"><a class="markdownIt-Anchor" href="#模型分级策略"></a> 模型分级策略</h4>
-<p>从 <code>code-review</code> 插件的源码可以看到精细的模型分级：</p>
+<h4 id="模型分级策略"><a href="#模型分级策略" class="headerlink" title="模型分级策略"></a>模型分级策略</h4><p>从 <code>code-review</code> 插件的源码可以看到精细的模型分级：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -803,9 +779,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>v2.1.68 起，Opus 4.6 默认使用 medium effort，可通过 <code>/effort</code> 或 <code>effort</code> frontmatter 调整。v2.1.72 简化了 effort 级别为 <code>low</code>/<code>medium</code>/<code>high</code>（移除了 <code>max</code>），对应符号 <code>○ ◐ ●</code>。</p>
-<h4 id="worktree-隔离"><a class="markdownIt-Anchor" href="#worktree-隔离"></a> Worktree 隔离</h4>
-<p>v2.1.49 引入了 <code>--worktree</code>（<code>-w</code>）标志和 <code>isolation: &quot;worktree&quot;</code> 代理属性，允许代理在<strong>隔离的 git worktree</strong> 中工作。</p>
+<h4 id="Worktree-隔离"><a href="#Worktree-隔离" class="headerlink" title="Worktree 隔离"></a>Worktree 隔离</h4><p>v2.1.49 引入了 <code>--worktree</code>（<code>-w</code>）标志和 <code>isolation: &quot;worktree&quot;</code> 代理属性，允许代理在<strong>隔离的 git worktree</strong> 中工作。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/12-worktree-isolation.png" class="" title="sucessful">
 <p>Worktree 隔离解决了一个核心问题：<strong>多个代理同时修改同一个仓库的文件会产生冲突</strong>。通过为每个代理创建独立的 worktree，它们可以在不同的分支上并行工作。</p>
 <p>技术细节：</p>
@@ -817,8 +793,7 @@
 <li><strong>自定义 VCS 初始化</strong>：<code>WorktreeCreate</code>/<code>WorktreeRemove</code> Hook 允许在 worktree 创建/删除时执行自定义逻辑（如初始化 Jujutsu VCS）</li>
 <li><strong>Windows 兼容</strong>：v2.1.69 修复了 Windows 上 worktree 文件复制的问题</li>
 </ul>
-<h4 id="agent-teams代理团队"><a class="markdownIt-Anchor" href="#agent-teams代理团队"></a> Agent Teams（代理团队）</h4>
-<p>Agent Teams 是更高级的多代理模式——多个代理以 <strong>tmux 分屏</strong>的形式并行运行，共享同一个终端界面。v2.1.32 作为研究预览引入（需要设置 <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>）。</p>
+<h4 id="Agent-Teams（代理团队）"><a href="#Agent-Teams（代理团队）" class="headerlink" title="Agent Teams（代理团队）"></a>Agent Teams（代理团队）</h4><p>Agent Teams 是更高级的多代理模式——多个代理以 <strong>tmux 分屏</strong>的形式并行运行，共享同一个终端界面。v2.1.32 作为研究预览引入（需要设置 <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>）。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/13-agent-teams-tmux.png" class="" title="sucessful">
 <p>从 CHANGELOG 中可以看到 Agent Teams 的技术挑战：</p>
 <ul>
@@ -828,22 +803,19 @@
 <li><strong>内存管理</strong>：v2.1.69 修复了 in-process teammates 的完整对话历史被 pin 住，阻止 GC</li>
 <li><strong>导航简化</strong>：v2.1.47 简化了 teammate 导航——只使用 Shift+Down（带循环），而非 Shift+Up/Down</li>
 </ul>
-<h4 id="编排模式实例"><a class="markdownIt-Anchor" href="#编排模式实例"></a> 编排模式实例</h4>
-<p><strong>模式一：阶段式编排（feature-dev 7 阶段流水线）</strong></p>
+<h4 id="编排模式实例"><a href="#编排模式实例" class="headerlink" title="编排模式实例"></a>编排模式实例</h4><p><strong>模式一：阶段式编排（feature-dev 7 阶段流水线）</strong></p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/14-orchestration-phased-pipeline.png" class="" title="sucessful">
 <p><strong>模式二：多轮验证流水线（code-review 9 步）</strong></p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/15-orchestration-code-review.png" class="" title="sucessful">
 <p>关键设计决策：</p>
 <ol>
-<li><strong>两轮验证</strong>：Step 4 发现问题，Step 5 用独立代理验证。这种&quot;发现-验证&quot;模式显著降低误报率。</li>
+<li><strong>两轮验证</strong>：Step 4 发现问题，Step 5 用独立代理验证。这种”发现-验证”模式显著降低误报率。</li>
 <li><strong>严格的信号过滤</strong>：明确列出了不应标记的问题类型——预存在问题、Linter 能捕获的问题、主观建议、看起来像 bug 但实际正确的代码。</li>
 <li><strong>Agent 3 vs Agent 4 的分工</strong>：Agent 3 只看 diff（快速扫描明显 bug），Agent 4 读取上下文（深度分析逻辑问题）。两者并行运行，互不干扰。</li>
 </ol>
-<hr />
-<h3 id="mcp-集成架构"><a class="markdownIt-Anchor" href="#mcp-集成架构"></a> MCP 集成架构</h3>
-<p><span style="color: #BB8ED0; font-weight: bold;">MCP（Model Context Protocol）</span> 是 Anthropic 主导的开放协议，定义了 LLM 应用与外部工具/数据源之间的标准通信方式。Claude Code 对 MCP 的集成不是简单的&quot;调用 API&quot;，而是一套完整的服务器生命周期管理、认证、工具注册和容错系统。</p>
-<h4 id="四种传输方式与通信流程"><a class="markdownIt-Anchor" href="#四种传输方式与通信流程"></a> 四种传输方式与通信流程</h4>
-<p><strong>1. stdio 传输（本地工具）</strong></p>
+<hr>
+<h3 id="MCP-集成架构"><a href="#MCP-集成架构" class="headerlink" title="MCP 集成架构"></a>MCP 集成架构</h3><p><span style="color: #BB8ED0; font-weight: bold;">MCP（Model Context Protocol）</span> 是 Anthropic 主导的开放协议，定义了 LLM 应用与外部工具/数据源之间的标准通信方式。Claude Code 对 MCP 的集成不是简单的”调用 API”，而是一套完整的服务器生命周期管理、认证、工具注册和容错系统。</p>
+<h4 id="四种传输方式与通信流程"><a href="#四种传输方式与通信流程" class="headerlink" title="四种传输方式与通信流程"></a>四种传输方式与通信流程</h4><p><strong>1. stdio 传输（本地工具）</strong></p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/16-mcp-stdio-transport.png" class="" title="sucessful">
 <p>stdio 是最常用的传输方式，适用于本地 NPM 包和命令行工具。Claude Code 通过 <code>spawn</code> 启动 MCP 服务器进程，然后通过 stdin/stdout 进行 JSON-RPC 双向通信。连接建立后，Claude Code 首先发送 <code>initialize</code> 请求获取服务器的 capabilities（支持哪些功能），然后发送 <code>tools/list</code> 获取可用工具列表。在代理循环中，每次需要调用 MCP 工具时，Claude Code 发送 <code>tools/call</code> 请求并等待响应。会话结束时发送 <code>shutdown</code> 请求并终止进程。</p>
 <p>配置示例：</p>
@@ -858,76 +830,56 @@
 <p>HTTP 传输是最简单的模式——每次请求都是独立的 <code>POST /mcp</code>，不维护长连接，天然适合 Serverless 后端和 REST API。它的优势是无状态、易于扩展、不需要处理连接管理，但缺点是不支持服务器主动推送。</p>
 <p><strong>4. WebSocket 传输（双向实时）</strong></p>
 <p>WebSocket 提供全双工通信，适用于需要服务器主动推送的场景（如实时通知、流式输出）。与 SSE 的单向推送不同，WebSocket 允许双方随时发送消息。但 WebSocket 的连接管理更复杂——重连时需要避免 duplicate <code>control_response</code> 消息导致 API 400 错误，listener 的注册和清理也需要特别小心以避免内存泄漏。</p>
-<h4 id="oauth-认证流程"><a class="markdownIt-Anchor" href="#oauth-认证流程"></a> OAuth 认证流程</h4>
-<p>当 Claude Code 尝试连接一个需要认证的 MCP 服务器时，服务器会返回 <code>401 Unauthorized</code>。此时 Claude Code 启动 OAuth 2.0 认证流程。</p>
+<h4 id="OAuth-认证流程"><a href="#OAuth-认证流程" class="headerlink" title="OAuth 认证流程"></a>OAuth 认证流程</h4><p>当 Claude Code 尝试连接一个需要认证的 MCP 服务器时，服务器会返回 <code>401 Unauthorized</code>。此时 Claude Code 启动 OAuth 2.0 认证流程。</p>
 <p>第一步是<strong>发现授权服务器</strong>。Claude Code 向 MCP 服务器发送 <code>GET /.well-known/oauth-protected-resource</code>（遵循 RFC 9728 Protected Resource Metadata 规范），服务器返回其关联的授权服务器地址。然后 Claude Code 向授权服务器发送 <code>GET /.well-known/oauth-authorization-server</code> 获取完整的 Authorization Server Metadata（包括 token endpoint、authorization endpoint、支持的 grant types 等）。如果标准发现失败，可以通过 <code>oauth.authServerMetadataUrl</code> 配置指定自定义的发现 URL。</p>
 <p>第二步是<strong>客户端注册</strong>。这里有三种策略：如果授权服务器支持 Dynamic Client Registration（DCR），Claude Code 会自动通过 <code>POST /register</code> 注册自己为客户端，获取 <code>client_id</code> 和 <code>client_secret</code>；如果服务器不支持 DCR（如 Slack），用户需要通过 <code>--client-id</code> 和 <code>--client-secret</code> 参数预配置凭证；第三种是 CIMD（Client ID Metadata Document，SEP-991 规范）——Claude Code 通过 <code>GET</code> 请求获取一个静态的 Client ID Metadata Document，无需动态注册。</p>
 <p>第三步是<strong>用户授权</strong>。Claude Code 打开系统浏览器导航到授权页面，用户在浏览器中完成授权后，授权服务器通过回调 URL 将 <code>authorization_code</code> 返回给 Claude Code 本地启动的 HTTP 服务器。这里有一个工程细节：回调端口可能被其他程序占用，导致认证挂起——系统需要处理端口冲突的情况。</p>
 <p>第四步是 <strong>Token 交换与刷新</strong>。Claude Code 用 <code>authorization_code</code> 向授权服务器的 token endpoint 换取 <code>access_token</code> 和 <code>refresh_token</code>。Token 存储在 macOS Keychain 或平台等效的受保护存储中。当 <code>access_token</code> 过期时，系统自动使用 <code>refresh_token</code> 获取新的 <code>access_token</code>。这里有一个并发问题：当多个并行的工具调用同时发现 token 过期时，它们可能同时尝试刷新，从 keychain 缓存中读取到同一个过期的 token。系统需要通过锁机制确保只有一个刷新请求被发出。另一个问题是 macOS Keychain 的存储容量——当使用多个 OAuth MCP 服务器时，大型的 OAuth metadata blob 可能溢出 <code>security -i</code> 的 stdin buffer，导致 Keychain 损坏。</p>
 <p>最后是 <strong>Step-up Authorization</strong>。某些操作可能需要比初始授权更高的权限。当 MCP 服务器返回 <code>403 insufficient_scope</code> 时，Claude Code 会重新启动授权流程，请求更高的权限范围。用户需要在浏览器中重新授权，整个过程对代理循环是透明的——工具调用会被暂停，等待重新授权完成后自动重试。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/19-mcp-oauth-flow.png" class="" title="sucessful">
-<h4 id="工具注册与动态更新"><a class="markdownIt-Anchor" href="#工具注册与动态更新"></a> 工具注册与动态更新</h4>
-<p>MCP 服务器连接成功后，Claude Code 通过 <code>tools/list</code> 获取服务器提供的工具列表并注册到代理的可用工具集中。每个工具的描述被限制在 2KB 以内——这是因为很多 MCP 服务器是从 OpenAPI 规范自动生成的，工具描述可能非常冗长，不截断会严重膨胀上下文。注册完成后，系统检查所有 MCP 工具描述的总大小是否超过上下文窗口的 10%——如果超过，则自动启用 ToolSearch 延迟加载，只在系统提示中注入内置工具和 ToolSearch 工具，其余 MCP 工具在需要时通过 ToolSearch 动态发现。</p>
-<p>MCP 协议支持 <code>list_changed</code> 通知——服务器可以在运行时动态更新其可用工具、prompts 和 resources，无需断开连接。当 Claude Code 收到这个通知时，会重新获取工具列表并更新内部注册表。去重也是一个重要的工程问题：当本地配置和 <a target="_blank" rel="noopener" href="http://claude.ai">claude.ai</a> connector 配置了相同的 MCP 服务器时，本地配置优先；插件提供的 MCP 服务器与手动配置的服务器（相同 command 或 URL）重复时自动跳过。</p>
+<h4 id="工具注册与动态更新"><a href="#工具注册与动态更新" class="headerlink" title="工具注册与动态更新"></a>工具注册与动态更新</h4><p>MCP 服务器连接成功后，Claude Code 通过 <code>tools/list</code> 获取服务器提供的工具列表并注册到代理的可用工具集中。每个工具的描述被限制在 2KB 以内——这是因为很多 MCP 服务器是从 OpenAPI 规范自动生成的，工具描述可能非常冗长，不截断会严重膨胀上下文。注册完成后，系统检查所有 MCP 工具描述的总大小是否超过上下文窗口的 10%——如果超过，则自动启用 ToolSearch 延迟加载，只在系统提示中注入内置工具和 ToolSearch 工具，其余 MCP 工具在需要时通过 ToolSearch 动态发现。</p>
+<p>MCP 协议支持 <code>list_changed</code> 通知——服务器可以在运行时动态更新其可用工具、prompts 和 resources，无需断开连接。当 Claude Code 收到这个通知时，会重新获取工具列表并更新内部注册表。去重也是一个重要的工程问题：当本地配置和 claude.ai connector 配置了相同的 MCP 服务器时，本地配置优先；插件提供的 MCP 服务器与手动配置的服务器（相同 command 或 URL）重复时自动跳过。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/20-mcp-tool-registration.png" class="" title="sucessful">
-<h4 id="elicitation结构化输入请求"><a class="markdownIt-Anchor" href="#elicitation结构化输入请求"></a> Elicitation（结构化输入请求）</h4>
-<p>Elicitation 是 MCP 协议中一个独特的能力——它允许 MCP 服务器在工具执行过程中主动向用户请求结构化输入。例如，一个数据库 MCP 服务器在执行危险操作前可能需要用户确认，或者一个部署服务器需要用户选择目标环境。服务器发送 elicitation 请求（包含表单字段定义），Claude Code 向用户显示交互式对话框或打开浏览器 URL，用户填写完成后将结果返回给服务器，服务器继续执行工具调用。Elicitation 有对应的 Hook 事件，允许外部系统拦截和自动回答 elicitation 请求——这在 CI/CD 环境中尤其有用，可以避免人工干预。</p>
+<h4 id="Elicitation（结构化输入请求）"><a href="#Elicitation（结构化输入请求）" class="headerlink" title="Elicitation（结构化输入请求）"></a>Elicitation（结构化输入请求）</h4><p>Elicitation 是 MCP 协议中一个独特的能力——它允许 MCP 服务器在工具执行过程中主动向用户请求结构化输入。例如，一个数据库 MCP 服务器在执行危险操作前可能需要用户确认，或者一个部署服务器需要用户选择目标环境。服务器发送 elicitation 请求（包含表单字段定义），Claude Code 向用户显示交互式对话框或打开浏览器 URL，用户填写完成后将结果返回给服务器，服务器继续执行工具调用。Elicitation 有对应的 Hook 事件，允许外部系统拦截和自动回答 elicitation 请求——这在 CI/CD 环境中尤其有用，可以避免人工干预。</p>
 <img src="/2026/03/31/%E6%8E%A2%E7%B4%A2cluadecode%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/21-mcp-elicitation.png" class="" title="sucessful">
-<h4 id="channels消息推送"><a class="markdownIt-Anchor" href="#channels消息推送"></a> Channels（消息推送）</h4>
-<p>Channels 是一个研究预览功能（通过 <code>--channels</code> 参数启用），它反转了传统的 MCP 通信方向——不是 Claude Code 调用 MCP 服务器，而是 MCP 服务器主动向会话推送消息。这使得外部系统可以实时向代理注入信息——例如来自手机的审批结果、来自 CI 系统的构建状态、来自监控系统的告警。Channel 服务器还可以声明 permission capability，将工具审批提示转发到手机——这意味着用户可以在手机上审批代理的工具调用，而不需要坐在电脑前。当 Channels 激活时，系统会禁用 <code>AskUserQuestion</code> 和 plan-mode 工具，因为用户交互已经通过 Channel 进行。</p>
-<h4 id="二进制内容处理"><a class="markdownIt-Anchor" href="#二进制内容处理"></a> 二进制内容处理</h4>
-<p>MCP 工具可能返回二进制内容——PDF、Office 文档、音频、图片等。将这些内容以 base64 编码形式放入对话上下文会浪费大量 token。Claude Code 的处理策略是自动将二进制内容保存到磁盘，使用正确的文件扩展名，然后在上下文中只保留文件路径引用和内容摘要。WebFetch 工具也采用相同的策略——二进制响应保存到磁盘并附上摘要。此外，MCP 协议的 <code>resource_link</code> 类型工具结果也被支持，允许服务器返回对外部资源的引用而非实际内容。</p>
-<hr />
-<h3 id="安全沙箱模型"><a class="markdownIt-Anchor" href="#安全沙箱模型"></a> 安全沙箱模型</h3>
-<p>Claude Code 实现了<strong>五层纵深安全架构</strong>。</p>
-<h4 id="第一层权限规则系统"><a class="markdownIt-Anchor" href="#第一层权限规则系统"></a> 第一层：权限规则系统</h4>
-<p>三级控制：<code>allow</code>（自动允许）、<code>ask</code>（询问用户）、<code>deny</code>（拒绝）。</p>
+<h4 id="Channels（消息推送）"><a href="#Channels（消息推送）" class="headerlink" title="Channels（消息推送）"></a>Channels（消息推送）</h4><p>Channels 是一个研究预览功能（通过 <code>--channels</code> 参数启用），它反转了传统的 MCP 通信方向——不是 Claude Code 调用 MCP 服务器，而是 MCP 服务器主动向会话推送消息。这使得外部系统可以实时向代理注入信息——例如来自手机的审批结果、来自 CI 系统的构建状态、来自监控系统的告警。Channel 服务器还可以声明 permission capability，将工具审批提示转发到手机——这意味着用户可以在手机上审批代理的工具调用，而不需要坐在电脑前。当 Channels 激活时，系统会禁用 <code>AskUserQuestion</code> 和 plan-mode 工具，因为用户交互已经通过 Channel 进行。</p>
+<h4 id="二进制内容处理"><a href="#二进制内容处理" class="headerlink" title="二进制内容处理"></a>二进制内容处理</h4><p>MCP 工具可能返回二进制内容——PDF、Office 文档、音频、图片等。将这些内容以 base64 编码形式放入对话上下文会浪费大量 token。Claude Code 的处理策略是自动将二进制内容保存到磁盘，使用正确的文件扩展名，然后在上下文中只保留文件路径引用和内容摘要。WebFetch 工具也采用相同的策略——二进制响应保存到磁盘并附上摘要。此外，MCP 协议的 <code>resource_link</code> 类型工具结果也被支持，允许服务器返回对外部资源的引用而非实际内容。</p>
+<hr>
+<h3 id="安全沙箱模型"><a href="#安全沙箱模型" class="headerlink" title="安全沙箱模型"></a>安全沙箱模型</h3><p>Claude Code 实现了<strong>五层纵深安全架构</strong>。</p>
+<h4 id="第一层：权限规则系统"><a href="#第一层：权限规则系统" class="headerlink" title="第一层：权限规则系统"></a>第一层：权限规则系统</h4><p>三级控制：<code>allow</code>（自动允许）、<code>ask</code>（询问用户）、<code>deny</code>（拒绝）。</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;permissions&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;allow&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;Read&quot;</span><span class="punctuation">,</span> <span class="string">&quot;Bash(git *)&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ask&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;Write&quot;</span><span class="punctuation">,</span> <span class="string">&quot;Edit&quot;</span><span class="punctuation">,</span> <span class="string">&quot;Bash&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;deny&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;WebSearch&quot;</span><span class="punctuation">,</span> <span class="string">&quot;WebFetch&quot;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>权限规则的优先级链从高到低依次是：<code>deny</code> 规则具有最高优先级，任何其他规则都无法覆盖（包括 Hook 返回的 <code>allow</code>）；其次是企业 managed policy 的 <code>ask</code> 规则（不能被用户的 <code>allow</code> 规则覆盖）；然后是用户的 <code>allow</code> 规则；再然后是 Skill 的 <code>allowed-tools</code> 声明；最后是默认行为。这个优先级链确保了安全约束不会被低优先级的配置意外放宽。权限系统还需要防御各种绕过尝试——例如通过 shell 行续接（line continuation）拆分危险命令，或通过通配符权限规则匹配包含 shell 操作符的复合命令。</p>
-<h4 id="第二层文件系统沙箱"><a class="markdownIt-Anchor" href="#第二层文件系统沙箱"></a> 第二层：文件系统沙箱</h4>
-<p>macOS 使用 Seatbelt（系统级沙箱），Linux 使用自定义沙箱实现。沙箱通过配置文件声明文件系统的读写权限——<code>allowWrite</code> 指定允许写入的目录，<code>denyRead</code> 指定禁止读取的文件，<code>excludedCommands</code> 指定不受沙箱限制的命令（如 <code>gh</code>、<code>terraform</code> 等需要广泛文件访问的工具）。一个关键的设计决策是 <code>failIfUnavailable</code> 参数——当设为 <code>true</code> 时，如果沙箱启用但无法启动（例如依赖缺失），系统会直接退出而非静默降级为无沙箱模式。沙箱还需要防御符号链接攻击——通过符号链接父目录写入新文件可以逃逸工作目录限制。</p>
+<h4 id="第二层：文件系统沙箱"><a href="#第二层：文件系统沙箱" class="headerlink" title="第二层：文件系统沙箱"></a>第二层：文件系统沙箱</h4><p>macOS 使用 Seatbelt（系统级沙箱），Linux 使用自定义沙箱实现。沙箱通过配置文件声明文件系统的读写权限——<code>allowWrite</code> 指定允许写入的目录，<code>denyRead</code> 指定禁止读取的文件，<code>excludedCommands</code> 指定不受沙箱限制的命令（如 <code>gh</code>、<code>terraform</code> 等需要广泛文件访问的工具）。一个关键的设计决策是 <code>failIfUnavailable</code> 参数——当设为 <code>true</code> 时，如果沙箱启用但无法启动（例如依赖缺失），系统会直接退出而非静默降级为无沙箱模式。沙箱还需要防御符号链接攻击——通过符号链接父目录写入新文件可以逃逸工作目录限制。</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;sandbox&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;failIfUnavailable&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;filesystem&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;allowWrite&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;/tmp/claude/&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;denyRead&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;/etc/shadow&quot;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;excludedCommands&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;gh&quot;</span><span class="punctuation">,</span> <span class="string">&quot;terraform&quot;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<h4 id="第三层网络防火墙devcontainer"><a class="markdownIt-Anchor" href="#第三层网络防火墙devcontainer"></a> 第三层：网络防火墙（DevContainer）</h4>
-<p><code>init-firewall.sh</code> 实现了基于 iptables + ipset 的严格网络白名单：</p>
+<h4 id="第三层：网络防火墙（DevContainer）"><a href="#第三层：网络防火墙（DevContainer）" class="headerlink" title="第三层：网络防火墙（DevContainer）"></a>第三层：网络防火墙（DevContainer）</h4><p><code>init-firewall.sh</code> 实现了基于 iptables + ipset 的严格网络白名单：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 默认策略：DROP 所有流量</span></span><br><span class="line">iptables -P INPUT DROP &amp;&amp; iptables -P FORWARD DROP &amp;&amp; iptables -P OUTPUT DROP</span><br><span class="line"></span><br><span class="line"><span class="comment"># 动态获取 GitHub IP 段并加入白名单</span></span><br><span class="line">gh_ranges=$(curl -s https://api.github.com/meta)</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="variable">$gh_ranges</span>&quot;</span> | jq -r <span class="string">&#x27;(.web + .api + .git)[]&#x27;</span> | <span class="keyword">while</span> <span class="built_in">read</span> -r cidr; <span class="keyword">do</span></span><br><span class="line">    ipset add allowed-domains <span class="string">&quot;<span class="variable">$cidr</span>&quot;</span></span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># DNS 解析白名单域名</span></span><br><span class="line"><span class="keyword">for</span> domain <span class="keyword">in</span> <span class="string">&quot;registry.npmjs.org&quot;</span> <span class="string">&quot;api.anthropic.com&quot;</span> <span class="string">&quot;sentry.io&quot;</span>; <span class="keyword">do</span></span><br><span class="line">    dig +noall +answer A <span class="string">&quot;<span class="variable">$domain</span>&quot;</span> | awk <span class="string">&#x27;$4 == &quot;A&quot; &#123;print $5&#125;&#x27;</span> | <span class="keyword">while</span> <span class="built_in">read</span> -r ip; <span class="keyword">do</span></span><br><span class="line">        ipset add allowed-domains <span class="string">&quot;<span class="variable">$ip</span>&quot;</span></span><br><span class="line">    <span class="keyword">done</span></span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 仅允许白名单流量</span></span><br><span class="line">iptables -A OUTPUT -m <span class="built_in">set</span> --match-set allowed-domains dst -j ACCEPT</span><br><span class="line">iptables -A OUTPUT -j REJECT --reject-with icmp-admin-prohibited</span><br></pre></td></tr></table></figure>
 <p>v2.1.69 引入了 <code>sandbox.enableWeakerNetworkIsolation</code>（macOS only），允许 Go 程序在使用 MITM 代理时验证 TLS 证书。</p>
-<h4 id="第四层凭证保护"><a class="markdownIt-Anchor" href="#第四层凭证保护"></a> 第四层：凭证保护</h4>
-<p>凭证保护解决的是一个微妙但关键的安全问题：代理执行的工具（包括 MCP 服务器和 Bash 命令）可能读取环境变量中的 API 密钥。<code>CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1</code> 环境变量会从所有子进程的环境中剥离 Anthropic 和云提供商的凭证，防止恶意 MCP 服务器窃取 API 密钥。插件选项系统中标记为 <code>sensitive: true</code> 的值（如 API key）存储在 macOS Keychain 或平台等效的受保护存储中，而非明文配置文件。系统还需要确保敏感数据（OAuth tokens、API keys、passwords）不会在 debug 日志中暴露。</p>
-<h4 id="第五层企业策略管控"><a class="markdownIt-Anchor" href="#第五层企业策略管控"></a> 第五层：企业策略管控</h4>
-<p>配置采用 <strong>7 层覆盖机制</strong>：</p>
+<h4 id="第四层：凭证保护"><a href="#第四层：凭证保护" class="headerlink" title="第四层：凭证保护"></a>第四层：凭证保护</h4><p>凭证保护解决的是一个微妙但关键的安全问题：代理执行的工具（包括 MCP 服务器和 Bash 命令）可能读取环境变量中的 API 密钥。<code>CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1</code> 环境变量会从所有子进程的环境中剥离 Anthropic 和云提供商的凭证，防止恶意 MCP 服务器窃取 API 密钥。插件选项系统中标记为 <code>sensitive: true</code> 的值（如 API key）存储在 macOS Keychain 或平台等效的受保护存储中，而非明文配置文件。系统还需要确保敏感数据（OAuth tokens、API keys、passwords）不会在 debug 日志中暴露。</p>
+<h4 id="第五层：企业策略管控"><a href="#第五层：企业策略管控" class="headerlink" title="第五层：企业策略管控"></a>第五层：企业策略管控</h4><p>配置采用 <strong>7 层覆盖机制</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">企业管理配置 (managed-settings.json / managed-settings.d/*.json)</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">用户全局配置 (~/.claude/settings.json)</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">用户本地配置 (~/.claude/settings.local.json)</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">项目配置 (.claude/settings.json)</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">项目本地配置 (.claude/settings.local.json)</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">环境变量</span><br><span class="line">  ↓ 覆盖</span><br><span class="line">CLI 参数</span><br></pre></td></tr></table></figure>
 <p>v2.1.83 引入了 <code>managed-settings.d/</code> 分片目录，允许企业通过多个配置文件组合管理策略。配置来源不限于 JSON 文件——macOS 支持 plist，Windows 支持 Registry，方便与现有的企业设备管理系统（MDM）集成。</p>
 <p>企业管理员可以通过这套机制控制几乎所有方面的行为：<code>enabledPlugins</code> 和 <code>allowedChannelPlugins</code> 控制插件白名单；<code>strictKnownMarketplaces</code> 配合 <code>hostPattern</code>/<code>pathPattern</code> 限制插件只能从指定的仓库安装；<code>deniedMcpServers</code> 和 <code>allowedMcpServers</code> 控制 MCP 服务器的黑白名单；<code>disableAllHooks</code> 禁用所有用户定义的 Hook（但 managed hooks 不受影响）；<code>permissions.disableBypassPermissionsMode</code> 禁止用户绕过权限模式；<code>allowManagedDomainsOnly</code> 让沙箱自动阻止非白名单域名的网络访问，无需用户确认。</p>
-<hr />
-<h3 id="性能工程"><a class="markdownIt-Anchor" href="#性能工程"></a> 性能工程</h3>
-<p>Claude Code 在性能方面的工程深度主要体现在三个方面：启动性能、长会话内存管理和 Prompt Cache 命中率优化。</p>
-<h4 id="启动性能"><a class="markdownIt-Anchor" href="#启动性能"></a> 启动性能</h4>
-<p>启动性能的核心策略是<strong>延迟加载和并行化</strong>。几乎所有非必要的初始化工作都被延迟到首次使用时：Yoga WASM 布局引擎的预加载被延迟（节省 ~16MB 内存），Zod schema 的构建被延迟（减少事件循环阻塞），原生图片处理器被延迟到首次处理图片时才加载，SessionStart Hook 的执行被延迟（节省 ~500ms）。并行化也被广泛应用：macOS Keychain 凭证的读取被并行化（节省 ~60ms），<code>setup()</code> 与 slash command 加载并行执行，<a target="_blank" rel="noopener" href="http://claude.ai">claude.ai</a> 的 MCP 配置获取与本地连接并行进行，MCP 工具的 token 计数被批量合并为单个 API 调用。<code>--bare -p</code> 模式是极致优化的体现——它禁用 auto-memory、hooks、LSP、plugin sync 和 skill directory walks，使得到达 API 请求的时间减少约 14%。</p>
-<h4 id="内存管理"><a class="markdownIt-Anchor" href="#内存管理"></a> 内存管理</h4>
-<p>长会话的内存管理是一个持续的工程挑战。Claude Code 使用 React Compiler 渲染 TUI，这意味着每次对话更新都会触发重新渲染，而旧的消息数组版本可能在 React 的 memoCache 中累积。REPL 的 render scopes 也会随对话轮次增长，大约每 1000 轮累积 35MB。Yoga WASM 布局引擎的线性内存会无限增长，需要定期重置 tree-sitter parser。MCP 服务器重连时工具和资源缓存需要被清理，否则内存会持续增长。Streaming buffer 在 generator 提前终止时需要通过 <code>finally</code> 块释放。文件历史快照需要设置上限防止无限增长。CircularBuffer 在 <code>clear()</code> 后 backing array 仍然保留引用，需要显式重置。Git diff 解析中的 sliced strings 会保留对大型 parent strings 的引用，需要复制字符串来断开引用链。Agent Teams 中 Teammate 的完整对话历史需要在 Compaction 后正确释放。长会话中 Hook 事件会无限累积，需要设置上限。这些问题的共同特点是：它们在短会话中不可见，只有在持续数小时的长会话中才会显现。</p>
-<h4 id="prompt-cache-优化"><a class="markdownIt-Anchor" href="#prompt-cache-优化"></a> Prompt Cache 优化</h4>
-<p>Anthropic 的 Prompt Cache 机制允许 API 请求中前缀匹配的 token 命中缓存，缓存 token 的计费仅为正常输入的 1/10，且延迟显著降低。对于代理循环场景，每一轮都会发送完整的 system prompt + 历史消息 + 新消息，system prompt 的稳定性直接决定了缓存命中率。Claude Code 的代理循环可能在一个会话中执行数十到数百轮 API 调用，cache 命中率的差异会导致成本相差数倍。</p>
+<hr>
+<h3 id="性能工程"><a href="#性能工程" class="headerlink" title="性能工程"></a>性能工程</h3><p>Claude Code 在性能方面的工程深度主要体现在三个方面：启动性能、长会话内存管理和 Prompt Cache 命中率优化。</p>
+<h4 id="启动性能"><a href="#启动性能" class="headerlink" title="启动性能"></a>启动性能</h4><p>启动性能的核心策略是<strong>延迟加载和并行化</strong>。几乎所有非必要的初始化工作都被延迟到首次使用时：Yoga WASM 布局引擎的预加载被延迟（节省 ~16MB 内存），Zod schema 的构建被延迟（减少事件循环阻塞），原生图片处理器被延迟到首次处理图片时才加载，SessionStart Hook 的执行被延迟（节省 ~500ms）。并行化也被广泛应用：macOS Keychain 凭证的读取被并行化（节省 ~60ms），<code>setup()</code> 与 slash command 加载并行执行，claude.ai 的 MCP 配置获取与本地连接并行进行，MCP 工具的 token 计数被批量合并为单个 API 调用。<code>--bare -p</code> 模式是极致优化的体现——它禁用 auto-memory、hooks、LSP、plugin sync 和 skill directory walks，使得到达 API 请求的时间减少约 14%。</p>
+<h4 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h4><p>长会话的内存管理是一个持续的工程挑战。Claude Code 使用 React Compiler 渲染 TUI，这意味着每次对话更新都会触发重新渲染，而旧的消息数组版本可能在 React 的 memoCache 中累积。REPL 的 render scopes 也会随对话轮次增长，大约每 1000 轮累积 35MB。Yoga WASM 布局引擎的线性内存会无限增长，需要定期重置 tree-sitter parser。MCP 服务器重连时工具和资源缓存需要被清理，否则内存会持续增长。Streaming buffer 在 generator 提前终止时需要通过 <code>finally</code> 块释放。文件历史快照需要设置上限防止无限增长。CircularBuffer 在 <code>clear()</code> 后 backing array 仍然保留引用，需要显式重置。Git diff 解析中的 sliced strings 会保留对大型 parent strings 的引用，需要复制字符串来断开引用链。Agent Teams 中 Teammate 的完整对话历史需要在 Compaction 后正确释放。长会话中 Hook 事件会无限累积，需要设置上限。这些问题的共同特点是：它们在短会话中不可见，只有在持续数小时的长会话中才会显现。</p>
+<h4 id="Prompt-Cache-优化"><a href="#Prompt-Cache-优化" class="headerlink" title="Prompt Cache 优化"></a>Prompt Cache 优化</h4><p>Anthropic 的 Prompt Cache 机制允许 API 请求中前缀匹配的 token 命中缓存，缓存 token 的计费仅为正常输入的 1/10，且延迟显著降低。对于代理循环场景，每一轮都会发送完整的 system prompt + 历史消息 + 新消息，system prompt 的稳定性直接决定了缓存命中率。Claude Code 的代理循环可能在一个会话中执行数十到数百轮 API 调用，cache 命中率的差异会导致成本相差数倍。</p>
 <p>围绕这个核心问题，Claude Code 做了四个层面的优化：</p>
 <p><strong>系统提示去动态化。</strong> 最直接的策略是消除 system prompt 中的一切动态内容。日期信息从系统提示中移出，工具描述中的动态内容被剥离（这对 Bedrock/Vertex/Foundry 等非直连 API 用户尤为重要，因为这些平台的 cache 机制对 prompt 变化更敏感）。<code>@</code> 文件引用的原始字符串内容不再进行 JSON 转义——JSON 转义会将换行符、引号等字符转换为转义序列，改变 token 边界，导致不必要的 cache miss。这些看似微小的改动，累积起来对长会话的 cache 命中率有显著影响。</p>
 <p><strong>精确的 Cache 失效控制。</strong> Cache 失效的粒度需要精确把控。早期实现中 cache 仅在工具名称变更时失效，但工具描述和 schema 变更时不会触发失效，导致模型使用过时的工具定义产生错误调用。修复后的策略是对工具的名称、描述、schema 三个维度做哈希比对，任一变化都触发失效。MCP 服务器带 <code>instructions</code> 时需要特殊处理——如果 MCP 服务器在首轮之后才连接并携带 <code>instructions</code>，会导致系统提示结构变化，cache 全部失效。解决方案是在系统提示中为 MCP instructions 预留固定的插槽位置，即使内容为空也保持结构一致。Prompt suggestion 的 cache 也经历了多次回归修复，核心问题是 suggestion 的生成依赖上下文状态，状态变化时 suggestion 缓存需要同步失效，但失效范围不能过大。</p>
 <p><strong>ToolSearch 与 Cache 的兼容。</strong> ToolSearch 延迟加载工具时，动态注入的工具 schema 会改变 prompt 结构，破坏 cache 前缀匹配。解决方案是将全局系统提示与工具 schema 分层缓存——全局系统提示作为第一层 cache breakpoint，工具 schema 作为第二层，这样即使工具列表因 ToolSearch 动态变化，系统提示部分的 cache 仍然可以命中。</p>
 <p><strong>Compaction 中的 Cache 复用。</strong> Compaction 压缩历史消息时，压缩请求本身也是一次 API 调用。通过在压缩请求中保留图片等大体积内容，可以复用已有的 prompt cache，使压缩操作本身更快更便宜。SDK 层面的 <code>query()</code> 调用也需要正确处理 cache——早期实现中 SDK 调用会不正确地使 cache 失效，修复后输入 token 成本降低最高可达 12 倍。</p>
 <p>这些优化的累积效果是显著的：对于典型的长会话（数十轮代理循环），cache 命中率从早期的不稳定状态提升到了稳定的高水平，p90 prompt cache rate 得到了实质性改善。考虑到 Claude Code 的使用场景天然是长会话、多轮交互，Prompt Cache 优化可能是所有性能优化中 ROI 最高的一项。</p>
-<hr />
-<h3 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h3>
-<p>Claude Code 的技术架构可以用四个关键词概括：</p>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Claude Code 的技术架构可以用四个关键词概括：</p>
 <ol>
-<li>
-<p><strong>上下文精算</strong>：从 Skill 的三级渐进式加载、<a target="_blank" rel="noopener" href="http://MEMORY.md">MEMORY.md</a> 的 25KB/200 行截断、工具结果的 50K 磁盘持久化、MCP 工具描述的 2KB 限制、ToolSearch 的动态延迟加载，到 Auto-Compaction 的熔断机制和 Partial Summarization 的精确控制——整个系统的设计都围绕着&quot;每一个 token 都有成本&quot;的原则。</p>
+<li><p><strong>上下文精算</strong>：从 Skill 的三级渐进式加载、MEMORY.md 的 25KB/200 行截断、工具结果的 50K 磁盘持久化、MCP 工具描述的 2KB 限制、ToolSearch 的动态延迟加载，到 Auto-Compaction 的熔断机制和 Partial Summarization 的精确控制——整个系统的设计都围绕着”每一个 token 都有成本”的原则。</p>
 </li>
-<li>
-<p><strong>可编程性</strong>：15+ 种 Hook 事件 × 3 种 Hook 类型（command/prompt/http）× 条件触发（<code>if</code> 字段）× 并行执行 × <code>once: true</code> 一次性触发，构成了一个完整的事件驱动编程模型。Hook 不仅能拦截和修改代理行为，还能通过 <code>$CLAUDE_ENV_FILE</code> 持久化环境变量、通过 <code>updatedInput</code> 修改工具参数、通过 <code>systemMessage</code> 注入上下文、通过 <code>additionalContext</code> 提供额外信息。</p>
+<li><p><strong>可编程性</strong>：15+ 种 Hook 事件 × 3 种 Hook 类型（command/prompt/http）× 条件触发（<code>if</code> 字段）× 并行执行 × <code>once: true</code> 一次性触发，构成了一个完整的事件驱动编程模型。Hook 不仅能拦截和修改代理行为，还能通过 <code>$CLAUDE_ENV_FILE</code> 持久化环境变量、通过 <code>updatedInput</code> 修改工具参数、通过 <code>systemMessage</code> 注入上下文、通过 <code>additionalContext</code> 提供额外信息。</p>
 </li>
-<li>
-<p><strong>多代理编排</strong>：模型分级（Haiku/Sonnet/Opus）× Worktree 隔离（稀疏检出 + 自动清理）× 后台任务（5GB 输出限制 + 30K 截断）× Agent Teams（tmux 分屏）× 两轮验证模式，构成了一套完整的分布式代理协作框架。</p>
+<li><p><strong>多代理编排</strong>：模型分级（Haiku/Sonnet/Opus）× Worktree 隔离（稀疏检出 + 自动清理）× 后台任务（5GB 输出限制 + 30K 截断）× Agent Teams（tmux 分屏）× 两轮验证模式，构成了一套完整的分布式代理协作框架。</p>
 </li>
-<li>
-<p><strong>协议驱动</strong>：MCP 集成不是简单的 API 调用，而是一套完整的服务器生命周期管理系统——4 种传输方式、OAuth 2.0 全流程（RFC 9728 发现 + DCR/CIMD 注册 + Step-up Auth）、<code>list_changed</code> 动态工具更新、Elicitation 结构化输入、Channels 消息推送、二进制内容智能处理。</p>
+<li><p><strong>协议驱动</strong>：MCP 集成不是简单的 API 调用，而是一套完整的服务器生命周期管理系统——4 种传输方式、OAuth 2.0 全流程（RFC 9728 发现 + DCR/CIMD 注册 + Step-up Auth）、<code>list_changed</code> 动态工具更新、Elicitation 结构化输入、Channels 消息推送、二进制内容智能处理。</p>
 </li>
 </ol>
 
@@ -948,7 +900,10 @@
     <a href="/2026/03/06/GNN01/" rel="prev" title="GNN从入门到入门01：图的基础与图嵌入">
       <i class="fa fa-chevron-left"></i> GNN从入门到入门01：图的基础与图嵌入
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2026/04/01/claudecode%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="claudecode源码分析">
+      claudecode源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -1007,7 +962,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#intro"><span class="nav-number">1.</span> <span class="nav-text"> Intro</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text"> 整体架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E5%BE%AA%E7%8E%AFagent-loop"><span class="nav-number">3.</span> <span class="nav-text"> 代理循环（Agent Loop）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E7%BD%AE%E5%B7%A5%E5%85%B7%E4%BD%93%E7%B3%BB"><span class="nav-number">3.1.</span> <span class="nav-text"> 内置工具体系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#toolsearch%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E4%B8%8E%E5%8A%A8%E6%80%81%E5%8F%91%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text"> ToolSearch：延迟加载与动态发现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E4%B8%8E-memory-%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text"> 上下文管理与 Memory 系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#auto-compaction%E8%87%AA%E5%8A%A8%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8E%8B%E7%BC%A9"><span class="nav-number">4.1.</span> <span class="nav-text"> Auto-Compaction（自动上下文压缩）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#partial-summarization%E9%83%A8%E5%88%86%E5%AF%B9%E8%AF%9D%E6%91%98%E8%A6%81"><span class="nav-number">4.2.</span> <span class="nav-text"> Partial Summarization（部分对话摘要）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#memorymd"><span class="nav-number">4.3.</span> <span class="nav-text"> MEMORY.md（手动 Memory）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#auto-memory%E8%87%AA%E5%8A%A8-memory-%E6%8F%90%E5%8F%96"><span class="nav-number">4.4.</span> <span class="nav-text"> Auto-Memory（自动 Memory 提取）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E7%BB%93%E6%9E%9C%E7%9A%84%E7%A3%81%E7%9B%98%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">4.5.</span> <span class="nav-text"> 工具结果的磁盘持久化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A9%BA%E9%97%B2%E4%BC%9A%E8%AF%9D%E5%A4%84%E7%90%86"><span class="nav-number">4.6.</span> <span class="nav-text"> 空闲会话处理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#skill-%E8%A7%A6%E5%8F%91%E4%B8%8E%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6"><span class="nav-number">5.</span> <span class="nav-text"> Skill 触发与加载机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E7%BA%A7%E6%B8%90%E8%BF%9B%E5%BC%8F%E5%8A%A0%E8%BD%BD"><span class="nav-number">5.1.</span> <span class="nav-text"> 三级渐进式加载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6%E8%AF%A6%E8%A7%A3"><span class="nav-number">5.2.</span> <span class="nav-text"> 触发机制详解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skill-%E7%9A%84%E6%9D%A1%E4%BB%B6%E8%A7%A6%E5%8F%91"><span class="nav-number">5.3.</span> <span class="nav-text"> Skill 的条件触发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skill-%E7%9A%84%E8%B5%84%E6%BA%90%E7%BB%84%E7%BB%87"><span class="nav-number">5.4.</span> <span class="nav-text"> Skill 的资源组织</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">5.5.</span> <span class="nav-text"> 自动发现机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84"><span class="nav-number">6.</span> <span class="nav-text"> 插件系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E4%B8%8E%E5%8F%91%E7%8E%B0"><span class="nav-number">6.1.</span> <span class="nav-text"> 插件目录结构与发现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#markdown-as-codefrontmatter-%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.2.</span> <span class="nav-text"> Markdown as Code：Frontmatter 协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E6%9D%A5%E6%BA%90%E4%B8%8E%E5%88%86%E5%8F%91"><span class="nav-number">6.3.</span> <span class="nav-text"> 插件来源与分发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E9%80%89%E9%A1%B9%E7%B3%BB%E7%BB%9F"><span class="nav-number">6.4.</span> <span class="nav-text"> 插件选项系统</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hook-%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">7.</span> <span class="nav-text"> Hook 事件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E4%BA%8B%E4%BB%B6%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">7.1.</span> <span class="nav-text"> 完整事件生命周期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%88%86%E7%B1%BB%E4%B8%8E%E6%8E%A7%E5%88%B6%E8%83%BD%E5%8A%9B"><span class="nav-number">7.2.</span> <span class="nav-text"> 事件分类与控制能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D-hook-%E7%B1%BB%E5%9E%8B%E4%B8%8E%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE"><span class="nav-number">7.3.</span> <span class="nav-text"> 三种 Hook 类型与通信协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%A7%A6%E5%8F%91%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%89%A7%E8%A1%8C"><span class="nav-number">7.4.</span> <span class="nav-text"> 条件触发与并行执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sessionstart-%E7%9A%84%E7%89%B9%E6%AE%8A%E8%83%BD%E5%8A%9B"><span class="nav-number">7.5.</span> <span class="nav-text"> SessionStart 的特殊能力</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E4%BB%A3%E7%90%86%E7%BC%96%E6%8E%92%E4%B8%8E-worktree-%E9%9A%94%E7%A6%BB"><span class="nav-number">8.</span> <span class="nav-text"> 多代理编排与 Worktree 隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#agent-%E5%B7%A5%E5%85%B7%E6%97%8F%E4%B8%8E%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B"><span class="nav-number">8.1.</span> <span class="nav-text"> Agent 工具族与通信模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%88%86%E7%BA%A7%E7%AD%96%E7%95%A5"><span class="nav-number">8.2.</span> <span class="nav-text"> 模型分级策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#worktree-%E9%9A%94%E7%A6%BB"><span class="nav-number">8.3.</span> <span class="nav-text"> Worktree 隔离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#agent-teams%E4%BB%A3%E7%90%86%E5%9B%A2%E9%98%9F"><span class="nav-number">8.4.</span> <span class="nav-text"> Agent Teams（代理团队）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E6%8E%92%E6%A8%A1%E5%BC%8F%E5%AE%9E%E4%BE%8B"><span class="nav-number">8.5.</span> <span class="nav-text"> 编排模式实例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mcp-%E9%9B%86%E6%88%90%E6%9E%B6%E6%9E%84"><span class="nav-number">9.</span> <span class="nav-text"> MCP 集成架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B%E7%A7%8D%E4%BC%A0%E8%BE%93%E6%96%B9%E5%BC%8F%E4%B8%8E%E9%80%9A%E4%BF%A1%E6%B5%81%E7%A8%8B"><span class="nav-number">9.1.</span> <span class="nav-text"> 四种传输方式与通信流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#oauth-%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="nav-number">9.2.</span> <span class="nav-text"> OAuth 认证流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8A%A8%E6%80%81%E6%9B%B4%E6%96%B0"><span class="nav-number">9.3.</span> <span class="nav-text"> 工具注册与动态更新</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#elicitation%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%85%A5%E8%AF%B7%E6%B1%82"><span class="nav-number">9.4.</span> <span class="nav-text"> Elicitation（结构化输入请求）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#channels%E6%B6%88%E6%81%AF%E6%8E%A8%E9%80%81"><span class="nav-number">9.5.</span> <span class="nav-text"> Channels（消息推送）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%86%85%E5%AE%B9%E5%A4%84%E7%90%86"><span class="nav-number">9.6.</span> <span class="nav-text"> 二进制内容处理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E6%B2%99%E7%AE%B1%E6%A8%A1%E5%9E%8B"><span class="nav-number">10.</span> <span class="nav-text"> 安全沙箱模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%E6%9D%83%E9%99%90%E8%A7%84%E5%88%99%E7%B3%BB%E7%BB%9F"><span class="nav-number">10.1.</span> <span class="nav-text"> 第一层：权限规则系统</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%B2%99%E7%AE%B1"><span class="nav-number">10.2.</span> <span class="nav-text"> 第二层：文件系统沙箱</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82%E7%BD%91%E7%BB%9C%E9%98%B2%E7%81%AB%E5%A2%99devcontainer"><span class="nav-number">10.3.</span> <span class="nav-text"> 第三层：网络防火墙（DevContainer）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E5%B1%82%E5%87%AD%E8%AF%81%E4%BF%9D%E6%8A%A4"><span class="nav-number">10.4.</span> <span class="nav-text"> 第四层：凭证保护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E5%B1%82%E4%BC%81%E4%B8%9A%E7%AD%96%E7%95%A5%E7%AE%A1%E6%8E%A7"><span class="nav-number">10.5.</span> <span class="nav-text"> 第五层：企业策略管控</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E5%B7%A5%E7%A8%8B"><span class="nav-number">11.</span> <span class="nav-text"> 性能工程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%80%A7%E8%83%BD"><span class="nav-number">11.1.</span> <span class="nav-text"> 启动性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">11.2.</span> <span class="nav-text"> 内存管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#prompt-cache-%E4%BC%98%E5%8C%96"><span class="nav-number">11.3.</span> <span class="nav-text"> Prompt Cache 优化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">12.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Intro"><span class="nav-number">1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">整体架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E5%BE%AA%E7%8E%AF%EF%BC%88Agent-Loop%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">代理循环（Agent Loop）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E7%BD%AE%E5%B7%A5%E5%85%B7%E4%BD%93%E7%B3%BB"><span class="nav-number">3.1.</span> <span class="nav-text">内置工具体系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ToolSearch%EF%BC%9A%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E4%B8%8E%E5%8A%A8%E6%80%81%E5%8F%91%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">ToolSearch：延迟加载与动态发现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E4%B8%8E-Memory-%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text">上下文管理与 Memory 系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Auto-Compaction%EF%BC%88%E8%87%AA%E5%8A%A8%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8E%8B%E7%BC%A9%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">Auto-Compaction（自动上下文压缩）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Partial-Summarization%EF%BC%88%E9%83%A8%E5%88%86%E5%AF%B9%E8%AF%9D%E6%91%98%E8%A6%81%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">Partial Summarization（部分对话摘要）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MEMORY-md%EF%BC%88%E6%89%8B%E5%8A%A8-Memory%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">MEMORY.md（手动 Memory）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Auto-Memory%EF%BC%88%E8%87%AA%E5%8A%A8-Memory-%E6%8F%90%E5%8F%96%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">Auto-Memory（自动 Memory 提取）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E7%BB%93%E6%9E%9C%E7%9A%84%E7%A3%81%E7%9B%98%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">4.5.</span> <span class="nav-text">工具结果的磁盘持久化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A9%BA%E9%97%B2%E4%BC%9A%E8%AF%9D%E5%A4%84%E7%90%86"><span class="nav-number">4.6.</span> <span class="nav-text">空闲会话处理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Skill-%E8%A7%A6%E5%8F%91%E4%B8%8E%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6"><span class="nav-number">5.</span> <span class="nav-text">Skill 触发与加载机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E7%BA%A7%E6%B8%90%E8%BF%9B%E5%BC%8F%E5%8A%A0%E8%BD%BD"><span class="nav-number">5.1.</span> <span class="nav-text">三级渐进式加载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6%E8%AF%A6%E8%A7%A3"><span class="nav-number">5.2.</span> <span class="nav-text">触发机制详解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Skill-%E7%9A%84%E6%9D%A1%E4%BB%B6%E8%A7%A6%E5%8F%91"><span class="nav-number">5.3.</span> <span class="nav-text">Skill 的条件触发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Skill-%E7%9A%84%E8%B5%84%E6%BA%90%E7%BB%84%E7%BB%87"><span class="nav-number">5.4.</span> <span class="nav-text">Skill 的资源组织</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">5.5.</span> <span class="nav-text">自动发现机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84"><span class="nav-number">6.</span> <span class="nav-text">插件系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E4%B8%8E%E5%8F%91%E7%8E%B0"><span class="nav-number">6.1.</span> <span class="nav-text">插件目录结构与发现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Markdown-as-Code%EF%BC%9AFrontmatter-%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.2.</span> <span class="nav-text">Markdown as Code：Frontmatter 协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E6%9D%A5%E6%BA%90%E4%B8%8E%E5%88%86%E5%8F%91"><span class="nav-number">6.3.</span> <span class="nav-text">插件来源与分发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E9%80%89%E9%A1%B9%E7%B3%BB%E7%BB%9F"><span class="nav-number">6.4.</span> <span class="nav-text">插件选项系统</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hook-%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">7.</span> <span class="nav-text">Hook 事件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E4%BA%8B%E4%BB%B6%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">7.1.</span> <span class="nav-text">完整事件生命周期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%88%86%E7%B1%BB%E4%B8%8E%E6%8E%A7%E5%88%B6%E8%83%BD%E5%8A%9B"><span class="nav-number">7.2.</span> <span class="nav-text">事件分类与控制能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D-Hook-%E7%B1%BB%E5%9E%8B%E4%B8%8E%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE"><span class="nav-number">7.3.</span> <span class="nav-text">三种 Hook 类型与通信协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%A7%A6%E5%8F%91%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%89%A7%E8%A1%8C"><span class="nav-number">7.4.</span> <span class="nav-text">条件触发与并行执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SessionStart-%E7%9A%84%E7%89%B9%E6%AE%8A%E8%83%BD%E5%8A%9B"><span class="nav-number">7.5.</span> <span class="nav-text">SessionStart 的特殊能力</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E4%BB%A3%E7%90%86%E7%BC%96%E6%8E%92%E4%B8%8E-Worktree-%E9%9A%94%E7%A6%BB"><span class="nav-number">8.</span> <span class="nav-text">多代理编排与 Worktree 隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Agent-%E5%B7%A5%E5%85%B7%E6%97%8F%E4%B8%8E%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B"><span class="nav-number">8.1.</span> <span class="nav-text">Agent 工具族与通信模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%88%86%E7%BA%A7%E7%AD%96%E7%95%A5"><span class="nav-number">8.2.</span> <span class="nav-text">模型分级策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Worktree-%E9%9A%94%E7%A6%BB"><span class="nav-number">8.3.</span> <span class="nav-text">Worktree 隔离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Agent-Teams%EF%BC%88%E4%BB%A3%E7%90%86%E5%9B%A2%E9%98%9F%EF%BC%89"><span class="nav-number">8.4.</span> <span class="nav-text">Agent Teams（代理团队）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E6%8E%92%E6%A8%A1%E5%BC%8F%E5%AE%9E%E4%BE%8B"><span class="nav-number">8.5.</span> <span class="nav-text">编排模式实例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MCP-%E9%9B%86%E6%88%90%E6%9E%B6%E6%9E%84"><span class="nav-number">9.</span> <span class="nav-text">MCP 集成架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B%E7%A7%8D%E4%BC%A0%E8%BE%93%E6%96%B9%E5%BC%8F%E4%B8%8E%E9%80%9A%E4%BF%A1%E6%B5%81%E7%A8%8B"><span class="nav-number">9.1.</span> <span class="nav-text">四种传输方式与通信流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OAuth-%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="nav-number">9.2.</span> <span class="nav-text">OAuth 认证流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8A%A8%E6%80%81%E6%9B%B4%E6%96%B0"><span class="nav-number">9.3.</span> <span class="nav-text">工具注册与动态更新</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Elicitation%EF%BC%88%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%85%A5%E8%AF%B7%E6%B1%82%EF%BC%89"><span class="nav-number">9.4.</span> <span class="nav-text">Elicitation（结构化输入请求）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Channels%EF%BC%88%E6%B6%88%E6%81%AF%E6%8E%A8%E9%80%81%EF%BC%89"><span class="nav-number">9.5.</span> <span class="nav-text">Channels（消息推送）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%86%85%E5%AE%B9%E5%A4%84%E7%90%86"><span class="nav-number">9.6.</span> <span class="nav-text">二进制内容处理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E6%B2%99%E7%AE%B1%E6%A8%A1%E5%9E%8B"><span class="nav-number">10.</span> <span class="nav-text">安全沙箱模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%9A%E6%9D%83%E9%99%90%E8%A7%84%E5%88%99%E7%B3%BB%E7%BB%9F"><span class="nav-number">10.1.</span> <span class="nav-text">第一层：权限规则系统</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%B2%99%E7%AE%B1"><span class="nav-number">10.2.</span> <span class="nav-text">第二层：文件系统沙箱</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82%EF%BC%9A%E7%BD%91%E7%BB%9C%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%88DevContainer%EF%BC%89"><span class="nav-number">10.3.</span> <span class="nav-text">第三层：网络防火墙（DevContainer）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E5%B1%82%EF%BC%9A%E5%87%AD%E8%AF%81%E4%BF%9D%E6%8A%A4"><span class="nav-number">10.4.</span> <span class="nav-text">第四层：凭证保护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E5%B1%82%EF%BC%9A%E4%BC%81%E4%B8%9A%E7%AD%96%E7%95%A5%E7%AE%A1%E6%8E%A7"><span class="nav-number">10.5.</span> <span class="nav-text">第五层：企业策略管控</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E5%B7%A5%E7%A8%8B"><span class="nav-number">11.</span> <span class="nav-text">性能工程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%80%A7%E8%83%BD"><span class="nav-number">11.1.</span> <span class="nav-text">启动性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">11.2.</span> <span class="nav-text">内存管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Prompt-Cache-%E4%BC%98%E5%8C%96"><span class="nav-number">11.3.</span> <span class="nav-text">Prompt Cache 优化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">12.</span> <span class="nav-text">总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -1023,7 +978,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">63</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1075,13 +1030,13 @@
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">356k</span>
+    <span title="站点总字数">438k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">10:48</span>
+    <span title="站点阅读时长">13:17</span>
 </div>
 
         

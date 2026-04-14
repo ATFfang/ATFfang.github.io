@@ -30,7 +30,7 @@
 <meta property="og:description" content="本文记录了从知识蒸馏、结构感知分块、双路混合检索到端到端问答的完整技术实践，以如何将数百篇垂直领域专业文章变成一个轻量级的、能回答专业问题的 AI 知识库。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-13T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-04-14T12:55:26.915Z">
+<meta property="article:modified_time" content="2026-04-14T13:05:34.438Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta name="twitter:card" content="summary">
 
@@ -194,7 +194,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2026-04-14 00:00:00 / 修改时间：20:55:26" itemprop="dateCreated datePublished" datetime="2026-04-14T00:00:00+08:00">2026-04-14</time>
+              <time title="创建时间：2026-04-14 00:00:00 / 修改时间：21:05:34" itemprop="dateCreated datePublished" datetime="2026-04-14T00:00:00+08:00">2026-04-14</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -219,7 +219,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>23k</span>
+              <span>24k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -240,19 +240,21 @@
       
         <p>本文记录了从知识蒸馏、结构感知分块、双路混合检索到端到端问答的完整技术实践，以如何将数百篇垂直领域专业文章变成一个轻量级的、能回答专业问题的 AI 知识库。</p>
 <span id="more"></span>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
+<blockquote>
 <p><strong>说明</strong>：本文为技术方案公开版，聚焦于 Pipeline 架构设计与技术原理。出于数据保密要求，文中涉及的数据集内容（文章标题、作者、具体蒸馏产物示例等）已做脱敏处理，具体数值以量级和比例呈现。</p>
 </blockquote>
 <p>我们手头有数百篇垂直领域的专业文章，涵盖多个子方向。文章来源于内部知识库，质量参差不齐——有的是万字长文的深度拆解，有的是行业演讲的翻译整理，还有的是个人随笔式的经验感悟。</p>
 <p>目标很明确：<strong>构建一个 RAG（Retrieval-Augmented Generation）系统，让团队成员能用自然语言提问，系统从这些文章中检索相关知识，生成专业、有据可查的回答。</strong></p>
 <p>但在动手之前，我们需要回答一个架构层面的核心问题：<strong>原始文章应该直接切片入库，还是先做一轮知识蒸馏？</strong></p>
-<p>传统 RAG 的做法是”原文 → 分块 → 向量化 → 入库”，简单直接。但垂直领域专业文章有一个显著特点：<strong>知识密度极低</strong>。一篇 15KB 的文章中，真正有价值的核心知识可能只占 15%，其余 85% 是过渡句、个人感受、修辞铺垫。如果直接滑窗分块，大量 Chunk 会被噪声淹没，检索精度必然受损。</p>
+<p>传统 RAG 的做法是&quot;原文 → 分块 → 向量化 → 入库&quot;，简单直接。但垂直领域专业文章有一个显著特点：<strong>知识密度极低</strong>。一篇 15KB 的文章中，真正有价值的核心知识可能只占 15%，其余 85% 是过渡句、个人感受、修辞铺垫。如果直接滑窗分块，大量 Chunk 会被噪声淹没，检索精度必然受损。</p>
 <p>因此，我们选择了一条更重的路线：<strong>先蒸馏，再入库</strong>。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">N 篇原始文章</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 1: LLM 分类</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 2: 差异化知识提取</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 3: 结晶组装</span><br><span class="line">    │</span><br><span class="line">    ▼ 结构感知分块</span><br><span class="line">    │</span><br><span class="line">    ▼ BGE-M3 双表示编码</span><br><span class="line">    │</span><br><span class="line">    ▼ Qdrant 向量数据库</span><br><span class="line">    │</span><br><span class="line">    ▼ Dense + Sparse 双路检索 + RRF 融合</span><br><span class="line">    │</span><br><span class="line">    ▼ Cross-Encoder 精排</span><br><span class="line">    │</span><br><span class="line">    ▼ LLM 生成回答</span><br></pre></td></tr></table></figure>
 <p>这条路线的代价是多了一个离线蒸馏阶段（N 篇 × 2 次 LLM 调用），但换来的是：<strong>知识密度从 ~15% 提升到 ~90%，每个 Chunk 都是一个语义完整的知识单元</strong>。后续的实验数据将证明，这个选择是值得的。</p>
 <p>本文将完整记录这条路线的每一个技术决策、实现细节和实验数据。当然，该项目是面向轻量级的、技术预研的数据库搭建，因此选择了轻量级的架构设计，不涉及生产阶段，后续将进行生产阶段的优化与迁移/</p>
-<h2 id="知识蒸馏"><a href="#知识蒸馏" class="headerlink" title="知识蒸馏"></a>知识蒸馏</h2><h3 id="为什么需要蒸馏"><a href="#为什么需要蒸馏" class="headerlink" title="为什么需要蒸馏"></a>为什么需要蒸馏</h3><p>以某篇典型文章为样本做蒸馏测试，结果如下：</p>
-<div class="table-container">
+<h2 id="知识蒸馏"><a class="markdownIt-Anchor" href="#知识蒸馏"></a> 知识蒸馏</h2>
+<h3 id="为什么需要蒸馏"><a class="markdownIt-Anchor" href="#为什么需要蒸馏"></a> 为什么需要蒸馏</h3>
+<p>以某篇典型文章为样本做蒸馏测试，结果如下：</p>
 <table>
 <thead>
 <tr>
@@ -289,13 +291,13 @@
 </tr>
 </tbody>
 </table>
-</div>
-<p>体积压缩幅度有限（约 30%），因为蒸馏不是”删减”而是”重组”——将散落在全文各处的知识点提取并结构化。<strong>真正的价值在于知识密度的 6 倍提升</strong>。蒸馏产出为标准 YAML 格式，可直接被程序解析、被 Agent System Prompt 引用、或作为 RAG 的高质量数据源。</p>
-<h3 id="三阶段蒸馏-Pipeline"><a href="#三阶段蒸馏-Pipeline" class="headerlink" title="三阶段蒸馏 Pipeline"></a>三阶段蒸馏 Pipeline</h3><p>蒸馏 Pipeline 分为三个阶段，每个阶段解决一个特定问题：</p>
+<p>体积压缩幅度有限（约 30%），因为蒸馏不是&quot;删减&quot;而是&quot;重组&quot;——将散落在全文各处的知识点提取并结构化。<strong>真正的价值在于知识密度的 6 倍提升</strong>。蒸馏产出为标准 YAML 格式，可直接被程序解析、被 Agent System Prompt 引用、或作为 RAG 的高质量数据源。</p>
+<h3 id="三阶段蒸馏-pipeline"><a class="markdownIt-Anchor" href="#三阶段蒸馏-pipeline"></a> 三阶段蒸馏 Pipeline</h3>
+<p>蒸馏 Pipeline 分为三个阶段，每个阶段解决一个特定问题：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">STAGE 1: 分类 (Classify)          STAGE 2: 知识提取 (Extract)       STAGE 3: 结晶组装 (Assemble)</span><br><span class="line">        │                                │                                │</span><br><span class="line">        ▼                                ▼                                ▼</span><br><span class="line">classifications/*.json       →   extractions/*.yaml          →   knowledge_crystal.yaml</span><br><span class="line">                                                                     knowledge_crystal.json</span><br></pre></td></tr></table></figure>
-<h4 id="Stage-1：文章分类（Classify）"><a href="#Stage-1：文章分类（Classify）" class="headerlink" title="Stage 1：文章分类（Classify）"></a>Stage 1：文章分类（Classify）</h4><p>第一阶段用 LLM 判断每篇文章的类型。这一步只需要文章前 3000 字 + 尾部 1000 字，<strong>token 消耗极低</strong>，但它的输出决定了后续使用哪套提取 Prompt。</p>
+<h4 id="stage-1文章分类classify"><a class="markdownIt-Anchor" href="#stage-1文章分类classify"></a> Stage 1：文章分类（Classify）</h4>
+<p>第一阶段用 LLM 判断每篇文章的类型。这一步只需要文章前 3000 字 + 尾部 1000 字，<strong>token 消耗极低</strong>，但它的输出决定了后续使用哪套提取 Prompt。</p>
 <p>我们定义了四种文章类型：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -332,12 +334,11 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>每篇文章生成一个 JSON 文件，包含分类结果和元数据：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;C&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;confidence&quot;</span><span class="punctuation">:</span> <span class="string">&quot;high&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;domains&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;&lt;领域标签1&gt;&quot;</span><span class="punctuation">,</span> <span class="string">&quot;&lt;领域标签2&gt;&quot;</span><span class="punctuation">,</span> <span class="string">&quot;&lt;领域标签3&gt;&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;one_line&quot;</span><span class="punctuation">:</span> <span class="string">&quot;文章提出某领域的三阶段框架...&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;文章标题&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;category&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;分类&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;author&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;作者&gt;&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p><strong>为什么要先分类再提取（两次 LLM 调用）？</strong> 因为不同类型文章的知识形态差异极大。思路型文章的价值在于”框架”和”论点”，案例型的价值在于”做了什么”和”效果如何”，公式型的价值在于”精确的数学表达”。统一 Prompt 会导致 LLM 对所有文章做同质化提取，丢失各类型特有的知识结构。分类本身的 token 消耗极低，但能显著提升后续提取的精度。</p>
-<h4 id="Stage-2：知识提取（Extract）"><a href="#Stage-2：知识提取（Extract）" class="headerlink" title="Stage 2：知识提取（Extract）"></a>Stage 2：知识提取（Extract）</h4><p>第二阶段根据文章类型，使用<strong>差异化 Prompt 模板</strong>提取结构化知识。四套模板分别针对四种文章类型的知识形态：</p>
-<div class="table-container">
+<p><strong>为什么要先分类再提取（两次 LLM 调用）？</strong> 因为不同类型文章的知识形态差异极大。思路型文章的价值在于&quot;框架&quot;和&quot;论点&quot;，案例型的价值在于&quot;做了什么&quot;和&quot;效果如何&quot;，公式型的价值在于&quot;精确的数学表达&quot;。统一 Prompt 会导致 LLM 对所有文章做同质化提取，丢失各类型特有的知识结构。分类本身的 token 消耗极低，但能显著提升后续提取的精度。</p>
+<h4 id="stage-2知识提取extract"><a class="markdownIt-Anchor" href="#stage-2知识提取extract"></a> Stage 2：知识提取（Extract）</h4>
+<p>第二阶段根据文章类型，使用<strong>差异化 Prompt 模板</strong>提取结构化知识。四套模板分别针对四种文章类型的知识形态：</p>
 <table>
 <thead>
 <tr>
@@ -369,12 +370,11 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>以 B 型（案例拆解型）的提取结果为例，每个 case 都是一个自包含的知识单元：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">article_meta:</span></span><br><span class="line">  <span class="attr">title:</span> <span class="string">&quot;&lt;文章标题&gt;&quot;</span></span><br><span class="line">  <span class="attr">category:</span> <span class="string">&quot;&lt;分类&gt;&quot;</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">B</span></span><br><span class="line"></span><br><span class="line"><span class="attr">cases:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">game:</span> <span class="string">&quot;&lt;产品名&gt;&quot;</span></span><br><span class="line">    <span class="attr">topic:</span> <span class="string">&quot;&lt;分析主题&gt;&quot;</span></span><br><span class="line">    <span class="attr">what_they_did:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;&lt;具体做法1&gt;&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;&lt;具体做法2&gt;&quot;</span></span><br><span class="line">    <span class="attr">why_it_worked:</span> <span class="string">&quot;&lt;成功原因分析&gt;&quot;</span></span><br><span class="line">    <span class="attr">key_numbers:</span> <span class="string">&quot;&lt;关键数据&gt;&quot;</span></span><br><span class="line">    <span class="attr">takeaway:</span> <span class="string">&quot;&lt;核心启示&gt;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">techniques:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">&quot;&lt;技法名称&gt;&quot;</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">&quot;&lt;技法描述&gt;&quot;</span></span><br><span class="line">    <span class="attr">example:</span> <span class="string">&quot;&lt;具体案例&gt;&quot;</span></span><br><span class="line">    <span class="attr">applicable_to:</span> <span class="string">&quot;&lt;适用场景&gt;&quot;</span></span><br></pre></td></tr></table></figure>
 <p>若文章知识密度极低（纯水文），LLM 会输出 <code>LOW_DENSITY: true</code> 标记并跳过。</p>
-<h4 id="Stage-3：结晶组装（Assemble）"><a href="#Stage-3：结晶组装（Assemble）" class="headerlink" title="Stage 3：结晶组装（Assemble）"></a>Stage 3：结晶组装（Assemble）</h4><p>第三阶段将所有个体提取结果合并为一个统一的知识晶体文件（<code>knowledge_crystal.yaml</code>），包含六大模块：</p>
-<div class="table-container">
+<h4 id="stage-3结晶组装assemble"><a class="markdownIt-Anchor" href="#stage-3结晶组装assemble"></a> Stage 3：结晶组装（Assemble）</h4>
+<p>第三阶段将所有个体提取结果合并为一个统一的知识晶体文件（<code>knowledge_crystal.yaml</code>），包含六大模块：</p>
 <table>
 <thead>
 <tr>
@@ -416,14 +416,16 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h3 id="蒸馏产出的目录结构"><a href="#蒸馏产出的目录结构" class="headerlink" title="蒸馏产出的目录结构"></a>蒸馏产出的目录结构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">distill/output/</span><br><span class="line">├── classifications/        # Stage 1 输出：N 个 .json</span><br><span class="line">│   ├── &lt;doc_id_1&gt;_&lt;文章标题1&gt;.json</span><br><span class="line">│   ├── &lt;doc_id_2&gt;_&lt;文章标题2&gt;.json</span><br><span class="line">│   └── ...</span><br><span class="line">├── extractions/            # Stage 2 输出：N 个 .yaml</span><br><span class="line">│   ├── &lt;doc_id_1&gt;_&lt;文章标题1&gt;.yaml</span><br><span class="line">│   ├── &lt;doc_id_2&gt;_&lt;文章标题2&gt;.yaml</span><br><span class="line">│   └── ...</span><br><span class="line">├── knowledge_crystal.yaml  # Stage 3 最终产物（人类可读）</span><br><span class="line">├── knowledge_crystal.json  # Stage 3 最终产物（程序可解析）</span><br><span class="line">└── .progress.json          # 断点续传进度文件</span><br></pre></td></tr></table></figure>
+<h3 id="蒸馏产出的目录结构"><a class="markdownIt-Anchor" href="#蒸馏产出的目录结构"></a> 蒸馏产出的目录结构</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">distill/output/</span><br><span class="line">├── classifications/        # Stage 1 输出：N 个 .json</span><br><span class="line">│   ├── &lt;doc_id_1&gt;_&lt;文章标题1&gt;.json</span><br><span class="line">│   ├── &lt;doc_id_2&gt;_&lt;文章标题2&gt;.json</span><br><span class="line">│   └── ...</span><br><span class="line">├── extractions/            # Stage 2 输出：N 个 .yaml</span><br><span class="line">│   ├── &lt;doc_id_1&gt;_&lt;文章标题1&gt;.yaml</span><br><span class="line">│   ├── &lt;doc_id_2&gt;_&lt;文章标题2&gt;.yaml</span><br><span class="line">│   └── ...</span><br><span class="line">├── knowledge_crystal.yaml  # Stage 3 最终产物（人类可读）</span><br><span class="line">├── knowledge_crystal.json  # Stage 3 最终产物（程序可解析）</span><br><span class="line">└── .progress.json          # 断点续传进度文件</span><br></pre></td></tr></table></figure>
 <p>每个文件以 8 位 hex 前缀（<code>doc_id</code>）命名，classifications 和 extractions 通过 <code>doc_id</code> 一一对应。这个设计为后续的合并分块奠定了基础。</p>
-<h2 id="二、结构感知分块"><a href="#二、结构感知分块" class="headerlink" title="二、结构感知分块"></a>二、结构感知分块</h2><h3 id="为什么不用滑窗分块"><a href="#为什么不用滑窗分块" class="headerlink" title="为什么不用滑窗分块"></a>为什么不用滑窗分块</h3><p>传统 RAG 系统最常用的分块策略是<strong>固定窗口滑窗</strong>（如 512 token 一块，128 token 重叠）。这种方法简单通用，但有一个致命缺陷：<strong>它不理解语义边界</strong>。</p>
-<p>一个案例分析可能跨越 300-800 字符，滑窗会在案例中间切一刀，导致上半段有”做法”没”结论”，下半段有”结论”没”背景”。检索到这样的 Chunk，LLM 也无法生成有意义的回答。</p>
+<h2 id="结构感知分块"><a class="markdownIt-Anchor" href="#结构感知分块"></a> 结构感知分块</h2>
+<h3 id="为什么不用滑窗分块"><a class="markdownIt-Anchor" href="#为什么不用滑窗分块"></a> 为什么不用滑窗分块</h3>
+<p>传统 RAG 系统最常用的分块策略是<strong>固定窗口滑窗</strong>（如 512 token 一块，128 token 重叠）。这种方法简单通用，但有一个致命缺陷：<strong>它不理解语义边界</strong>。</p>
+<p>一个案例分析可能跨越 300-800 字符，滑窗会在案例中间切一刀，导致上半段有&quot;做法&quot;没&quot;结论&quot;，下半段有&quot;结论&quot;没&quot;背景&quot;。检索到这样的 Chunk，LLM 也无法生成有意义的回答。</p>
 <p>而我们的蒸馏数据天然具有结构化边界——每个 <code>case</code>、每个 <code>technique</code>、每个 <code>method</code> 都是一个语义完整的知识单元。<strong>利用这些天然边界做分块，比任何分块算法都要好。</strong></p>
-<h3 id="数据探查"><a href="#数据探查" class="headerlink" title="数据探查"></a>数据探查</h3><p>在实现分块逻辑之前，我们对全部 YAML 文件做了全量数据探查。结果发现了一个技术路线中未预见的情况：蒸馏产物存在 <strong>5 种不同的 YAML 结构模式</strong>，而非预设的单一 <code>cases + techniques</code> 结构。</p>
-<div class="table-container">
+<h3 id="数据探查"><a class="markdownIt-Anchor" href="#数据探查"></a> 数据探查</h3>
+<p>在实现分块逻辑之前，我们对全部 YAML 文件做了全量数据探查。结果发现了一个技术路线中未预见的情况：蒸馏产物存在 <strong>5 种不同的 YAML 结构模式</strong>，而非预设的单一 <code>cases + techniques</code> 结构。</p>
 <table>
 <thead>
 <tr>
@@ -466,28 +468,30 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>这意味着原技术路线仅预设了 Schema A 的处理逻辑，如果不做扩展，将丢失近 50% 的蒸馏数据。</p>
-<h3 id="10-种-Chunk-Builder-的调度架构"><a href="#10-种-Chunk-Builder-的调度架构" class="headerlink" title="10 种 Chunk Builder 的调度架构"></a>10 种 Chunk Builder 的调度架构</h3><p>为覆盖全部 5 种 Schema 变体，我们实现了 <strong>10 种 Chunk Builder</strong>，加上必有的 <code>article_summary</code>，共 11 种 Chunk 类型：</p>
+<h3 id="10-种-chunk-builder-的调度架构"><a class="markdownIt-Anchor" href="#10-种-chunk-builder-的调度架构"></a> 10 种 Chunk Builder 的调度架构</h3>
+<p>为覆盖全部 5 种 Schema 变体，我们实现了 <strong>10 种 Chunk Builder</strong>，加上必有的 <code>article_summary</code>，共 11 种 Chunk 类型：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">文档 (doc_id)</span><br><span class="line">├── article_summary    ← 必有（来自 JSON 元数据的 one_line 摘要）</span><br><span class="line">├── case               ← Schema A: 案例分析</span><br><span class="line">├── technique           ← Schema A: 设计技法</span><br><span class="line">├── method              ← Schema B: 方法论步骤</span><br><span class="line">├── checklist           ← Schema B: 检查清单</span><br><span class="line">├── framework           ← Schema C/E: 设计框架</span><br><span class="line">├── key_argument        ← Schema C/E: 核心论点</span><br><span class="line">├── formula             ← Schema D: 公式</span><br><span class="line">├── algorithm           ← Schema D: 算法</span><br><span class="line">├── numerical_pattern   ← Schema D: 数值规律</span><br><span class="line">└── practice            ← Schema E: 实践案例</span><br></pre></td></tr></table></figure>
 <p>调度逻辑通过一个 <code>SECTION_BUILDERS</code> 字典实现——YAML 的顶层字段名直接映射到对应的 Builder 函数：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SECTION_BUILDERS = &#123;</span><br><span class="line">    <span class="string">&quot;cases&quot;</span>: build_case_chunks,</span><br><span class="line">    <span class="string">&quot;techniques&quot;</span>: build_technique_chunks,</span><br><span class="line">    <span class="string">&quot;methods&quot;</span>: build_method_chunks,</span><br><span class="line">    <span class="string">&quot;checklists&quot;</span>: build_checklist_chunks,</span><br><span class="line">    <span class="string">&quot;frameworks&quot;</span>: build_framework_chunks,</span><br><span class="line">    <span class="string">&quot;key_arguments&quot;</span>: build_key_argument_chunks,</span><br><span class="line">    <span class="string">&quot;formulas&quot;</span>: build_formula_chunks,</span><br><span class="line">    <span class="string">&quot;algorithms&quot;</span>: build_algorithm_chunks,</span><br><span class="line">    <span class="string">&quot;numerical_patterns&quot;</span>: build_numerical_pattern_chunks,</span><br><span class="line">    <span class="string">&quot;practices&quot;</span>: build_practice_chunks,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_document</span>(<span class="params">doc_id, cls_data, ext_data</span>):</span><br><span class="line">    chunks = []</span><br><span class="line">    <span class="comment"># 1) 必有的文章级摘要</span></span><br><span class="line">    chunks.append(build_article_summary_chunk(doc_id, cls_data, ext_meta))</span><br><span class="line">    <span class="comment"># 2) 按 YAML 字段自动路由到对应 Builder</span></span><br><span class="line">    <span class="keyword">if</span> ext_data:</span><br><span class="line">        <span class="keyword">for</span> section_key, builder_fn <span class="keyword">in</span> SECTION_BUILDERS.items():</span><br><span class="line">            <span class="keyword">if</span> section_key <span class="keyword">in</span> ext_data <span class="keyword">and</span> ext_data[section_key]:</span><br><span class="line">                chunks.extend(builder_fn(doc_id, cls_data, ext_data))</span><br><span class="line">    <span class="keyword">return</span> chunks</span><br></pre></td></tr></table></figure>
 <p>这个设计的优雅之处在于：<strong>新增一种 Schema 只需要写一个 Builder 函数并在字典中注册一行</strong>，完全开闭原则。</p>
-<h3 id="Chunk-文本构造"><a href="#Chunk-文本构造" class="headerlink" title="Chunk 文本构造"></a>Chunk 文本构造</h3><p>每个 Chunk 的 <code>text</code> 字段遵循统一的结构化模板：</p>
+<h3 id="chunk-文本构造"><a class="markdownIt-Anchor" href="#chunk-文本构造"></a> Chunk 文本构造</h3>
+<p>每个 Chunk 的 <code>text</code> 字段遵循统一的结构化模板：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">【类型标签】标题/名称</span><br><span class="line">来源文章：&#123;article_title&#125;</span><br><span class="line">字段1：&#123;value1&#125;</span><br><span class="line">字段2：&#123;value2&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 <p>以一个 <code>method</code> 类型的 Chunk 为例：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">【方法论】&lt;方法名称&gt;</span><br><span class="line">来源文章：&lt;文章标题&gt;</span><br><span class="line">目的：&lt;方法论的目标描述&gt;</span><br><span class="line">步骤：</span><br><span class="line">  步骤1. &lt;第一步描述&gt;...</span><br><span class="line">  步骤2. &lt;第二步描述&gt;...</span><br><span class="line">  步骤3. &lt;第三步描述&gt;...</span><br><span class="line">  步骤4. &lt;第四步描述&gt;...</span><br><span class="line">输入：&lt;输入条件&gt;</span><br><span class="line">输出：&lt;预期产出&gt;</span><br><span class="line">适用场景：&lt;适用场景描述&gt;</span><br></pre></td></tr></table></figure>
 <p>这个模板有三个设计意图：</p>
 <ol>
-<li><strong>类型标签</strong>（如 <code>【案例】</code>、<code>【方法论】</code>、<code>【公式】</code>）为 Sparse 检索提供强信号词。当用户搜索”方法论”时，Sparse 路能精确匹配到这些标签</li>
+<li><strong>类型标签</strong>（如 <code>【案例】</code>、<code>【方法论】</code>、<code>【公式】</code>）为 Sparse 检索提供强信号词。当用户搜索&quot;方法论&quot;时，Sparse 路能精确匹配到这些标签</li>
 <li><strong><code>来源文章</code></strong> 字段建立 Chunk → 文章的溯源链路，LLM 生成回答时可以直接引用</li>
-<li><strong>结构化排列</strong>有利于 LLM 在生成阶段解析上下文——模型能清晰地区分”目的”、”步骤”、”适用场景”等字段</li>
+<li><strong>结构化排列</strong>有利于 LLM 在生成阶段解析上下文——模型能清晰地区分&quot;目的&quot;、“步骤”、&quot;适用场景&quot;等字段</li>
 </ol>
-<h3 id="Metadata-Payload"><a href="#Metadata-Payload" class="headerlink" title="Metadata Payload"></a>Metadata Payload</h3><p>每个 Chunk 携带丰富的元数据 Payload，支持后续的过滤检索与结果增强：</p>
+<h3 id="metadata-payload"><a class="markdownIt-Anchor" href="#metadata-payload"></a> Metadata Payload</h3>
+<p>每个 Chunk 携带丰富的元数据 Payload，支持后续的过滤检索与结果增强：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;doc_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;8位hex&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;文章标题&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;category&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;分类&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;domains&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;&lt;领域1&gt;&quot;</span><span class="punctuation">,</span> <span class="string">&quot;&lt;领域2&gt;&quot;</span><span class="punctuation">,</span> <span class="string">&quot;&lt;领域3&gt;&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;author&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;作者&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;article_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;C&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;source_url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;来源链接&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;method_name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;方法名称&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;use_when&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;适用场景&gt;&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>元数据字段根据 Chunk 类型动态扩展：<code>game</code>/<code>topic</code> 仅 case 类型有，<code>technique_name</code>/<code>applicable_to</code> 仅 technique 类型有，<code>formula_name</code> 仅 formula 类型有。这些字段后续会在 Qdrant 中建立 Payload 索引，支持检索时的精确过滤。</p>
-<h3 id="无效数据处理"><a href="#无效数据处理" class="headerlink" title="无效数据处理"></a>无效数据处理</h3><p>全部 YAML 文件中，约 <strong>22.5%</strong> 是无效的：</p>
-<div class="table-container">
+<h3 id="无效数据处理"><a class="markdownIt-Anchor" href="#无效数据处理"></a> 无效数据处理</h3>
+<p>全部 YAML 文件中，约 <strong>22.5%</strong> 是无效的：</p>
 <table>
 <thead>
 <tr>
@@ -509,11 +513,10 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>处理策略是：<strong>无效 YAML 对应的文档仍通过 JSON 元数据中的 <code>one_line</code> 摘要生成 <code>article_summary</code> 级 Chunk</strong>。这确保了全部文章零丢失——即使蒸馏失败的文章，也至少有一个摘要级别的 Chunk 可供检索。</p>
 <p>100 bytes 的阈值是通过实测确定的：26 个空文件 ≤ 17 bytes，19 个解析失败文件 ≥ 126 bytes，100 bytes 是安全的分界线。</p>
-<h3 id="分块结果"><a href="#分块结果" class="headerlink" title="分块结果"></a>分块结果</h3><p>执行 <code>prepare_chunks.py</code> 后，得到以下结果：</p>
-<div class="table-container">
+<h3 id="分块结果"><a class="markdownIt-Anchor" href="#分块结果"></a> 分块结果</h3>
+<p>执行 <code>prepare_chunks.py</code> 后，得到以下结果：</p>
 <table>
 <thead>
 <tr>
@@ -544,9 +547,7 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>Chunk 类型分布如下：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -613,17 +614,17 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>Chunk 文本长度统计：平均约 <strong>200+ 字符</strong>，中位数约 <strong>170+ 字符</strong>，最长约 <strong>1,200+ 字符</strong>。所有 Chunk 均远低于 BGE-M3 的 8192 token 上限，无需截断处理。</p>
 <p>各子领域分布均衡（各约 22%-27%），无明显偏斜。</p>
 <p>与技术路线预估对比，最大的偏差在于 Chunk 类型数：预估 3 种，实际 <strong>11 种</strong>。这是因为发现了 5 种 Schema 变体，扩展为 10+1 种 Builder。总 Chunk 数也超出预估约 18%，多出的 Chunk 来自 Schema B/C/D/E 的贡献。</p>
-<h2 id="Embedding-编码与向量数据库构建"><a href="#Embedding-编码与向量数据库构建" class="headerlink" title="Embedding 编码与向量数据库构建"></a>Embedding 编码与向量数据库构建</h2><h3 id="BGE-M3"><a href="#BGE-M3" class="headerlink" title="BGE-M3"></a>BGE-M3</h3><p><strong>BGE-M3</strong>（BAAI General Embedding - Multi-Functionality, Multi-Linguality, Multi-Granularity）是由北京智源人工智能研究院（BAAI）于 2024 年发布的多功能文本嵌入模型（论文：<em>M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation</em>，Chen et al., 2024）。其核心创新在于<strong>单一模型同时支持三种检索范式</strong>：Dense Retrieval（稠密向量检索）、Sparse Retrieval（稀疏向量检索）和 ColBERT 式的 Multi-Vector Retrieval（多向量检索）。模型基于 XLM-RoBERTa 架构，支持 100+ 种语言，最大输入长度 8192 tokens，在 MTEB、C-MTEB 等主流评测基准上均达到 SOTA 水平。</p>
+<h2 id="embedding-编码与向量数据库构建"><a class="markdownIt-Anchor" href="#embedding-编码与向量数据库构建"></a> Embedding 编码与向量数据库构建</h2>
+<h3 id="bge-m3"><a class="markdownIt-Anchor" href="#bge-m3"></a> BGE-M3</h3>
+<p><strong>BGE-M3</strong>（BAAI General Embedding - Multi-Functionality, Multi-Linguality, Multi-Granularity）是由北京智源人工智能研究院（BAAI）于 2024 年发布的多功能文本嵌入模型（论文：<em>M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation</em>，Chen et al., 2024）。其核心创新在于<strong>单一模型同时支持三种检索范式</strong>：Dense Retrieval（稠密向量检索）、Sparse Retrieval（稀疏向量检索）和 ColBERT 式的 Multi-Vector Retrieval（多向量检索）。模型基于 XLM-RoBERTa 架构，支持 100+ 种语言，最大输入长度 8192 tokens，在 MTEB、C-MTEB 等主流评测基准上均达到 SOTA 水平。</p>
 <p>选择 BGE-M3 作为 Embedding 模型的核心理由是：<strong>它能同时输出 Dense 和 Sparse 两种向量表示</strong>，省去了维护两个模型的复杂度。</p>
 <ul>
 <li><strong>Dense 向量</strong>（稠密向量）：文本经 Transformer 编码后，取 <code>[CLS]</code> token 的最终隐藏状态并 L2 归一化，得到一个固定维度（1024d）的连续浮点向量。该向量捕获文本的<strong>全局语义信息</strong>，适用于语义相似度计算（Semantic Similarity）。在信息检索领域，这种方法被称为 Dense Passage Retrieval（DPR, Karpukhin et al., 2020），是当前神经信息检索（Neural IR）的主流范式。</li>
 <li><strong>Sparse 向量</strong>（稀疏向量）：文本经同一个 Transformer 编码后，通过一个额外的线性层将每个 token 的隐藏状态映射为标量权重，构成一个高维稀疏向量（维度 = 词表大小 ~250K），仅出现在文本中的 token 对应维度有非零值。这种方法被称为 Learned Sparse Representation（学习型稀疏表示，Formal et al., 2021），相比传统的 BM25 统计方法，它能利用 Transformer 的上下文理解能力为每个词项赋予<strong>语境感知的权重</strong>。</li>
 </ul>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -654,11 +655,11 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>编码流程：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">chunks.jsonl (N texts)</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">BGE-M3 Tokenizer (XLMRobertaTokenizerFast)</span><br><span class="line">    │ pre-tokenize: batches × 64 texts/batch</span><br><span class="line">    ▼</span><br><span class="line">BGE-M3 Inference (CPU, FP32)</span><br><span class="line">    │ ~2-3 texts/sec (CPU)</span><br><span class="line">    ▼</span><br><span class="line">├── Dense Vectors:    shape (N, 1024), float32</span><br><span class="line">└── Sparse Weights:   N dicts &#123;token_id: weight&#125;</span><br></pre></td></tr></table></figure>
 <p>Dense 向量捕获语义相似性，Sparse 向量捕获精确关键词匹配（专有术语精确匹配）。两者互补，是后续双路检索的基础。</p>
-<h3 id="Qdrant-Local：轻量嵌入式知识库"><a href="#Qdrant-Local：轻量嵌入式知识库" class="headerlink" title="Qdrant Local：轻量嵌入式知识库"></a>Qdrant Local：轻量嵌入式知识库</h3><p><strong>Qdrant</strong>（读作 /kwɒdrənt/）是一款开源的高性能向量相似度搜索引擎，使用 Rust 语言编写，专为大规模向量检索场景设计（GitHub: qdrant/qdrant）。与同类产品（Milvus、Weaviate、Pinecone 等）相比，Qdrant 的核心技术特点包括：</p>
+<h3 id="qdrant-local轻量嵌入式知识库"><a class="markdownIt-Anchor" href="#qdrant-local轻量嵌入式知识库"></a> Qdrant Local：轻量嵌入式知识库</h3>
+<p><strong>Qdrant</strong>（读作 /kwɒdrənt/）是一款开源的高性能向量相似度搜索引擎，使用 Rust 语言编写，专为大规模向量检索场景设计（GitHub: qdrant/qdrant）。与同类产品（Milvus、Weaviate、Pinecone 等）相比，Qdrant 的核心技术特点包括：</p>
 <ul>
 <li><strong>HNSW 图索引</strong>（Hierarchical Navigable Small World, Malkov &amp; Yashunin, 2018）：一种基于多层跳表思想的近似最近邻（ANN）搜索算法，将检索复杂度从暴力搜索的 O(N) 降至 O(log N)，在百万级向量规模下仍能保持毫秒级响应；</li>
 <li><strong>原生多向量支持</strong>：单个 Point（数据记录）可同时存储 Dense 向量和 Sparse 向量，并支持在同一次查询中对两种向量分别检索后融合（Prefetch + Fusion），这正是我们实现双路混合检索的基础；</li>
@@ -670,7 +671,6 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">client.create_collection(</span><br><span class="line">    collection_name=<span class="string">&quot;knowledge_base&quot;</span>,</span><br><span class="line">    vectors_config=&#123;</span><br><span class="line">        <span class="string">&quot;dense&quot;</span>: VectorParams(size=<span class="number">1024</span>, distance=Distance.COSINE)</span><br><span class="line">    &#125;,</span><br><span class="line">    sparse_vectors_config=&#123;</span><br><span class="line">        <span class="string">&quot;sparse&quot;</span>: SparseVectorParams()</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 <p>每个 Chunk 对应一个 Qdrant Point，包含 Dense 向量 + Sparse 向量 + Payload（元数据 + 原文）。分批 Upsert（128 个/批）。</p>
 <p>为 5 个高频过滤字段创建 Payload 索引：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -707,11 +707,11 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h3 id="入库验证"><a href="#入库验证" class="headerlink" title="入库验证"></a>入库验证</h3><p>使用第一个 Chunk 的向量作为测试 Query，执行 Dense + Sparse 双路检索 + RRF 融合：</p>
+<h3 id="入库验证"><a class="markdownIt-Anchor" href="#入库验证"></a> 入库验证</h3>
+<p>使用第一个 Chunk 的向量作为测试 Query，执行 Dense + Sparse 双路检索 + RRF 融合：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Query: &lt;某篇文章的 article_summary Chunk&gt;</span><br><span class="line"></span><br><span class="line">结果：</span><br><span class="line">  [1] score=1.0000 | article_summary | &lt;同一文章&gt;</span><br><span class="line">  [2] score=0.5833 | method          | &lt;同一文章&gt;</span><br><span class="line">  [3] score=0.5000 | method          | &lt;同一文章&gt;</span><br><span class="line">  [4] score=0.4500 | checklist       | &lt;同一文章&gt;</span><br><span class="line">  [5] score=0.3250 | checklist       | &lt;同一文章&gt;</span><br></pre></td></tr></table></figure>
 <p>自身精确匹配 score=1.0，同文档不同 Chunk 按相关性递减排列，RRF 融合逻辑正确。验证通过。</p>
-<h3 id="存储数据"><a href="#存储数据" class="headerlink" title="存储数据"></a>存储数据</h3><div class="table-container">
+<h3 id="存储数据"><a class="markdownIt-Anchor" href="#存储数据"></a> 存储数据</h3>
 <table>
 <thead>
 <tr>
@@ -738,9 +738,9 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>Sparse 向量平均每个 Chunk 包含约 73 个有效词项，说明蒸馏后的结构化文本具有丰富的关键词信号——这正是蒸馏带来的额外收益：结构化标签（<code>【案例】</code>、<code>【方法论】</code>）和字段名（<code>做法：</code>、<code>成功原因：</code>）本身就是高质量的关键词。</p>
-<h2 id="检索与重排：Dense-Sparse-Rerank"><a href="#检索与重排：Dense-Sparse-Rerank" class="headerlink" title="检索与重排：Dense + Sparse + Rerank"></a>检索与重排：Dense + Sparse + Rerank</h2><p>在工业级 RAG 系统中，检索环节通常遵循一个经典的<strong>漏斗式架构</strong>：<strong>在线召回（Retrieval）→ 粗排（Coarse Ranking）→ 精排（Fine Ranking）</strong>。这一多阶段排序架构（Multi-Stage Ranking Pipeline）源自信息检索（Information Retrieval, IR）领域数十年的工程实践，最早可追溯到搜索引擎的 L2R（Learning to Rank）系统（Burges et al., 2005; Liu, 2009）。其核心思想是：</p>
+<h2 id="检索与重排dense-sparse-rerank"><a class="markdownIt-Anchor" href="#检索与重排dense-sparse-rerank"></a> 检索与重排：Dense + Sparse + Rerank</h2>
+<p>在工业级 RAG 系统中，检索环节通常遵循一个经典的<strong>漏斗式架构</strong>：<strong>在线召回（Retrieval）→ 粗排（Coarse Ranking）→ 精排（Fine Ranking）</strong>。这一多阶段排序架构（Multi-Stage Ranking Pipeline）源自信息检索（Information Retrieval, IR）领域数十年的工程实践，最早可追溯到搜索引擎的 L2R（Learning to Rank）系统（Burges et al., 2005; Liu, 2009）。其核心思想是：</p>
 <ul>
 <li><strong>在线召回（Retrieval / Candidate Generation）</strong>：从全量索引中以极低的计算成本快速筛出候选集。典型方法包括倒排索引（Inverted Index）、ANN 向量检索（Approximate Nearest Neighbor）等，复杂度通常为 O(log N) 或亚线性，要求毫秒级响应。</li>
 <li><strong>粗排（Coarse Ranking / Pre-Ranking）</strong>：对召回的候选集进行初步排序，融合多路召回信号并统一排名。常见方法包括 Reciprocal Rank Fusion（RRF, Cormack et al., 2009）、加权分数融合、轻量级模型打分等，目标是在亚秒级内将候选集从数百缩小到数十。</li>
@@ -748,10 +748,10 @@
 </ul>
 <p>这个三级架构的本质是一个<strong>精度-效率权衡</strong>，每一级都在缩小候选集的同时提升排序质量，最终将数千个候选文档收敛到个位数的高质量结果。</p>
 <p>我们的系统完整实现了这三个阶段。在展开技术细节之前，先看一下与工业级系统的对比，以建立全局视角。</p>
-<h3 id="与工业级-RAG-系统的架构对比"><a href="#与工业级-RAG-系统的架构对比" class="headerlink" title="与工业级 RAG 系统的架构对比"></a>与工业级 RAG 系统的架构对比</h3><p>作为参照，我们选取了一个典型的企业级 RAG 系统——ISearchChat（一个支持 iWiki、KM 等内部知识库的智能问答系统）。它的在线检索链路如下：</p>
+<h3 id="与工业级-rag-系统的架构对比"><a class="markdownIt-Anchor" href="#与工业级-rag-系统的架构对比"></a> 与工业级 RAG 系统的架构对比</h3>
+<p>作为参照，我们选取了一个典型的企业级 RAG 系统——ISearchChat（一个支持 iWiki、KM 等内部知识库的智能问答系统）。它的在线检索链路如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">用户请求 → Query 预处理（分词 / 纠错 / 去停用词）</span><br><span class="line">    │</span><br><span class="line">    ├─ Vector Search：EF 向量召回 (Top 200)</span><br><span class="line">    ├─ Keyword Search：ES 关键词召回 (KM 5条 / iWiki 3条)</span><br><span class="line">    └─ Full-text Search：ES 全文检索召回</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">    第一轮重排：关键词匹配 + Jaccard 相似度</span><br><span class="line">    第二轮重排：finalScore × 提升系数</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">    LLM 总结生成 (Final Answer Generation)</span><br></pre></td></tr></table></figure>
 <p>将其与我们的系统做对比：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -813,16 +813,14 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>两个系统的设计哲学截然不同：ISearchChat 面向<strong>大规模、高并发、持续更新</strong>的生产环境，因此采用多组件分布式架构，用 ES 做关键词召回（成熟稳定），用规则化的多轮重排（可控可调）；而我们面向<strong>小规模、高质量、离线构建</strong>的知识库场景，因此选择了更重的模型（BGE-M3 一个模型同时输出两种表示，省去维护 ES 的复杂度）和更重的精排（Cross-Encoder 神经网络，精度远高于规则重排）。</p>
 <p>一个值得注意的差异是 <strong>Query 预处理</strong>。ISearchChat 在检索前做了大量的 Query 预处理工作——jieba 分词、去停用词、提取产品名称、意图识别等。这些预处理在传统 IR 系统中至关重要，因为关键词召回的质量高度依赖于 Query 的清洁度。而我们的系统跳过了这一步，原因是：BGE-M3 的 Transformer 编码器本身就具备强大的文本理解能力，能自动处理停用词、同义词等问题；同时，我们的 Sparse 路是<strong>学习型稀疏表示</strong>（而非传统 BM25），权重由神经网络计算，对 Query 噪声的鲁棒性更强。</p>
 <p>另一个关键差异是 <strong>向量入库的粒度</strong>。ISearchChat 对每个 Chunk 提取三种向量文本——<code>chunk_title</code>（标题）、<code>highlight</code>（高亮句子/子标题）、<code>sentence</code>（常规文本分句），每种类型独立入库，检索时分别取 Top-N 再合并打分。这种细粒度的向量化策略在大规模数据上能显著提升召回率（ISearchChat 的评测数据显示 title 类型贡献了 77% 的命中）。而我们的系统将整个 Chunk 作为一个整体入库——这是因为蒸馏后的 Chunk 本身就是语义完整的知识单元（平均 216 字符），粒度已经足够细，无需再做子句级拆分。</p>
-<h3 id="Pipeline-总览"><a href="#Pipeline-总览" class="headerlink" title="Pipeline 总览"></a>Pipeline 总览</h3><p>理解了工业级系统的全貌后，回到我们自己的 Pipeline。整体架构如下：</p>
+<h3 id="pipeline-总览"><a class="markdownIt-Anchor" href="#pipeline-总览"></a> Pipeline 总览</h3>
+<p>理解了工业级系统的全貌后，回到我们自己的 Pipeline。整体架构如下：</p>
 <div style="font-family: 'SF Pro Text', 'PingFang SC', system-ui, sans-serif; max-width: 520px; margin: 20px auto; padding: 20px 22px; border-radius: 14px; background: #fafbfc; border: 1px solid #e8eaed; box-shadow: 0 2px 12px rgba(0,0,0,0.04); color: #333; font-size: 13px; line-height: 1.5;">
-
   <div style="text-align: center; padding: 6px 0 10px; font-weight: 600; color: #555; letter-spacing: 0.5px;">用户 Query</div>
   <div style="width: 1.5px; height: 16px; background: #ccc; margin: 0 auto;"></div>
-
   <div style="background: #eef4fc; border-left: 3px solid #4A90E2; border-radius: 6px; padding: 10px 14px; margin: 8px 0; position: relative;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span style="font-weight: 600; color: #4A90E2;">⚙️ BGE-M3 Encode</span>
@@ -830,9 +828,7 @@
     </div>
     <div style="margin-top: 4px; font-family: ui-monospace, monospace; font-size: 12px; color: #666;">→ Dense Vector (1024d)　→ Sparse Weights (dict)</div>
   </div>
-
   <div style="width: 1.5px; height: 12px; background: #ccc; margin: 0 auto;"></div>
-
   <div style="display: flex; gap: 10px; margin: 8px 0;">
     <div style="flex: 1; padding: 9px 12px; background: #fff; border: 1px dashed #4A90E2; border-radius: 6px;">
       <div style="color: #4A90E2; font-weight: 600; font-size: 12px;">Dense 路</div>
@@ -843,9 +839,7 @@
       <div style="color: #888; font-size: 11px; margin-top: 2px;">Qdrant 稀疏 → <b style="color: #333;">Top 40</b></div>
     </div>
   </div>
-
   <div style="width: 1.5px; height: 12px; background: #ccc; margin: 0 auto;"></div>
-
   <div style="background: #fef8f0; border-left: 3px solid #F2994A; border-radius: 6px; padding: 10px 14px; margin: 8px 0;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span style="font-weight: 600; color: #F2994A;">🧩 RRF Fusion — 粗排</span>
@@ -853,9 +847,7 @@
     </div>
     <div style="margin-top: 4px; font-size: 12px; color: #666;"><code style="background: rgba(242,153,74,0.12); padding: 1px 5px; border-radius: 3px; font-size: 11px;">score = Σ 1/(k + rank_i)</code> → <b>Top 20</b></div>
   </div>
-
   <div style="width: 1.5px; height: 12px; background: #ccc; margin: 0 auto;"></div>
-
   <div style="background: #f0faf4; border-left: 3px solid #27AE60; border-radius: 6px; padding: 10px 14px; margin: 8px 0;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span style="font-weight: 600; color: #27AE60;">🔥 BGE-Reranker-v2-m3 — 精排</span>
@@ -863,10 +855,8 @@
     </div>
     <div style="margin-top: 4px; font-size: 12px; color: #666;">Cross-Encoder 交叉注意力打分 → <b style="color: #27AE60; font-size: 14px;">Top 5 最终结果</b></div>
   </div>
-
-<p>&lt;/div&gt;</p>
+</div>
 <p>三个阶段各自解决一个问题：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -901,18 +891,18 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>这是一个典型的<strong>倒金字塔</strong>结构：越往下，候选越少，模型越重，精度越高。</p>
-<h3 id="第一级：在线召回——Dense-Sparse-双路检索"><a href="#第一级：在线召回——Dense-Sparse-双路检索" class="headerlink" title="第一级：在线召回——Dense + Sparse 双路检索"></a>第一级：在线召回——Dense + Sparse 双路检索</h3><p>在线召回是整个 Pipeline 的入口，它的核心任务是<strong>从全量 Chunk 中快速筛出最可能相关的候选集</strong>。我们采用 Dense + Sparse 双路并行检索，两路各取 Top 40，合计约 80 个候选（去重后通常 50-70 个）。</p>
-<h4 id="Dense-路：语义向量检索"><a href="#Dense-路：语义向量检索" class="headerlink" title="Dense 路：语义向量检索"></a>Dense 路：语义向量检索</h4><p><strong>核心思想</strong>：将文本映射到一个连续的高维向量空间中，语义相近的文本在空间中距离更近。检索时，计算 Query 向量与所有文档向量的余弦相似度，取最近的 Top-K。</p>
+<h3 id="第一级在线召回dense-sparse-双路检索"><a class="markdownIt-Anchor" href="#第一级在线召回dense-sparse-双路检索"></a> 第一级：在线召回——Dense + Sparse 双路检索</h3>
+<p>在线召回是整个 Pipeline 的入口，它的核心任务是<strong>从全量 Chunk 中快速筛出最可能相关的候选集</strong>。我们采用 Dense + Sparse 双路并行检索，两路各取 Top 40，合计约 80 个候选（去重后通常 50-70 个）。</p>
+<h4 id="dense-路语义向量检索"><a class="markdownIt-Anchor" href="#dense-路语义向量检索"></a> Dense 路：语义向量检索</h4>
+<p><strong>核心思想</strong>：将文本映射到一个连续的高维向量空间中，语义相近的文本在空间中距离更近。检索时，计算 Query 向量与所有文档向量的余弦相似度，取最近的 Top-K。</p>
 <p><strong>编码过程</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&quot;产品核心系统平衡性设计&quot;</span><br><span class="line">    ↓ BGE-M3 Encoder (XLM-RoBERTa 架构, 12 层 Transformer)</span><br><span class="line">    ↓ Tokenization → subword tokens</span><br><span class="line">    ↓ 12 层自注意力编码（每个 token 都能&quot;看到&quot;所有其他 token）</span><br><span class="line">    ↓ [CLS] token pooling → 取首个 token 的最终隐藏状态</span><br><span class="line">    ↓ L2 归一化 → 映射到单位超球面</span><br><span class="line">    ↓</span><br><span class="line">[0.023, -0.156, 0.891, ..., 0.034]  ← 1024 维浮点向量</span><br></pre></td></tr></table></figure>
-<p>Transformer 的自注意力机制是 Dense 路语义理解能力的根基。在编码 “产品核心系统平衡性设计” 时，”平衡性” 这个 token 不仅编码了自身的词义，还通过注意力权重融合了 “产品”、”核心系统”、”设计” 等上下文信息。最终的 <code>[CLS]</code> 向量是整句话的<strong>全局语义压缩表示</strong>，它不再是各个词义的简单拼接，而是一个理解了”这句话在说什么”的整体表征。</p>
+<p>Transformer 的自注意力机制是 Dense 路语义理解能力的根基。在编码 “产品核心系统平衡性设计” 时，“平衡性” 这个 token 不仅编码了自身的词义，还通过注意力权重融合了 “产品”、“核心系统”、“设计” 等上下文信息。最终的 <code>[CLS]</code> 向量是整句话的<strong>全局语义压缩表示</strong>，它不再是各个词义的简单拼接，而是一个理解了&quot;这句话在说什么&quot;的整体表征。</p>
 <p><strong>检索过程</strong>：</p>
 <p>Query 向量 <strong>q</strong> 和文档向量 <strong>d_i</strong> 均为 1024 维实数向量。两者的相似度通过余弦相似度计算：<strong>sim(q, d_i) = cos(q, d_i) = (q · d_i) / (‖q‖ × ‖d_i‖)</strong>。由于 L2 归一化后 ‖q‖ = ‖d_i‖ = 1，余弦相似度退化为内积：<strong>cos(q, d_i) = q · d_i</strong>。</p>
 <p>L2 归一化是一个关键的工程优化：归一化后余弦相似度等价于内积，而内积运算可以被 SIMD 指令集（如 AVX-512）高度并行化。Qdrant 在底层使用 HNSW（Hierarchical Navigable Small World）图索引加速近似最近邻搜索，将检索复杂度从 O(N) 降至 O(log N)。</p>
 <p><strong>Dense 路的优势与局限</strong>：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -926,7 +916,7 @@
 <td>专有名词不敏感：不同专有术语在语义空间中可能距离很近</td>
 </tr>
 <tr>
-<td>跨表述匹配：”怎么让战斗更爽” 能匹配到 “战斗体验优化”</td>
+<td>跨表述匹配：“怎么让战斗更爽” 能匹配到 “战斗体验优化”</td>
 <td>精确匹配弱：搜某个缩写可能召回语义相近但不同的缩写</td>
 </tr>
 <tr>
@@ -935,14 +925,13 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h4 id="Sparse-路：学习型稀疏向量检索"><a href="#Sparse-路：学习型稀疏向量检索" class="headerlink" title="Sparse 路：学习型稀疏向量检索"></a>Sparse 路：学习型稀疏向量检索</h4><p><strong>核心思想</strong>：将文本表示为一个稀疏向量，维度对应词表中的每个 token（约 250K 维），值为该 token 的重要性权重。只有文本中出现的（或模型认为相关的）token 对应的维度有非零值，其余全为 0。</p>
+<h4 id="sparse-路学习型稀疏向量检索"><a class="markdownIt-Anchor" href="#sparse-路学习型稀疏向量检索"></a> Sparse 路：学习型稀疏向量检索</h4>
+<p><strong>核心思想</strong>：将文本表示为一个稀疏向量，维度对应词表中的每个 token（约 250K 维），值为该 token 的重要性权重。只有文本中出现的（或模型认为相关的）token 对应的维度有非零值，其余全为 0。</p>
 <p>BGE-M3 的 Sparse 表示<strong>不是传统的 BM25</strong>，而是一种<strong>学习型稀疏表示（Learned Sparse Representation）</strong>。这个区别至关重要：</p>
 <p><strong>编码过程</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&quot;产品核心系统平衡性设计&quot;</span><br><span class="line">    ↓ BGE-M3 Encoder（与 Dense 路共享同一个 Transformer）</span><br><span class="line">    ↓ 每个 token 的隐藏状态 h_i ∈ R^1024</span><br><span class="line">    ↓ 线性投影层：w_i = ReLU(W · h_i + b)  ← 单独的稀疏头</span><br><span class="line">    ↓ 同一 token 多次出现时取 max pooling</span><br><span class="line">    ↓</span><br><span class="line">&#123;</span><br><span class="line">    &quot;产品&quot;: 0.78,       ← 核心实体，高权重</span><br><span class="line">    &quot;核心&quot;: 0.65,</span><br><span class="line">    &quot;平衡&quot;: 0.91,       ← 核心概念，最高权重</span><br><span class="line">    &quot;性&quot;: 0.12,         ← 功能词，低权重</span><br><span class="line">    &quot;设计&quot;: 0.73,</span><br><span class="line">    &quot;优化&quot;: 0.31,       ← 模型推断出的隐含相关词（原文未出现！）</span><br><span class="line">    &quot;数值&quot;: 0.28,       ← 同上</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里有一个精妙的设计：<strong>Dense 路和 Sparse 路共享同一个 Transformer 编码器</strong>。这意味着 Sparse 路的权重计算也受益于 Transformer 的全局注意力。”平衡” 这个词在 “产品核心系统平衡性设计” 中的权重（0.91）会高于在 “工作生活平衡” 中的权重，因为 Transformer 理解了上下文。</p>
+<p>这里有一个精妙的设计：<strong>Dense 路和 Sparse 路共享同一个 Transformer 编码器</strong>。这意味着 Sparse 路的权重计算也受益于 Transformer 的全局注意力。“平衡” 这个词在 “产品核心系统平衡性设计” 中的权重（0.91）会高于在 “工作生活平衡” 中的权重，因为 Transformer 理解了上下文。</p>
 <p><strong>与传统 BM25 的关键区别</strong>：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -979,12 +968,10 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p><strong>检索过程</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Query 稀疏向量: &#123;&quot;产品&quot;: 0.78, &quot;核心&quot;: 0.65, &quot;平衡&quot;: 0.91, &quot;设计&quot;: 0.73&#125;</span><br><span class="line">文档 稀疏向量:  &#123;&quot;产品&quot;: 0.76, &quot;核心&quot;: 0.58, &quot;平衡&quot;: 0.88, &quot;数值&quot;: 0.45, &quot;调整&quot;: 0.33&#125;</span><br><span class="line"></span><br><span class="line">相似度 = 共有维度的加权内积</span><br><span class="line">       = 0.78×0.76 + 0.65×0.58 + 0.91×0.88</span><br><span class="line">       = 0.593 + 0.377 + 0.801</span><br><span class="line">       = 1.771</span><br></pre></td></tr></table></figure>
 <p>只有两个向量<strong>共同非零</strong>的维度才参与计算，这使得稀疏向量检索天然具有精确匹配的特性，如果 Query 中有某个专有术语而文档中没有，这个维度的贡献为 0。</p>
 <p><strong>Sparse 路的优势与局限</strong>：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1007,17 +994,19 @@
 </tr>
 <tr>
 <td>比 BM25 更智能：能做一定程度的词汇扩展</td>
+<td></td>
 </tr>
 </tbody>
 </table>
-</div>
-<h4 id="双路互补的本质"><a href="#双路互补的本质" class="headerlink" title="双路互补的本质"></a>双路互补的本质</h4><p>两路召回的设计不是冗余，而是<strong>互补</strong>。它们的错误模式恰好相反：</p>
+<h4 id="双路互补的本质"><a class="markdownIt-Anchor" href="#双路互补的本质"></a> 双路互补的本质</h4>
+<p>两路召回的设计不是冗余，而是<strong>互补</strong>。它们的错误模式恰好相反：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Dense 路的典型错误：语义漂移</span><br><span class="line">  Query: &quot;&lt;专有术语A&gt;&quot;</span><br><span class="line">  错误召回: &quot;&lt;专有术语B&gt;&quot;（语义相近但不是同一个东西）</span><br><span class="line"></span><br><span class="line">Sparse 路的典型错误：词汇 gap</span><br><span class="line">  Query: &quot;怎么让战斗更爽&quot;</span><br><span class="line">  漏召回: &quot;战斗体验优化方法论&quot;（语义相同但没有共同关键词）</span><br></pre></td></tr></table></figure>
 <p>当两路结果取交集时，<strong>Dense 路的语义漂移噪声会被 Sparse 路过滤</strong>（因为噪声文档通常不包含 Query 的关键词），<strong>Sparse 路的漏召回会被 Dense 路补上</strong>（因为语义相近的文档在 Dense 空间中距离很近）。</p>
 <p>消融实验中 T6（精确术语型）和 T7（模糊语义型）的结果完美验证了这一点，T6 中 Sparse 路贡献了精确的术语匹配，T7 中 Dense 路理解了口语化表述的语义意图。</p>
-<h3 id="第二级：粗排——RRF-排名融合"><a href="#第二级：粗排——RRF-排名融合" class="headerlink" title="第二级：粗排——RRF 排名融合"></a>第二级：粗排——RRF 排名融合</h3><p>两路召回各返回 Top 40 个结果，合计约 80 个候选。粗排的任务是<strong>将两路异构的分数统一为一个排名</strong>，输出 Top 20 给精排。</p>
-<h4 id="为什么不能直接加权融合"><a href="#为什么不能直接加权融合" class="headerlink" title="为什么不能直接加权融合"></a>为什么不能直接加权融合</h4><p>一个直觉的做法是：<code>final_score = α × dense_score + β × sparse_score</code>。但这行不通，因为两路的分数<strong>量纲完全不同</strong>：</p>
-<div class="table-container">
+<h3 id="第二级粗排rrf-排名融合"><a class="markdownIt-Anchor" href="#第二级粗排rrf-排名融合"></a> 第二级：粗排——RRF 排名融合</h3>
+<p>两路召回各返回 Top 40 个结果，合计约 80 个候选。粗排的任务是<strong>将两路异构的分数统一为一个排名</strong>，输出 Top 20 给精排。</p>
+<h4 id="为什么不能直接加权融合"><a class="markdownIt-Anchor" href="#为什么不能直接加权融合"></a> 为什么不能直接加权融合</h4>
+<p>一个直觉的做法是：<code>final_score = α × dense_score + β × sparse_score</code>。但这行不通，因为两路的分数<strong>量纲完全不同</strong>：</p>
 <table>
 <thead>
 <tr>
@@ -1042,10 +1031,10 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>直接加权融合会导致 Sparse 路的高分文档（内积可达 5.0）碾压 Dense 路的结果（余弦最高 1.0）。即使做 min-max 归一化，不同 Query 的分数分布差异也很大，很难找到一组通用的归一化参数。</p>
 <p>ISearchChat 的做法是设计复杂的规则化重排，包括时效惩罚、句子匹配惩罚、Jaccard 相似度等多个信号加权。这种方法在大规模系统中有效（因为可以针对具体场景调参），但对我们的小规模系统来说过于复杂。</p>
-<h4 id="RRF：只看排名，不看分数"><a href="#RRF：只看排名，不看分数" class="headerlink" title="RRF：只看排名，不看分数"></a>RRF：只看排名，不看分数</h4><p>RRF（Reciprocal Rank Fusion）提供了一个优雅的解决方案：<strong>完全忽略原始分数，只使用排名信息</strong>。</p>
+<h4 id="rrf只看排名不看分数"><a class="markdownIt-Anchor" href="#rrf只看排名不看分数"></a> RRF：只看排名，不看分数</h4>
+<p>RRF（Reciprocal Rank Fusion）提供了一个优雅的解决方案：<strong>完全忽略原始分数，只使用排名信息</strong>。</p>
 <p>核心公式：</p>
 <p><strong>RRF_score(d) = Σ 1 / (k + rank_i(d))</strong>，其中求和遍历 i ∈ {dense, sparse}。</p>
 <p>其中 <code>k</code> 是平滑常数（通常为 60），<code>rank_i(d)</code> 是文档 <code>d</code> 在第 <code>i</code> 路中的排名（从 1 开始）。</p>
@@ -1060,8 +1049,10 @@
 <p>Qdrant 内置了 RRF 融合，通过 Prefetch + FusionQuery 实现：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">results = client.query_points(</span><br><span class="line">    collection_name=<span class="string">&quot;knowledge_base&quot;</span>,</span><br><span class="line">    prefetch=[</span><br><span class="line">        Prefetch(query=q_dense, using=<span class="string">&quot;dense&quot;</span>, limit=<span class="number">40</span>),</span><br><span class="line">        Prefetch(query=SparseVector(...), using=<span class="string">&quot;sparse&quot;</span>, limit=<span class="number">40</span>),</span><br><span class="line">    ],</span><br><span class="line">    query=FusionQuery(fusion=Fusion.RRF),</span><br><span class="line">    limit=<span class="number">20</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 <p>这段代码的执行逻辑是：Qdrant 先并行执行两个 Prefetch（Dense Top 40 + Sparse Top 40），然后在服务端完成 RRF 融合，返回融合后的 Top 20。整个过程在一次网络请求中完成，延迟约 100ms。</p>
-<h3 id="第三级：精排——Cross-Encoder-交叉注意力"><a href="#第三级：精排——Cross-Encoder-交叉注意力" class="headerlink" title="第三级：精排——Cross-Encoder 交叉注意力"></a>第三级：精排——Cross-Encoder 交叉注意力</h3><p>粗排输出的 Top 20 候选已经具备较高的相关性，但排序质量仍有提升空间。精排使用 <code>bge-reranker-v2-m3</code>（~1.1 GB）对每个候选做逐对精细打分，输出最终的 Top 5。</p>
-<h4 id="Bi-Encoder-和-Cross-Encoder-的本质区别"><a href="#Bi-Encoder-和-Cross-Encoder-的本质区别" class="headerlink" title="Bi-Encoder 和 Cross-Encoder 的本质区别"></a>Bi-Encoder 和 Cross-Encoder 的本质区别</h4><p>前面的 Dense 路使用的是 <strong>Bi-Encoder</strong>（双塔编码器），而精排使用的是 <strong>Cross-Encoder</strong>（交叉编码器）。两者的本质区别在于<strong>信息交互的时机</strong>：</p>
+<h3 id="第三级精排cross-encoder-交叉注意力"><a class="markdownIt-Anchor" href="#第三级精排cross-encoder-交叉注意力"></a> 第三级：精排——Cross-Encoder 交叉注意力</h3>
+<p>粗排输出的 Top 20 候选已经具备较高的相关性，但排序质量仍有提升空间。精排使用 <code>bge-reranker-v2-m3</code>（~1.1 GB）对每个候选做逐对精细打分，输出最终的 Top 5。</p>
+<h4 id="bi-encoder-和-cross-encoder-的本质区别"><a class="markdownIt-Anchor" href="#bi-encoder-和-cross-encoder-的本质区别"></a> Bi-Encoder 和 Cross-Encoder 的本质区别</h4>
+<p>前面的 Dense 路使用的是 <strong>Bi-Encoder</strong>（双塔编码器），而精排使用的是 <strong>Cross-Encoder</strong>（交叉编码器）。两者的本质区别在于<strong>信息交互的时机</strong>：</p>
 <p><strong>Bi-Encoder（召回阶段）</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Query  → Transformer → q ─┐</span><br><span class="line">                            ├→ cos(q, d) → score</span><br><span class="line">Doc    → Transformer → d ─┘</span><br></pre></td></tr></table></figure>
 <p>Query 和 Doc <strong>分别独立编码</strong>，最后才计算相似度。两者之间<strong>没有注意力交互</strong>。</p>
@@ -1069,14 +1060,15 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[CLS] Query [SEP] Doc [SEP]</span><br><span class="line">         ↓</span><br><span class="line">    Transformer（Query 和 Doc 的 token 之间有完整的交叉注意力）</span><br><span class="line">         ↓</span><br><span class="line">    [CLS] → 线性层 → sigmoid → score ∈ [0, 1]</span><br></pre></td></tr></table></figure>
 <p>Query 和 Doc <strong>拼接后一起编码</strong>，每个 token 都能看到对方的所有 token。</p>
 <p><strong>为什么 Cross-Encoder 更准确？</strong> 因为在 Bi-Encoder 中，Query 的编码完全不知道 Doc 的内容（反之亦然），两者的交互仅限于最后的余弦相似度计算。而 Cross-Encoder 让 Query 和 Doc 的每个 token 在 Transformer 的每一层都能做交叉注意力，信息交互是<strong>全方位的</strong>。</p>
-<p>举个具体例子：当 Query 是 “某产品的核心系统是怎么设计的”，Doc 中有一句 “某个子模块的优先级仅次于最高级状态”。在 Bi-Encoder 中，”核心系统设计” 和 “子模块优先级” 的语义距离可能不够近（因为它们是独立编码的）。但在 Cross-Encoder 中，”核心系统” 的 token 能直接注意到 “子模块优先级” 的 token，理解这是核心系统设计的一个具体方面，从而给出更高的相关性分数。</p>
+<p>举个具体例子：当 Query 是 “某产品的核心系统是怎么设计的”，Doc 中有一句 “某个子模块的优先级仅次于最高级状态”。在 Bi-Encoder 中，“核心系统设计” 和 “子模块优先级” 的语义距离可能不够近（因为它们是独立编码的）。但在 Cross-Encoder 中，“核心系统” 的 token 能直接注意到 “子模块优先级” 的 token，理解这是核心系统设计的一个具体方面，从而给出更高的相关性分数。</p>
 <p><strong>为什么不直接用 Cross-Encoder 做召回？</strong> 因为计算量太大。Bi-Encoder 可以<strong>预计算</strong>所有文档的向量（离线完成），在线检索时只需要编码 Query 一次，然后做向量内积（O(N) 但可以用 ANN 索引加速到 O(log N)）。而 Cross-Encoder 必须对每个 (Query, Doc) 对<strong>实时编码</strong>，全量 Chunk 就需要过 N 次 Transformer，不可接受。</p>
 <p>这就是为什么需要三级漏斗：<strong>用廉价的 Bi-Encoder 快速筛出候选，再用昂贵的 Cross-Encoder 精细排序</strong>。</p>
-<h4 id="精排的计算过程"><a href="#精排的计算过程" class="headerlink" title="精排的计算过程"></a>精排的计算过程</h4><p>对 Top 20 的每个候选，Cross-Encoder 的计算过程如下：</p>
+<h4 id="精排的计算过程"><a class="markdownIt-Anchor" href="#精排的计算过程"></a> 精排的计算过程</h4>
+<p>对 Top 20 的每个候选，Cross-Encoder 的计算过程如下：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 伪代码</span></span><br><span class="line"><span class="keyword">for</span> doc <span class="keyword">in</span> top_20_candidates:</span><br><span class="line">    <span class="comment"># 1. 拼接 Query 和 Doc</span></span><br><span class="line">    input_text = <span class="string">f&quot;[CLS] <span class="subst">&#123;query&#125;</span> [SEP] <span class="subst">&#123;doc.text&#125;</span> [SEP]&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 2. Tokenize</span></span><br><span class="line">    tokens = tokenizer(input_text, max_length=<span class="number">512</span>, truncation=<span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 3. 过 Transformer（12 层交叉注意力）</span></span><br><span class="line">    hidden_states = transformer(tokens)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 4. 取 [CLS] 的隐藏状态，过线性层 + sigmoid</span></span><br><span class="line">    score = sigmoid(linear(hidden_states[<span class="number">0</span>]))  <span class="comment"># score ∈ [0, 1]</span></span><br><span class="line">    </span><br><span class="line">    doc.rerank_score = score</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 按 rerank_score 降序排列，取 Top 5</span></span><br><span class="line">final_results = <span class="built_in">sorted</span>(top_20_candidates, key=<span class="keyword">lambda</span> d: d.rerank_score, reverse=<span class="literal">True</span>)[:<span class="number">5</span>]</span><br></pre></td></tr></table></figure>
 <p>20 个候选 × 每个过一遍完整的 Transformer = 20 次前向传播。</p>
-<h3 id="8-个测试用例"><a href="#8-个测试用例" class="headerlink" title="8 个测试用例"></a>8 个测试用例</h3><p>我们设计了 8 个覆盖不同场景的测试用例：</p>
-<div class="table-container">
+<h3 id="8-个测试用例"><a class="markdownIt-Anchor" href="#8-个测试用例"></a> 8 个测试用例</h3>
+<p>我们设计了 8 个覆盖不同场景的测试用例：</p>
 <table>
 <thead>
 <tr>
@@ -1128,8 +1120,7 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h3 id="检索质量数据"><a href="#检索质量数据" class="headerlink" title="检索质量数据"></a>检索质量数据</h3><div class="table-container">
+<h3 id="检索质量数据"><a class="markdownIt-Anchor" href="#检索质量数据"></a> 检索质量数据</h3>
 <table>
 <thead>
 <tr>
@@ -1190,15 +1181,15 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p><strong>关键词命中率 100%</strong>：所有 8 个测试的期望关键词均在 Top 5 结果中出现。这说明 Dense + Sparse 双路互补效果显著：Dense 路负责语义理解（口语化表述 → 专业内容），Sparse 路负责精确匹配（专有术语 → 包含该术语的文档）。</p>
 <p>几个值得展开的结果：</p>
 <p><strong>T3（概念理解型）</strong> 是最令人满意的测试。Top 5 跨 <strong>4 篇</strong>不同文章召回，类型覆盖 100%（case + technique + method + article_summary），展现了优秀的跨文档聚合能力。</p>
 <p><strong>T4（领域专精型）</strong> 的 Rerank 分数接近 <strong>1.0</strong>，几乎是完美匹配。这说明蒸馏后的结构化文本与用户查询之间的语义对齐度极高。</p>
 <p><strong>T6（精确术语型）</strong> 验证了 Sparse 路的独特价值，专有术语和缩写是 Dense 路容易混淆的对象，但 Sparse 路能精确匹配到包含该关键词的 Chunk。</p>
-<h2 id="消融实验"><a href="#消融实验" class="headerlink" title="消融实验"></a>消融实验</h2><p>在接入 LLM 之前，我们用业界标准 IR 指标做了一组消融实验，量化每个组件的贡献。</p>
-<h3 id="实验设计"><a href="#实验设计" class="headerlink" title="实验设计"></a>实验设计</h3><p>对比 4 种检索策略：</p>
-<div class="table-container">
+<h2 id="消融实验"><a class="markdownIt-Anchor" href="#消融实验"></a> 消融实验</h2>
+<p>在接入 LLM 之前，我们用业界标准 IR 指标做了一组消融实验，量化每个组件的贡献。</p>
+<h3 id="实验设计"><a class="markdownIt-Anchor" href="#实验设计"></a> 实验设计</h3>
+<p>对比 4 种检索策略：</p>
 <table>
 <thead>
 <tr>
@@ -1230,9 +1221,8 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>构建了 <strong>16 个测试查询</strong>，每个查询标注了相关文章（Ground Truth），覆盖 Easy、Medium、Hard 三种难度。</p>
-<h3 id="消融实验结果"><a href="#消融实验结果" class="headerlink" title="消融实验结果"></a>消融实验结果</h3><div class="table-container">
+<h3 id="消融实验结果"><a class="markdownIt-Anchor" href="#消融实验结果"></a> 消融实验结果</h3>
 <table>
 <thead>
 <tr>
@@ -1303,9 +1293,7 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p><strong>Hybrid + Rerank (D) 在排序质量上全面领先。</strong></p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1332,13 +1320,15 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>Cross-Encoder Reranker 显著提升了排序质量和精确度。NDCG（Normalized Discounted Cumulative Gain）考虑了结果的位置权重，排在第 1 位的相关结果比排在第 5 位的更有价值。Reranker 的交叉注意力机制能更精确地判断 query-document 的相关性，将最相关的结果推到更靠前的位置。</p>
-<p><strong>Dense Only (A) 在首条命中率上最强。</strong><br>Dense 路的语义理解能力使其在”第一条就命中”方面表现最好（Hit Rate@1 = 87.5%，MRR = 0.903）。RRF 融合和 Rerank 虽然提升了整体排序质量，但有时会将 Dense 路的最佳结果排到第 2-3 位。这是一个有趣的 trade-off：如果只需要首条结果，Dense Only 反而更好；如果需要 Top 5 的整体质量，Hybrid + Rerank 更优。</p>
-<p><strong>Sparse 路在精确术语匹配上有独特优势。</strong><br>在精确术语型查询中，NDCG@5：Sparse = 0.79，Dense = 0.17，差距 <strong>4.6 倍</strong>。在特定产品型查询中：Sparse = 1.00，Dense = 0.39。这些案例说明，当查询包含精确的领域术语时，Sparse 路的关键词匹配能力是 Dense 路无法替代的。</p>
-<p><strong>全部策略在 Q09 上失败。</strong><br>某个关于”随机性和概率设计”的查询，所有策略 NDCG@5 = 0。原因是期望命中的文章标题中不包含”随机”或”概率”关键词，且蒸馏后的 Chunk 文本中这些词出现频率也很低。这暴露了蒸馏的一个局限：<strong>蒸馏后的文本是”提炼过的语言”，与用户的自然语言查询之间可能存在词汇 gap</strong>。后续可通过查询扩展来弥补。</p>
-<h3 id="逐查询热力图"><a href="#逐查询热力图" class="headerlink" title="逐查询热力图"></a>逐查询热力图</h3><p>为了更直观地展示各策略的优劣势，以下是 16 个查询在 NDCG@5 上的逐查询对比（摘选关键差异项）：</p>
-<div class="table-container">
+<p><strong>Dense Only (A) 在首条命中率上最强。</strong><br />
+Dense 路的语义理解能力使其在&quot;第一条就命中&quot;方面表现最好（Hit Rate@1 = 87.5%，MRR = 0.903）。RRF 融合和 Rerank 虽然提升了整体排序质量，但有时会将 Dense 路的最佳结果排到第 2-3 位。这是一个有趣的 trade-off：如果只需要首条结果，Dense Only 反而更好；如果需要 Top 5 的整体质量，Hybrid + Rerank 更优。</p>
+<p><strong>Sparse 路在精确术语匹配上有独特优势。</strong><br />
+在精确术语型查询中，NDCG@5：Sparse = 0.79，Dense = 0.17，差距 <strong>4.6 倍</strong>。在特定产品型查询中：Sparse = 1.00，Dense = 0.39。这些案例说明，当查询包含精确的领域术语时，Sparse 路的关键词匹配能力是 Dense 路无法替代的。</p>
+<p><strong>全部策略在 Q09 上失败。</strong><br />
+某个关于&quot;随机性和概率设计&quot;的查询，所有策略 NDCG@5 = 0。原因是期望命中的文章标题中不包含&quot;随机&quot;或&quot;概率&quot;关键词，且蒸馏后的 Chunk 文本中这些词出现频率也很低。这暴露了蒸馏的一个局限：<strong>蒸馏后的文本是&quot;提炼过的语言&quot;，与用户的自然语言查询之间可能存在词汇 gap</strong>。后续可通过查询扩展来弥补。</p>
+<h3 id="逐查询热力图"><a class="markdownIt-Anchor" href="#逐查询热力图"></a> 逐查询热力图</h3>
+<p>为了更直观地展示各策略的优劣势，以下是 16 个查询在 NDCG@5 上的逐查询对比（摘选关键差异项）：</p>
 <table>
 <thead>
 <tr>
@@ -1393,15 +1383,17 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p>这张表清晰地展示了现阶段使用的设计模式<strong>没有银弹</strong>，不同查询场景下，最优策略不同。但 Hybrid + Rerank 在大多数场景下都能给出最优或接近最优的结果，是综合最优的选择。</p>
-<h3 id="消融实验结论"><a href="#消融实验结论" class="headerlink" title="消融实验结论"></a>消融实验结论</h3><p><strong>最终推荐架构（已验证）</strong>：</p>
+<h3 id="消融实验结论"><a class="markdownIt-Anchor" href="#消融实验结论"></a> 消融实验结论</h3>
+<p><strong>最终推荐架构（已验证）</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Query</span><br><span class="line">  → BGE-M3 Encode</span><br><span class="line">  → Dense + Sparse 双路检索 (Hybrid)</span><br><span class="line">  → RRF 融合 Top 20</span><br><span class="line">  → Cross-Encoder Rerank Top 5</span><br><span class="line">  → 输出给 LLM</span><br></pre></td></tr></table></figure>
 <ul>
 <li><strong>NDCG@5 = 1.099</strong>（最优）</li>
 <li><strong>Precision@5 = 0.775</strong>（最优）</li>
 </ul>
-<h2 id="端到端-RAG：LLM-模型生成层"><a href="#端到端-RAG：LLM-模型生成层" class="headerlink" title="端到端 RAG：LLM 模型生成层"></a>端到端 RAG：LLM 模型生成层</h2><h3 id="Prompt-设计"><a href="#Prompt-设计" class="headerlink" title="Prompt 设计"></a>Prompt 设计</h3><p>Prompt 设计是 RAG 系统中最容易被低估的环节。一个好的 Prompt 需要做到三件事：<strong>定义角色</strong>、<strong>注入上下文</strong>、<strong>约束输出格式</strong>。</p>
+<h2 id="端到端-ragllm-模型生成层"><a class="markdownIt-Anchor" href="#端到端-ragllm-模型生成层"></a> 端到端 RAG：LLM 模型生成层</h2>
+<h3 id="prompt-设计"><a class="markdownIt-Anchor" href="#prompt-设计"></a> Prompt 设计</h3>
+<p>Prompt 设计是 RAG 系统中最容易被低估的环节。一个好的 Prompt 需要做到三件事：<strong>定义角色</strong>、<strong>注入上下文</strong>、<strong>约束输出格式</strong>。</p>
 <p><strong>System Prompt</strong> 定义角色为资深领域顾问，核心约束包括：</p>
 <ul>
 <li>优先引用检索内容，标注来源文章标题</li>
@@ -1412,11 +1404,12 @@
 </ul>
 <p><strong>User Prompt</strong> 的关键设计是<strong>元数据增强</strong>，每个检索结果不仅包含原文，还附加了结构化的元数据标签：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">### 参考资料 1</span><br><span class="line">[来源] 《&lt;文章标题&gt;》</span><br><span class="line">[分类] &lt;分类&gt; | [领域] &lt;领域1&gt;、&lt;领域2&gt; | [类型] 案例分析 | [产品] &lt;产品名&gt;</span><br><span class="line"></span><br><span class="line">【案例】&lt;产品名&gt; — &lt;分析主题&gt;</span><br><span class="line">来源文章：&lt;文章标题&gt;</span><br><span class="line">做法：&lt;具体做法描述&gt;</span><br><span class="line">成功原因：&lt;成功原因分析&gt;</span><br><span class="line">核心启示：&lt;核心启示总结&gt;</span><br></pre></td></tr></table></figure>
-<p>这些元数据标签帮助 LLM 理解每个检索结果的”身份”，包括它来自哪篇文章、属于什么分类、涉及哪个产品。LLM 可以据此做出更精准的引用和对比分析。</p>
-<h3 id="LLM-模型接入"><a href="#LLM-模型接入" class="headerlink" title="LLM 模型接入"></a>LLM 模型接入</h3><p>通过 LLM API 接入大语言模型。SDK 提供异步消息流式接收，API Key 通过本地配置文件管理。</p>
+<p>这些元数据标签帮助 LLM 理解每个检索结果的&quot;身份&quot;，包括它来自哪篇文章、属于什么分类、涉及哪个产品。LLM 可以据此做出更精准的引用和对比分析。</p>
+<h3 id="llm-模型接入"><a class="markdownIt-Anchor" href="#llm-模型接入"></a> LLM 模型接入</h3>
+<p>通过 LLM API 接入大语言模型。SDK 提供异步消息流式接收，API Key 通过本地配置文件管理。</p>
 <p>一个工程细节：SDK 返回的消息格式比较复杂（嵌套的 content blocks），需要专门的解析逻辑来提取纯文本回答。我们实现了一个递归解析器，能处理 TextBlock、ToolUseBlock 等多种 content 类型。</p>
-<h3 id="端到端测试结果"><a href="#端到端测试结果" class="headerlink" title="端到端测试结果"></a>端到端测试结果</h3><p>8 个测试查询，<strong>100% 成功率</strong>，平均质量分 <strong>0.918 / 1.0</strong>。</p>
-<div class="table-container">
+<h3 id="端到端测试结果"><a class="markdownIt-Anchor" href="#端到端测试结果"></a> 端到端测试结果</h3>
+<p>8 个测试查询，<strong>100% 成功率</strong>，平均质量分 <strong>0.918 / 1.0</strong>。</p>
 <table>
 <thead>
 <tr>
@@ -1495,8 +1488,7 @@
 </tr>
 </tbody>
 </table>
-</div>
-<h3 id="评估维度分析"><a href="#评估维度分析" class="headerlink" title="评估维度分析"></a>评估维度分析</h3><div class="table-container">
+<h3 id="评估维度分析"><a class="markdownIt-Anchor" href="#评估维度分析"></a> 评估维度分析</h3>
 <table>
 <thead>
 <tr>
@@ -1528,9 +1520,9 @@
 </tr>
 </tbody>
 </table>
-</div>
 <p><strong>结构化程度 100%</strong> 是最亮眼的指标，所有回答均使用 Markdown 标题、表格、代码块、列表等格式，信息层次清晰。这得益于 System Prompt 中对输出格式的明确约束。</p>
-<h3 id="数据流转全景"><a href="#数据流转全景" class="headerlink" title="数据流转全景"></a>数据流转全景</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">N 篇原始文章 (各 5-30 KB)</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 1: LLM 分类</span><br><span class="line">200 个 classification JSON (各 ~450 B)</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 2: LLM 知识提取</span><br><span class="line">200 个 extraction YAML (155 有效 + 45 无效)</span><br><span class="line">    │</span><br><span class="line">    ▼ 结构感知分块 (prepare_chunks.py)</span><br><span class="line">~8N 个 Chunk (chunks.jsonl)</span><br><span class="line">    │</span><br><span class="line">    ▼ BGE-M3 编码 (build_vectordb.py)</span><br><span class="line">~8N × Dense (1024d) + ~8N × Sparse (avg ~73 terms)</span><br><span class="line">    │</span><br><span class="line">    ▼ Qdrant 入库</span><br><span class="line">knowledge_base 集合 (5 个 Payload 索引)</span><br><span class="line">    │</span><br><span class="line">    ▼ 检索 + 重排 (search_pipeline.py)</span><br><span class="line">Query → Top 40×2 → RRF Top 20 → Rerank Top 5</span><br><span class="line">    │</span><br><span class="line">    ▼ LLM 生成 (rag_pipeline.py)</span><br><span class="line">结构化专业回答 (avg 2,639 字, 质量分 0.918)</span><br></pre></td></tr></table></figure>
+<h3 id="数据流转全景"><a class="markdownIt-Anchor" href="#数据流转全景"></a> 数据流转全景</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">N 篇原始文章 (各 5-30 KB)</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 1: LLM 分类</span><br><span class="line">200 个 classification JSON (各 ~450 B)</span><br><span class="line">    │</span><br><span class="line">    ▼ Stage 2: LLM 知识提取</span><br><span class="line">200 个 extraction YAML (155 有效 + 45 无效)</span><br><span class="line">    │</span><br><span class="line">    ▼ 结构感知分块 (prepare_chunks.py)</span><br><span class="line">~8N 个 Chunk (chunks.jsonl)</span><br><span class="line">    │</span><br><span class="line">    ▼ BGE-M3 编码 (build_vectordb.py)</span><br><span class="line">~8N × Dense (1024d) + ~8N × Sparse (avg ~73 terms)</span><br><span class="line">    │</span><br><span class="line">    ▼ Qdrant 入库</span><br><span class="line">knowledge_base 集合 (5 个 Payload 索引)</span><br><span class="line">    │</span><br><span class="line">    ▼ 检索 + 重排 (search_pipeline.py)</span><br><span class="line">Query → Top 40×2 → RRF Top 20 → Rerank Top 5</span><br><span class="line">    │</span><br><span class="line">    ▼ LLM 生成 (rag_pipeline.py)</span><br><span class="line">结构化专业回答 (avg 2,639 字, 质量分 0.918)</span><br></pre></td></tr></table></figure>
     </div>
 
     
@@ -1607,7 +1599,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F"><span class="nav-number">2.</span> <span class="nav-text">知识蒸馏</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E8%92%B8%E9%A6%8F"><span class="nav-number">2.1.</span> <span class="nav-text">为什么需要蒸馏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E9%98%B6%E6%AE%B5%E8%92%B8%E9%A6%8F-Pipeline"><span class="nav-number">2.2.</span> <span class="nav-text">三阶段蒸馏 Pipeline</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Stage-1%EF%BC%9A%E6%96%87%E7%AB%A0%E5%88%86%E7%B1%BB%EF%BC%88Classify%EF%BC%89"><span class="nav-number">2.2.1.</span> <span class="nav-text">Stage 1：文章分类（Classify）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Stage-2%EF%BC%9A%E7%9F%A5%E8%AF%86%E6%8F%90%E5%8F%96%EF%BC%88Extract%EF%BC%89"><span class="nav-number">2.2.2.</span> <span class="nav-text">Stage 2：知识提取（Extract）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Stage-3%EF%BC%9A%E7%BB%93%E6%99%B6%E7%BB%84%E8%A3%85%EF%BC%88Assemble%EF%BC%89"><span class="nav-number">2.2.3.</span> <span class="nav-text">Stage 3：结晶组装（Assemble）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%92%B8%E9%A6%8F%E4%BA%A7%E5%87%BA%E7%9A%84%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.3.</span> <span class="nav-text">蒸馏产出的目录结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E7%BB%93%E6%9E%84%E6%84%9F%E7%9F%A5%E5%88%86%E5%9D%97"><span class="nav-number">3.</span> <span class="nav-text">二、结构感知分块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%94%A8%E6%BB%91%E7%AA%97%E5%88%86%E5%9D%97"><span class="nav-number">3.1.</span> <span class="nav-text">为什么不用滑窗分块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8E%A2%E6%9F%A5"><span class="nav-number">3.2.</span> <span class="nav-text">数据探查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-%E7%A7%8D-Chunk-Builder-%E7%9A%84%E8%B0%83%E5%BA%A6%E6%9E%B6%E6%9E%84"><span class="nav-number">3.3.</span> <span class="nav-text">10 种 Chunk Builder 的调度架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chunk-%E6%96%87%E6%9C%AC%E6%9E%84%E9%80%A0"><span class="nav-number">3.4.</span> <span class="nav-text">Chunk 文本构造</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Metadata-Payload"><span class="nav-number">3.5.</span> <span class="nav-text">Metadata Payload</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86"><span class="nav-number">3.6.</span> <span class="nav-text">无效数据处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%9D%97%E7%BB%93%E6%9E%9C"><span class="nav-number">3.7.</span> <span class="nav-text">分块结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Embedding-%E7%BC%96%E7%A0%81%E4%B8%8E%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9E%84%E5%BB%BA"><span class="nav-number">4.</span> <span class="nav-text">Embedding 编码与向量数据库构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BGE-M3"><span class="nav-number">4.1.</span> <span class="nav-text">BGE-M3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Qdrant-Local%EF%BC%9A%E8%BD%BB%E9%87%8F%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">4.2.</span> <span class="nav-text">Qdrant Local：轻量嵌入式知识库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E5%BA%93%E9%AA%8C%E8%AF%81"><span class="nav-number">4.3.</span> <span class="nav-text">入库验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE"><span class="nav-number">4.4.</span> <span class="nav-text">存储数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E7%B4%A2%E4%B8%8E%E9%87%8D%E6%8E%92%EF%BC%9ADense-Sparse-Rerank"><span class="nav-number">5.</span> <span class="nav-text">检索与重排：Dense + Sparse + Rerank</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8E%E5%B7%A5%E4%B8%9A%E7%BA%A7-RAG-%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%9E%B6%E6%9E%84%E5%AF%B9%E6%AF%94"><span class="nav-number">5.1.</span> <span class="nav-text">与工业级 RAG 系统的架构对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pipeline-%E6%80%BB%E8%A7%88"><span class="nav-number">5.2.</span> <span class="nav-text">Pipeline 总览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E7%BA%A7%EF%BC%9A%E5%9C%A8%E7%BA%BF%E5%8F%AC%E5%9B%9E%E2%80%94%E2%80%94Dense-Sparse-%E5%8F%8C%E8%B7%AF%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.</span> <span class="nav-text">第一级：在线召回——Dense + Sparse 双路检索</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Dense-%E8%B7%AF%EF%BC%9A%E8%AF%AD%E4%B9%89%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.1.</span> <span class="nav-text">Dense 路：语义向量检索</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Sparse-%E8%B7%AF%EF%BC%9A%E5%AD%A6%E4%B9%A0%E5%9E%8B%E7%A8%80%E7%96%8F%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.2.</span> <span class="nav-text">Sparse 路：学习型稀疏向量检索</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%8C%E8%B7%AF%E4%BA%92%E8%A1%A5%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">5.3.3.</span> <span class="nav-text">双路互补的本质</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E7%BA%A7%EF%BC%9A%E7%B2%97%E6%8E%92%E2%80%94%E2%80%94RRF-%E6%8E%92%E5%90%8D%E8%9E%8D%E5%90%88"><span class="nav-number">5.4.</span> <span class="nav-text">第二级：粗排——RRF 排名融合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E7%9B%B4%E6%8E%A5%E5%8A%A0%E6%9D%83%E8%9E%8D%E5%90%88"><span class="nav-number">5.4.1.</span> <span class="nav-text">为什么不能直接加权融合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RRF%EF%BC%9A%E5%8F%AA%E7%9C%8B%E6%8E%92%E5%90%8D%EF%BC%8C%E4%B8%8D%E7%9C%8B%E5%88%86%E6%95%B0"><span class="nav-number">5.4.2.</span> <span class="nav-text">RRF：只看排名，不看分数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E7%BA%A7%EF%BC%9A%E7%B2%BE%E6%8E%92%E2%80%94%E2%80%94Cross-Encoder-%E4%BA%A4%E5%8F%89%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="nav-number">5.5.</span> <span class="nav-text">第三级：精排——Cross-Encoder 交叉注意力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Bi-Encoder-%E5%92%8C-Cross-Encoder-%E7%9A%84%E6%9C%AC%E8%B4%A8%E5%8C%BA%E5%88%AB"><span class="nav-number">5.5.1.</span> <span class="nav-text">Bi-Encoder 和 Cross-Encoder 的本质区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B2%BE%E6%8E%92%E7%9A%84%E8%AE%A1%E7%AE%97%E8%BF%87%E7%A8%8B"><span class="nav-number">5.5.2.</span> <span class="nav-text">精排的计算过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E4%B8%AA%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B"><span class="nav-number">5.6.</span> <span class="nav-text">8 个测试用例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E7%B4%A2%E8%B4%A8%E9%87%8F%E6%95%B0%E6%8D%AE"><span class="nav-number">5.7.</span> <span class="nav-text">检索质量数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C"><span class="nav-number">6.</span> <span class="nav-text">消融实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.1.</span> <span class="nav-text">实验设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">6.2.</span> <span class="nav-text">消融实验结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%90%E6%9F%A5%E8%AF%A2%E7%83%AD%E5%8A%9B%E5%9B%BE"><span class="nav-number">6.3.</span> <span class="nav-text">逐查询热力图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C%E7%BB%93%E8%AE%BA"><span class="nav-number">6.4.</span> <span class="nav-text">消融实验结论</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF-RAG%EF%BC%9ALLM-%E6%A8%A1%E5%9E%8B%E7%94%9F%E6%88%90%E5%B1%82"><span class="nav-number">7.</span> <span class="nav-text">端到端 RAG：LLM 模型生成层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Prompt-%E8%AE%BE%E8%AE%A1"><span class="nav-number">7.1.</span> <span class="nav-text">Prompt 设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LLM-%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%85%A5"><span class="nav-number">7.2.</span> <span class="nav-text">LLM 模型接入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C"><span class="nav-number">7.3.</span> <span class="nav-text">端到端测试结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E7%BB%B4%E5%BA%A6%E5%88%86%E6%9E%90"><span class="nav-number">7.4.</span> <span class="nav-text">评估维度分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E8%BD%AC%E5%85%A8%E6%99%AF"><span class="nav-number">7.5.</span> <span class="nav-text">数据流转全景</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F"><span class="nav-number">2.</span> <span class="nav-text"> 知识蒸馏</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E8%92%B8%E9%A6%8F"><span class="nav-number">2.1.</span> <span class="nav-text"> 为什么需要蒸馏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E9%98%B6%E6%AE%B5%E8%92%B8%E9%A6%8F-pipeline"><span class="nav-number">2.2.</span> <span class="nav-text"> 三阶段蒸馏 Pipeline</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#stage-1%E6%96%87%E7%AB%A0%E5%88%86%E7%B1%BBclassify"><span class="nav-number">2.2.1.</span> <span class="nav-text"> Stage 1：文章分类（Classify）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stage-2%E7%9F%A5%E8%AF%86%E6%8F%90%E5%8F%96extract"><span class="nav-number">2.2.2.</span> <span class="nav-text"> Stage 2：知识提取（Extract）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stage-3%E7%BB%93%E6%99%B6%E7%BB%84%E8%A3%85assemble"><span class="nav-number">2.2.3.</span> <span class="nav-text"> Stage 3：结晶组装（Assemble）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%92%B8%E9%A6%8F%E4%BA%A7%E5%87%BA%E7%9A%84%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.3.</span> <span class="nav-text"> 蒸馏产出的目录结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E6%84%9F%E7%9F%A5%E5%88%86%E5%9D%97"><span class="nav-number">3.</span> <span class="nav-text"> 结构感知分块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%94%A8%E6%BB%91%E7%AA%97%E5%88%86%E5%9D%97"><span class="nav-number">3.1.</span> <span class="nav-text"> 为什么不用滑窗分块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8E%A2%E6%9F%A5"><span class="nav-number">3.2.</span> <span class="nav-text"> 数据探查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-%E7%A7%8D-chunk-builder-%E7%9A%84%E8%B0%83%E5%BA%A6%E6%9E%B6%E6%9E%84"><span class="nav-number">3.3.</span> <span class="nav-text"> 10 种 Chunk Builder 的调度架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#chunk-%E6%96%87%E6%9C%AC%E6%9E%84%E9%80%A0"><span class="nav-number">3.4.</span> <span class="nav-text"> Chunk 文本构造</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#metadata-payload"><span class="nav-number">3.5.</span> <span class="nav-text"> Metadata Payload</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86"><span class="nav-number">3.6.</span> <span class="nav-text"> 无效数据处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%9D%97%E7%BB%93%E6%9E%9C"><span class="nav-number">3.7.</span> <span class="nav-text"> 分块结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#embedding-%E7%BC%96%E7%A0%81%E4%B8%8E%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9E%84%E5%BB%BA"><span class="nav-number">4.</span> <span class="nav-text"> Embedding 编码与向量数据库构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bge-m3"><span class="nav-number">4.1.</span> <span class="nav-text"> BGE-M3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#qdrant-local%E8%BD%BB%E9%87%8F%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">4.2.</span> <span class="nav-text"> Qdrant Local：轻量嵌入式知识库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E5%BA%93%E9%AA%8C%E8%AF%81"><span class="nav-number">4.3.</span> <span class="nav-text"> 入库验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE"><span class="nav-number">4.4.</span> <span class="nav-text"> 存储数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E7%B4%A2%E4%B8%8E%E9%87%8D%E6%8E%92dense-sparse-rerank"><span class="nav-number">5.</span> <span class="nav-text"> 检索与重排：Dense + Sparse + Rerank</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8E%E5%B7%A5%E4%B8%9A%E7%BA%A7-rag-%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%9E%B6%E6%9E%84%E5%AF%B9%E6%AF%94"><span class="nav-number">5.1.</span> <span class="nav-text"> 与工业级 RAG 系统的架构对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pipeline-%E6%80%BB%E8%A7%88"><span class="nav-number">5.2.</span> <span class="nav-text"> Pipeline 总览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E7%BA%A7%E5%9C%A8%E7%BA%BF%E5%8F%AC%E5%9B%9Edense-sparse-%E5%8F%8C%E8%B7%AF%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.</span> <span class="nav-text"> 第一级：在线召回——Dense + Sparse 双路检索</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#dense-%E8%B7%AF%E8%AF%AD%E4%B9%89%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.1.</span> <span class="nav-text"> Dense 路：语义向量检索</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sparse-%E8%B7%AF%E5%AD%A6%E4%B9%A0%E5%9E%8B%E7%A8%80%E7%96%8F%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2"><span class="nav-number">5.3.2.</span> <span class="nav-text"> Sparse 路：学习型稀疏向量检索</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%8C%E8%B7%AF%E4%BA%92%E8%A1%A5%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">5.3.3.</span> <span class="nav-text"> 双路互补的本质</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E7%BA%A7%E7%B2%97%E6%8E%92rrf-%E6%8E%92%E5%90%8D%E8%9E%8D%E5%90%88"><span class="nav-number">5.4.</span> <span class="nav-text"> 第二级：粗排——RRF 排名融合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E7%9B%B4%E6%8E%A5%E5%8A%A0%E6%9D%83%E8%9E%8D%E5%90%88"><span class="nav-number">5.4.1.</span> <span class="nav-text"> 为什么不能直接加权融合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#rrf%E5%8F%AA%E7%9C%8B%E6%8E%92%E5%90%8D%E4%B8%8D%E7%9C%8B%E5%88%86%E6%95%B0"><span class="nav-number">5.4.2.</span> <span class="nav-text"> RRF：只看排名，不看分数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E7%BA%A7%E7%B2%BE%E6%8E%92cross-encoder-%E4%BA%A4%E5%8F%89%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="nav-number">5.5.</span> <span class="nav-text"> 第三级：精排——Cross-Encoder 交叉注意力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#bi-encoder-%E5%92%8C-cross-encoder-%E7%9A%84%E6%9C%AC%E8%B4%A8%E5%8C%BA%E5%88%AB"><span class="nav-number">5.5.1.</span> <span class="nav-text"> Bi-Encoder 和 Cross-Encoder 的本质区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B2%BE%E6%8E%92%E7%9A%84%E8%AE%A1%E7%AE%97%E8%BF%87%E7%A8%8B"><span class="nav-number">5.5.2.</span> <span class="nav-text"> 精排的计算过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E4%B8%AA%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B"><span class="nav-number">5.6.</span> <span class="nav-text"> 8 个测试用例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E7%B4%A2%E8%B4%A8%E9%87%8F%E6%95%B0%E6%8D%AE"><span class="nav-number">5.7.</span> <span class="nav-text"> 检索质量数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C"><span class="nav-number">6.</span> <span class="nav-text"> 消融实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.1.</span> <span class="nav-text"> 实验设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">6.2.</span> <span class="nav-text"> 消融实验结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%90%E6%9F%A5%E8%AF%A2%E7%83%AD%E5%8A%9B%E5%9B%BE"><span class="nav-number">6.3.</span> <span class="nav-text"> 逐查询热力图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C%E7%BB%93%E8%AE%BA"><span class="nav-number">6.4.</span> <span class="nav-text"> 消融实验结论</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF-ragllm-%E6%A8%A1%E5%9E%8B%E7%94%9F%E6%88%90%E5%B1%82"><span class="nav-number">7.</span> <span class="nav-text"> 端到端 RAG：LLM 模型生成层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#prompt-%E8%AE%BE%E8%AE%A1"><span class="nav-number">7.1.</span> <span class="nav-text"> Prompt 设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#llm-%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%85%A5"><span class="nav-number">7.2.</span> <span class="nav-text"> LLM 模型接入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C"><span class="nav-number">7.3.</span> <span class="nav-text"> 端到端测试结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E7%BB%B4%E5%BA%A6%E5%88%86%E6%9E%90"><span class="nav-number">7.4.</span> <span class="nav-text"> 评估维度分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E8%BD%AC%E5%85%A8%E6%99%AF"><span class="nav-number">7.5.</span> <span class="nav-text"> 数据流转全景</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

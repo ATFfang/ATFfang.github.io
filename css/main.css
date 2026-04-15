@@ -407,8 +407,8 @@ td {
 }
 .highlight,
 pre {
-  background: #f1efee;
-  color: #68615e;
+  background: #fff;
+  color: #322f2e;
   line-height: 1.6;
   margin: 0 auto 20px;
 }
@@ -442,8 +442,8 @@ code {
   padding: 0;
 }
 .highlight figcaption {
-  background: #f1efee;
-  color: #68615e;
+  background: #fff;
+  color: #322f2e;
   display: flex;
   font-size: 0.875em;
   justify-content: space-between;
@@ -451,10 +451,10 @@ code {
   padding: 0.5em;
 }
 .highlight figcaption a {
-  color: #68615e;
+  color: #322f2e;
 }
 .highlight figcaption a:hover {
-  border-bottom-color: #68615e;
+  border-bottom-color: #322f2e;
 }
 .highlight .gutter {
   -moz-user-select: none;
@@ -463,14 +463,14 @@ code {
   user-select: none;
 }
 .highlight .gutter pre {
-  background: #f1efee;
+  background: #fff;
   color: #9c9491;
   padding-left: 10px;
   padding-right: 10px;
   text-align: right;
 }
 .highlight .code pre {
-  background: #f1efee;
+  background: #fff;
   padding-left: 10px;
   width: 100%;
 }
@@ -486,7 +486,7 @@ pre {
 }
 pre code {
   background: none;
-  color: #68615e;
+  color: #322f2e;
   font-size: 0.875em;
   padding: 0;
   text-shadow: none;
@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #55ffda;
+  background: #2f7eff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;

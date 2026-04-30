@@ -165,6 +165,92 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/" class="post-title-link" itemprop="url">一个RAG系统的技术选型与pipeline</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2026-04-29 22:00:45" itemprop="dateCreated datePublished" datetime="2026-04-29T22:00:45+08:00">2026-04-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-04-30 21:57:47" itemprop="dateModified" datetime="2026-04-30T21:57:47+08:00">2026-04-30</time>
+              </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>23k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>42 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki/论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/04/17/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%E7%9C%8BRAG%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -196,7 +282,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-04-19 14:41:58" itemprop="dateModified" datetime="2026-04-19T14:41:58+08:00">2026-04-19</time>
+                <time title="修改时间：2026-04-19 14:47:57" itemprop="dateModified" datetime="2026-04-19T14:47:57+08:00">2026-04-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -214,14 +300,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>23k</span>
+              <span>21k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>42 分钟</span>
+              <span>38 分钟</span>
             </span>
 
         </div>
@@ -378,17 +464,23 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2026-04-13 22:42:00 / 修改时间：21:29:42" itemprop="dateCreated datePublished" datetime="2026-04-13T22:42:00+08:00">2026-04-13</time>
+              <time title="创建时间：2026-04-13 22:42:00" itemprop="dateCreated datePublished" datetime="2026-04-13T22:42:00+08:00">2026-04-13</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-04-25 15:41:50" itemprop="dateModified" datetime="2026-04-25T15:41:50+08:00">2026-04-25</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
+                  <a href="/categories/LLM%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">LLM应用开发</span></a>
                 </span>
             </span>
 
@@ -417,7 +509,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>扒一扒港大最近开源的OpenHarness。</p>
+          <p>扒一扒港大最近开源的OpenHarness。<br>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/04/13/OpenHarness/#more" rel="contents">
@@ -971,105 +1063,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/01/15/Redis1-3%E7%A7%8D%E5%B8%B8%E7%94%A8%E7%9A%84%E7%BC%93%E5%AD%98%E8%AF%BB%E5%86%99%E7%AD%96%E7%95%A5/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="Fang Tianyao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tianyao' s BLOG">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2026/01/15/Redis1-3%E7%A7%8D%E5%B8%B8%E7%94%A8%E7%9A%84%E7%BC%93%E5%AD%98%E8%AF%BB%E5%86%99%E7%AD%96%E7%95%A5/" class="post-title-link" itemprop="url">Redis：三种常用的缓存读写策略</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2026-01-15 10:34:04" itemprop="dateCreated datePublished" datetime="2026-01-15T10:34:04+08:00">2026-01-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-01-17 13:00:47" itemprop="dateModified" datetime="2026-01-17T13:00:47+08:00">2026-01-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>9.4k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>17 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ul>
-<li>Cache Aside Pattern（旁路缓存模式）</li>
-<li>Read/Write Through Pattern（读写穿透）</li>
-<li>Write Behind Pattern（异步缓存写入）</li>
-</ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/01/15/Redis1-3%E7%A7%8D%E5%B8%B8%E7%94%A8%E7%9A%84%E7%BC%93%E5%AD%98%E8%AF%BB%E5%86%99%E7%AD%96%E7%95%A5/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1141,7 +1134,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">67</span>
+          <span class="site-state-item-count">68</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1193,13 +1186,13 @@
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">570k</span>
+    <span title="站点总字数">592k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:17</span>
+    <span title="站点阅读时长">17:55</span>
 </div>
 
         

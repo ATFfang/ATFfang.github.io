@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki&#x2F;论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个RAG系统的技术选型与pipeline">
+<meta property="og:url" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki&#x2F;论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-29T14:00:45.000Z">
+<meta property="article:modified_time" content="2026-04-30T13:57:47.224Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>一个RAG系统的技术选型与pipeline | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一个RAG系统的技术选型与pipeline
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2026-04-29 22:00:45" itemprop="dateCreated datePublished" datetime="2026-04-29T22:00:45+08:00">2026-04-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-04-30 21:57:47" itemprop="dateModified" datetime="2026-04-30T21:57:47+08:00">2026-04-30</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>23k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>42 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki/论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。<br><span id="more"></span></p>
+<h2 id="项目总览"><a href="#项目总览" class="headerlink" title="项目总览"></a>项目总览</h2><p>注：tRAG 是一款某司 RAG 服务平台</p>
+<p>本项目是一个<strong>游戏策划领域的垂直知识库 RAG 系统</strong>，数据来源覆盖三大渠道：</p>
+<ul>
+<li><strong>某私域Wiki</strong>，包含策划案、设计文档、复盘报告等资料，可通过 MCP 获取。</li>
+<li><strong>某私域论坛</strong>，包含技术分享、方法论文章、GDC 翻译等资料，可通过 MCP 获取。</li>
+<li><strong>游戏 Wiki / 公开平台</strong>，包含游戏分类数据库、各游戏 Wiki、专业评测等资料数据，可通过 MCP 获取。</li>
+</ul>
+<p>本项目包含以下三个子系统：</p>
+<ul>
+<li><strong>GDDClaw</strong> 数据采集系统，负责三源数据的抓取</li>
+<li>数据清洗 &amp; Chunk &amp; Embedding 入库系统</li>
+<li>RAG 查询服务系统，包含多路召回、精排等功能</li>
+</ul>
+<p>如下图所示：<br></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>原型系统（本地验证）</th>
+<th>线上版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>向量数据库</strong></td>
+<td>Qdrant Local（嵌入式 SQLite）</td>
+<td><strong>tRAG HybridCollection</strong>（倒排向量一体库，分布式）</td>
+</tr>
+<tr>
+<td><strong>Embedding</strong></td>
+<td>本地 BGE-M3</td>
+<td><strong>tRAG 平台托管 Embedding</strong>（<code>public-bge-m3</code>，GPU 集群）</td>
+</tr>
+<tr>
+<td><strong>Sparse 检索</strong></td>
+<td>Qdrant 内置稀疏向量</td>
+<td><strong>tRAG 倒排索引</strong>（Trecall-Olama，BM25 FullText）</td>
+</tr>
+<tr>
+<td><strong>Rerank</strong></td>
+<td>本地 bge-reranker-v2-m3</td>
+<td><strong>tRAG 平台 Rerank API</strong>（<code>bge-reranker-v2-m3</code>，GPU）</td>
+</tr>
+<tr>
+<td><strong>数据采集</strong></td>
+<td>手动下载文章</td>
+<td><strong>GDDClaw 自动化三源采集</strong>（私域Wiki MCP + 私域论坛 MCP + 爬虫）</td>
+</tr>
+<tr>
+<td><strong>数据规模</strong></td>
+<td>200 篇 → 1,656 Chunks</td>
+<td><strong>830 篇有效文档 → 8,164 Chunks</strong>（持续增量更新）</td>
+</tr>
+<tr>
+<td><strong>部署模式</strong></td>
+<td>单机 Python 脚本</td>
+<td><strong>tRAG 平台托管 + 定时任务调度</strong></td>
+</tr>
+<tr>
+<td><strong>Query 预处理</strong></td>
+<td>无</td>
+<td><strong>意图识别 + 多 Query 改写 + 多轮对话 Query 重写</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="GDDClaw：三源数据采集子系统"><a href="#GDDClaw：三源数据采集子系统" class="headerlink" title="GDDClaw：三源数据采集子系统"></a>GDDClaw：三源数据采集子系统</h2><p>GDDClaw（Game Design Document Crawler）负责从三个数据源持续采集游戏策划领域的文档数据。</p>
+
+<h3 id="私域-Wiki-Claw：私域Wiki-数据采集"><a href="#私域-Wiki-Claw：私域Wiki-数据采集" class="headerlink" title="私域 Wiki Claw：私域Wiki 数据采集"></a>私域 Wiki Claw：私域Wiki 数据采集</h3><p>通过 <strong>私域Wiki MCP</strong> 或 <strong>私域Wiki API</strong> 采集指定空间下的策划文档。</p>
+<p><strong>采集流程</strong>为：</p>
+<ul>
+<li><ol>
+<li>配置目标空间列表 &amp; 文档目录树</li>
+</ol>
+</li>
+<li><ol>
+<li>getSpacePageTree(parentid) → 递归获取文档树</li>
+</ol>
+</li>
+<li><ol>
+<li>getDocument(docid) → 获取文档 Markdown 内容</li>
+</ol>
+</li>
+<li><ol>
+<li>metadata(docid) → 获取文档元数据（作者、时间、标签）</li>
+</ol>
+</li>
+<li><ol>
+<li>统一格式化 → 输出到数据格式层</li>
+</ol>
+</li>
+</ul>
+<p>调用API采集示例：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">fetch_doc_as_markdown</span>(<span class="params">doc_url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;文档转 Markdown 任务流&quot;&quot;&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 1. 发起转换任务</span></span><br><span class="line">    task = api.submit_task(plugin=<span class="string">&quot;doc2md&quot;</span>, url=doc_url)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 2. 轮询直到成功</span></span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">not</span> task.is_finished():</span><br><span class="line">        time.sleep(<span class="number">2</span>)</span><br><span class="line">        task.update_status()</span><br><span class="line">        </span><br><span class="line">    <span class="comment"># 3. 返回结果 (含文件 ID 或 URL)</span></span><br><span class="line">    <span class="keyword">if</span> task.status == <span class="string">&quot;success&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> task.get_result()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">&quot;Task failed&quot;</span>)</span><br></pre></td></tr></table></figure></p>
+<p>增量更新策略类似于：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Record last crawl timestamp per document</span></span><br><span class="line"><span class="comment"># On each crawl cycle, compare document modifyTime with last crawl time</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">should_update</span>(<span class="params">doc_meta: <span class="built_in">dict</span>, last_crawl: <span class="built_in">dict</span></span>) -&gt; <span class="built_in">bool</span>:</span><br><span class="line">    doc_modify_time = doc_meta[<span class="string">&quot;modifyTime&quot;</span>]</span><br><span class="line">    last_crawl_time = last_crawl.get(doc_meta[<span class="string">&quot;docid&quot;</span>], <span class="string">&quot;1970-01-01&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> doc_modify_time &gt; last_crawl_time</span><br></pre></td></tr></table></figure></p>
+<h3 id="私域论坛-Claw：私域论坛知识库采集"><a href="#私域论坛-Claw：私域论坛知识库采集" class="headerlink" title="私域论坛 Claw：私域论坛知识库采集"></a>私域论坛 Claw：私域论坛知识库采集</h3><p>通过 <strong>私域论坛 MCP</strong> 或 私域论坛 API 采集指定团队/分类下的文章。</p>
+<p><strong>采集流程</strong>：</p>
+<ul>
+<li><ol>
+<li>配置目标团队 ID / 文章分类</li>
+</ol>
+</li>
+<li><ol>
+<li>私域论坛 API 列表接口 → 获取文章列表（支持分页）</li>
+</ol>
+</li>
+<li><ol>
+<li>私域论坛 API 详情接口 → 获取文章 HTML/Markdown 内容</li>
+</ol>
+</li>
+<li><ol>
+<li>tRAG 文档格式转换插件 → 统一转为 Markdown</li>
+</ol>
+</li>
+<li><ol>
+<li>统一格式化 → 输出到数据格式层</li>
+</ol>
+</li>
+</ul>
+<p>在处理<strong>私域Wiki</strong>与<strong>私域论坛</strong>的业务差异时，主要体现在四个维度：首先，Wiki 采用原生 <strong>Markdown</strong> 格式，可通过 <code>Wiki2md</code> 插件直接转换，而论坛内容以 <strong>HTML</strong> 为主，需通过 <code>docx2md</code> 或 HTML 转译工具处理；其次，在权限管理上，Wiki 侧重<strong>空间级</strong>授权，论坛则细化到<strong>团队或文章级</strong>；最后，针对增量更新的识别，Wiki 依赖 <code>modifyTime</code> 字段，而论坛则通过<strong>文章更新时间戳</strong>进行校验。</p>
+<h3 id="Web-Claw：公开游戏数据采集"><a href="#Web-Claw：公开游戏数据采集" class="headerlink" title="Web Claw：公开游戏数据采集"></a>Web Claw：公开游戏数据采集</h3><p>采用 <strong>通用爬虫模板 + Agent 自主生成代码</strong> 的混合链路。<br></p>
+<p>对于结构复杂的站点（如游戏 Wiki），采用 Agent 链路：</p>
+<ul>
+<li><ol>
+<li>人工提供目标站点 URL + 期望数据结构描述</li>
+</ol>
+</li>
+<li><ol>
+<li>Agent 分析站点 DOM 结构（通过 spider_url 获取 HTML）</li>
+</ol>
+</li>
+<li><ol>
+<li>Agent 生成定制化爬虫代码（Python + BeautifulSoup/Scrapy）</li>
+</ol>
+</li>
+<li><ol>
+<li>tRAG 代码执行插件运行爬虫代码</li>
+</ol>
+</li>
+<li><ol>
+<li>输出结构化数据 → 统一格式层</li>
+</ol>
+</li>
+</ul>
+<h2 id="数据清洗-amp-Chunk-amp-Embedding-入库"><a href="#数据清洗-amp-Chunk-amp-Embedding-入库" class="headerlink" title="数据清洗 &amp; Chunk &amp; Embedding 入库"></a>数据清洗 &amp; Chunk &amp; Embedding 入库</h2><ul>
+<li>GDDClaw 原始数据 (Markdown + Meta)</li>
+<li>Stage 1: 数据清洗 &amp; 质量过滤</li>
+<li>Stage 2: 分块策略（标题层级切分 / tRAG 语义切分）</li>
+<li>Stage 3: tRAG HybridCollection 入库（自动 Embedding + 倒排索引）</li>
+<li>tRAG 倒排向量一体库（线上可查询状态）</li>
+</ul>
+<h3 id="Stage-1：数据清洗-amp-质量过滤"><a href="#Stage-1：数据清洗-amp-质量过滤" class="headerlink" title="Stage 1：数据清洗 &amp; 质量过滤"></a>Stage 1：数据清洗 &amp; 质量过滤</h3><p><strong><code>DataCleaner</code> 是数据入库前的质检站环节</strong>。它通过流水线作业对抓取内容进行深度精炼。首先<strong>自动化降噪</strong>，剔除导航和页脚等无关模板；其次利用 <strong>SimHash 算法进行跨源去重</strong>，确保 Wiki 与论坛的重复内容不被反复记录；最后通过<strong>长度与语种双重过滤</strong>，屏蔽低质短文与无效字符，确保只有高纯度的知识被沉淀进系统。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">DataCleaner</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    清洗并过滤原始抓取的文档。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">clean</span>(<span class="params">self, doc: <span class="built_in">dict</span></span>) -&gt; <span class="built_in">dict</span>:</span><br><span class="line">        content = doc[<span class="string">&quot;content_md&quot;</span>]</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 1. 移除导航栏、目录（TOC）及页脚等模板内容</span></span><br><span class="line">        content = self.remove_boilerplate(content)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 2. 标准化空白字符及排版格式</span></span><br><span class="line">        content = self.normalize_formatting(content)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 3. 内容去重（跨源查重）</span></span><br><span class="line">        <span class="keyword">if</span> self.is_duplicate(doc):</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 4. 质量过滤：限制最小正文长度</span></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(content.strip()) &lt; <span class="number">200</span>:</span><br><span class="line">            doc[<span class="string">&quot;quality&quot;</span>] = <span class="string">&quot;low&quot;</span></span><br><span class="line">            <span class="keyword">return</span> doc</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 5. 语种检测（过滤非中、英文内容）</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> self.is_valid_language(content):</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line">        </span><br><span class="line">        doc[<span class="string">&quot;content_md&quot;</span>] = content</span><br><span class="line">        doc[<span class="string">&quot;quality&quot;</span>] = <span class="string">&quot;normal&quot;</span></span><br><span class="line">        <span class="keyword">return</span> doc</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">is_duplicate</span>(<span class="params">self, doc: <span class="built_in">dict</span></span>) -&gt; <span class="built_in">bool</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        利用 SimHash 或 MinHash 进行跨源去重。</span></span><br><span class="line"><span class="string">        同一篇文章可能同时存在于私域 Wiki 和私域论坛中。</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        doc_hash = compute_simhash(doc[<span class="string">&quot;content_md&quot;</span>])</span><br><span class="line">        <span class="keyword">return</span> doc_hash <span class="keyword">in</span> self.seen_hashes</span><br></pre></td></tr></table></figure>
+<h3 id="Stage-2：分块策略"><a href="#Stage-2：分块策略" class="headerlink" title="Stage 2：分块策略"></a>Stage 2：分块策略</h3><p>我们提供<strong>两种分块路径</strong>，根据文档结构自动路由。分块（Chunking）是 RAG 系统中最容易被低估却影响深远的环节，分块粒度直接决定了检索精度与生成质量之间的平衡。切片太小，检索虽精准但上下文支离破碎，LLM 容易断章取义；切片太大，上下文完整但包含大量噪声，检索匹配度下降。本系统采用「双路径」策略，根据文档是否具有清晰的标题层级结构进行路由，兼顾两种场景的最优解：</p>
+<h4 id="路径-A：标题层级切分（结构化文档）"><a href="#路径-A：标题层级切分（结构化文档）" class="headerlink" title="路径 A：标题层级切分（结构化文档）"></a>路径 A：标题层级切分（结构化文档）</h4><p>对于具有清晰标题层级（H1/H2/H3）的文档，按标题层级进行结构化切分：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Markdown 文档</span><br><span class="line">├── 按 H1/H2/H3 标题层级递归切分</span><br><span class="line">├── 每个 Chunk 保留完整标题链路（面包屑）</span><br><span class="line">├── 过短的 Chunk 与相邻 Chunk 合并（minLength=256）</span><br><span class="line">├── 过长的 Chunk 进一步按段落/句子切分（maxLength=1024）</span><br><span class="line">└── 每个 Chunk 附加元数据（来源、分类、领域标签）</span><br></pre></td></tr></table></figure>
+<p><strong>适用场景</strong>：私域Wiki 策划案、私域论坛 技术文章等具有清晰标题结构的文档。</p>
+<h4 id="路径-B：tRAG-语义切分（非结构化文档）"><a href="#路径-B：tRAG-语义切分（非结构化文档）" class="headerlink" title="路径 B：tRAG 语义切分（非结构化文档）"></a>路径 B：tRAG 语义切分（非结构化文档）</h4><p>对于缺乏清晰标题层级的文档，使用 tRAG 平台的<strong>语义切分 API</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">semantic_split</span>(<span class="params">text: <span class="built_in">str</span>, is_markdown: <span class="built_in">bool</span> = <span class="literal">True</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    调用 tRAG 语义分割 API 进行智能分片。</span></span><br><span class="line"><span class="string">    遵循语义边界进行切分，而非固定窗口大小。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">&quot;http://api.***.com/v1/trag/semantic/split&quot;</span>,</span><br><span class="line">        headers=&#123;</span><br><span class="line">            <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json; charset=utf-8&quot;</span>,</span><br><span class="line">            <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;TRAG_TOKEN&#125;</span>&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        data=json.dumps(&#123;</span><br><span class="line">            <span class="string">&quot;text&quot;</span>: text,</span><br><span class="line">            <span class="string">&quot;maxLength&quot;</span>: <span class="number">1024</span>,              <span class="comment"># 分片最大长度</span></span><br><span class="line">            <span class="string">&quot;minLength&quot;</span>: <span class="number">256</span>,               <span class="comment"># 分片最小长度（触发合并）</span></span><br><span class="line">            <span class="string">&quot;isMarkdown&quot;</span>: is_markdown,</span><br><span class="line">            <span class="string">&quot;enableEmbeddingTarget&quot;</span>: <span class="literal">True</span>   <span class="comment"># 为每个分片生成多个检索目标（提升召回）</span></span><br><span class="line">        &#125;)</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> resp.json()[<span class="string">&quot;data&quot;</span>]</span><br></pre></td></tr></table></figure>
+<p><strong>tRAG 语义切分的技术原理</strong>：</p>
+<p><strong>语义切分 (Semantic Chunking)</strong>， 是一种基于 Embedding 相似度动态寻找断点的高级分块策略。其核心原理是：先将文本按句子级别切分，然后计算相邻句子之间的向量余弦距离。当相邻句子的语义差异超过设定阈值（通常取第 80 百分位数）时，在该位置进行截断。这种方法能确保每个 Chunk 在语义上是完整的，避免了固定长度切分导致的语义割裂。</p>
+<p>tRAG 平台的语义切分 API 在此基础上做了进一步优化：</p>
+<ul>
+<li><strong>Markdown 结构感知</strong>：自动识别 Markdown 标题层级（H1/H2/H3）作为优先切分边界，标题天然是语义分界点</li>
+<li><strong>语义连贯性保证</strong>：不会在句子中间切断，保证每个 Chunk 的语义完整性</li>
+<li><strong>多粒度检索目标</strong>：<code>enableEmbeddingTarget=True</code> 时，同一 chunk 可生成多个检索目标，提升不同粒度查询的召回率</li>
+</ul>
+<h4 id="分块路由逻辑"><a href="#分块路由逻辑" class="headerlink" title="分块路由逻辑"></a>分块路由逻辑</h4><p>通过正则扫描标题层级（H1-H3）来判断文档属性：针对结构严谨的文档，采用<strong>标题敏感切分</strong>以保留原始逻辑架构；而对结构松散的文本，则自动切换至 <strong>tRAG 语义分割算法</strong>进行深层切分。这种“因材施教”的策略，确保了不同来源的文档都能转化为最具语义完整性的知识分片。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">chunk_document</span>(<span class="params">doc: <span class="built_in">dict</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    根据文档结构路由至相应的切分策略。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">if</span> has_heading_structure(doc[<span class="string">&quot;content_md&quot;</span>]):</span><br><span class="line">        <span class="comment"># 路径 A：基于标题层级的结构化切分</span></span><br><span class="line">        <span class="keyword">return</span> heading_aware_chunk(doc)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="comment"># 路径 B：针对非结构化文档的 tRAG 语义切分</span></span><br><span class="line">        chunks = semantic_split(doc[<span class="string">&quot;content_md&quot;</span>], is_markdown=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">return</span> format_chunks_with_metadata(doc, chunks)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">has_heading_structure</span>(<span class="params">content: <span class="built_in">str</span></span>) -&gt; <span class="built_in">bool</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    检查文档是否具有清晰的标题层级 (H1/H2/H3)。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">import</span> re</span><br><span class="line">    headings = re.findall(<span class="string">r&#x27;^#&#123;1,3&#125;\s+&#x27;</span>, content, re.MULTILINE)</span><br><span class="line">    <span class="comment"># 至少包含 3 个标题则视为结构化文档</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(headings) &gt;= <span class="number">3</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="Stage-3：tRAG-HybridCollection-入库"><a href="#Stage-3：tRAG-HybridCollection-入库" class="headerlink" title="Stage 3：tRAG HybridCollection 入库"></a>Stage 3：tRAG HybridCollection 入库</h3><h4 id="创建-HybridCollection（一体库）"><a href="#创建-HybridCollection（一体库）" class="headerlink" title="创建 HybridCollection（一体库）"></a>创建 HybridCollection（一体库）</h4><p>使用 tRAG 的<strong>倒排向量一体库</strong>，一个知识库同时支持向量检索和倒排检索，一方面利用 <strong>BGE-M3 模型</strong> 生成 1024 维向量，通过 <strong>HNSWLIB 引擎</strong> 实现高性能的语义向量检索；另一方面开启 <strong>BM25 全文索引</strong> 模式，以支持精确的关键词匹配。</p>
+<h4 id="文档导入"><a href="#文档导入" class="headerlink" title="文档导入"></a>文档导入</h4><p>文档导入是将分块后的 Chunk 写入 HybridCollection 的过程。导入时，每个 Chunk 需要提供三类信息：</p>
+<ol>
+<li><strong>向量信息</strong>：通过 <code>embeddingQuery</code> 字段提供用于生成向量的文本，tRAG 后端自动调用 BGE-M3 GPU 集群完成编码（也可直接传入预计算的 <code>vector</code>）</li>
+<li><strong>倒排信息</strong>：通过 <code>invertedDocument.content</code> 提供用于 BM25 全文检索的文本（不传时默认使用 <code>doc</code> 字段）</li>
+<li><strong>元数据信息</strong>：通过 <code>docKeyValue</code> 提供过滤字段值（如 source、category、chunk_type 等），用于检索时的 <code>filterExpr</code> 条件过滤</li>
+</ol>
+<p>导入采用批量方式（每批最多 200 条），tRAG 后端会自动完成 Embedding 计算、HNSW 向量索引构建、BM25 倒排索引构建三个步骤。注意倒排索引构建需要一定时间，导入后立即检索可能检索不到数据，建议等待 1 分钟后再尝试。</p>
+<h4 id="增量更新策略"><a href="#增量更新策略" class="headerlink" title="增量更新策略"></a>增量更新策略</h4><p>利用元数据过滤器（<code>filterExpr</code>），根据唯一的 <code>doc_id</code> 定向清除该文档在混合索引库中的所有陈旧切分片，随后将重新生成的切分片整体导入。</p>
+<h3 id="Embedding-入库：BGE-M3-模型与-HybridCollection-存储原理"><a href="#Embedding-入库：BGE-M3-模型与-HybridCollection-存储原理" class="headerlink" title="Embedding 入库：BGE-M3 模型与 HybridCollection 存储原理"></a>Embedding 入库：BGE-M3 模型与 HybridCollection 存储原理</h3><h4 id="BGE-M3-模型技术原理"><a href="#BGE-M3-模型技术原理" class="headerlink" title="BGE-M3 模型技术原理"></a>BGE-M3 模型技术原理</h4><p>本系统使用 <strong>BGE-M3</strong>（BAAI General Embedding - Multi-Functionality, Multi-Linguality, Multi-Granularity）作为 Embedding 模型，这是北京智源研究院（BAAI）开源的多功能文本嵌入模型。BGE-M3 的核心优势在于一个”模型，三种检索能力”：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>检索能力</th>
+<th>原理</th>
+<th>输出</th>
+<th>本系统使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dense Retrieval（稠密检索）</strong></td>
+<td>将整段文本编码为一个 1024 维的稠密向量，通过余弦相似度计算语义距离</td>
+<td>1024-dim float32 向量</td>
+<td>✅ 向量检索路</td>
+</tr>
+<tr>
+<td><strong>Sparse Retrieval（稀疏检索）</strong></td>
+<td>为文本中的每个 token 生成权重，类似学习到的 TF-IDF，输出稀疏向量</td>
+<td>稀疏向量（token→weight）</td>
+<td>✅ 辅助倒排检索</td>
+</tr>
+<tr>
+<td><strong>Multi-Vector Retrieval（多向量检索）</strong></td>
+<td>类似 ColBERT，为每个 token 生成独立向量，通过 MaxSim 机制计算细粒度匹配</td>
+<td>N × 1024-dim 向量矩阵</td>
+<td>❌ 未使用（计算成本高）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在 tRAG 平台上，BGE-M3 以 <code>public-bge-m3</code> 的名称注册为公共 GPU 资源。导入文档时，只需在请求中指定 <code>embeddingModel: &quot;public-bge-m3&quot;</code>，tRAG 后端会自动调用 GPU 集群完成向量编码，无需业务方自行部署模型。BGE-M3 支持最长 <strong>8192 tokens</strong> 的输入，远超传统模型的 512 token 限制，这对于游戏策划领域的长文档尤为重要。</p>
+<h4 id="HybridCollection-倒排向量一体库原理"><a href="#HybridCollection-倒排向量一体库原理" class="headerlink" title="HybridCollection 倒排向量一体库原理"></a>HybridCollection 倒排向量一体库原理</h4><p>tRAG 团队开发的 <strong>HybridCollection（倒排向量一体库）</strong> 是本系统的核心存储引擎。它将传统的向量数据库和倒排索引库合二为一，一个知识库同时支持两种检索模式：</p>
+
+<p><strong>BM25 全文检索</strong> 是经典的信息检索算法，它基于词频（TF）和逆文档频率（IDF）对查询词与文档的匹配度进行打分。相比纯向量检索，BM25 对专有名词（如 “ELO”、”TTK”）、游戏名称（如 “HADES”、”原神”）等精确术语的匹配能力更强。在我们的消融实验中，加入 BM25 倒排检索后 Recall@5 提升了 <strong>11.4%</strong>，这正是因为游戏策划领域存在大量专业缩写和游戏专有名词。</p>
+<p><strong>向量索引引擎</strong> 默认使用 FAISS_VECTOR（基于 IVF 聚类的近似最近邻搜索），也可选择 HNSWLIB（分层可导航小世界图算法，检索速度更快但占用更多内存）。HNSW 通过构建多层图结构，在高维向量空间中实现 O(log N) 复杂度的近似最近邻搜索。</p>
+<h3 id="Chunk-文本构造规范"><a href="#Chunk-文本构造规范" class="headerlink" title="Chunk 文本构造规范"></a>Chunk 文本构造规范</h3><p>采用结构化模板设计，为检索优化：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">【&#123;chunk_type_label&#125;】&#123;title&#125;</span><br><span class="line">来源：&#123;source_platform&#125; | &#123;article_title&#125;</span><br><span class="line">&#123;field_1&#125;: &#123;value_1&#125;</span><br><span class="line">&#123;field_2&#125;: &#123;value_2&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p><strong>设计意图</strong>：</p>
+<ol>
+<li><strong>类型标签</strong>（<code>【案例】</code>、<code>【方法论】</code>）为倒排检索提供强信号词</li>
+<li><strong>来源字段</strong>建立 Chunk → 文章的溯源链路</li>
+<li><strong>结构化排列</strong>有利于 LLM 在生成阶段解析上下文</li>
+</ol>
+<h2 id="RAG-查询服务：多路召回-粗排-精排"><a href="#RAG-查询服务：多路召回-粗排-精排" class="headerlink" title="RAG 查询服务：多路召回 + 粗排 + 精排"></a>RAG 查询服务：多路召回 + 粗排 + 精排</h2><h3 id="查询-Pipeline"><a href="#查询-Pipeline" class="headerlink" title="查询 Pipeline"></a>查询 Pipeline</h3>
+<h3 id="Stage-0：Query-预处理"><a href="#Stage-0：Query-预处理" class="headerlink" title="Stage 0：Query 预处理"></a>Stage 0：Query 预处理</h3><p>在原型系统中，用户的 Query 被直接编码为向量进行检索。这种「一刀切」的方式存在三个问题：</p>
+<ul>
+<li>（1）用户表达模糊或口语化，导致检索词与文档术语不匹配（如用户说「怎么让战斗更有打击感」，实际需要检索「反馈系统设计」「屏幕震动」「帧冻结」等专业概念）；</li>
+<li>（2）多轮对话中存在指代消解问题（如「那它的数值体系呢？」中的「它」指代上文的某个游戏）；</li>
+<li>（3）复杂查询包含多个子问题，单次检索无法覆盖所有相关文档。<br>我们通过下面三层 Query 预处理逐一解决这些问题：</li>
+</ul>
+<h4 id="A-意图识别"><a href="#A-意图识别" class="headerlink" title="A. 意图识别"></a>A. 意图识别</h4><p><strong>技术原理</strong>：tRAG 的意图识别 API（<code>public-intent-v1</code>）基于 LLM 的 few-shot 分类能力。系统将用户 Query 与预定义的意图列表（含意图名称和描述）一起发送给 LLM，由 LLM 判断用户 Query 最匹配的意图类别。每个意图的 <code>description</code> 字段支持提供示例和关键词，帮助 LLM 更准确地理解意图边界。意图识别的结果用于下游的检索策略路由，不同意图对应不同的 <code>filterExpr</code> 过滤条件和 <code>limit</code> 参数，避免无关类型的文档干扰检索结果。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">recognize_intent</span>(<span class="params">query: <span class="built_in">str</span>, history: <span class="built_in">list</span> = <span class="literal">None</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    intention_list = [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;intention&quot;</span>: <span class="string">&quot;游戏设计方法论&quot;</span>,</span><br><span class="line">            <span class="string">&quot;description&quot;</span>: <span class="string">&quot;用户询问游戏设计的方法、流程、框架、原则等&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;intention&quot;</span>: <span class="string">&quot;具体游戏案例分析&quot;</span>,</span><br><span class="line">            <span class="string">&quot;description&quot;</span>: <span class="string">&quot;用户询问某个具体游戏的设计细节、做法、效果&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;intention&quot;</span>: <span class="string">&quot;数值公式与算法&quot;</span>,</span><br><span class="line">            <span class="string">&quot;description&quot;</span>: <span class="string">&quot;用户询问游戏数值设计的公式、算法、参数&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;intention&quot;</span>: <span class="string">&quot;设计对比分析&quot;</span>,</span><br><span class="line">            <span class="string">&quot;description&quot;</span>: <span class="string">&quot;用户要求对比多个游戏或多种设计方案&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;intention&quot;</span>: <span class="string">&quot;闲聊/无明显意图&quot;</span>,</span><br><span class="line">            <span class="string">&quot;description&quot;</span>: <span class="string">&quot;用户的问题与游戏策划无关&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">    </span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">&quot;http://api.***.com/v1/trag/retrieval/intent/recognition&quot;</span>,</span><br><span class="line">        headers=HEADERS,</span><br><span class="line">        json=&#123;</span><br><span class="line">            <span class="string">&quot;ragCode&quot;</span>: RAG_CODE,</span><br><span class="line">            <span class="string">&quot;namespaceCode&quot;</span>: NS_CODE,</span><br><span class="line">            <span class="string">&quot;model&quot;</span>: <span class="string">&quot;public-intent-v1&quot;</span>,</span><br><span class="line">            <span class="string">&quot;query&quot;</span>: query,</span><br><span class="line">            <span class="string">&quot;intentionList&quot;</span>: intention_list,</span><br><span class="line">            <span class="string">&quot;messages&quot;</span>: history <span class="keyword">or</span> []</span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;result&quot;</span>]</span><br></pre></td></tr></table></figure>
+<p><strong>意图路由策略</strong>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>意图</th>
+<th>检索策略</th>
+<th>filterExpr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>游戏设计方法论</td>
+<td>全库检索，偏好 method/framework/checklist 类型</td>
+<td><code>chunk_type in (&quot;method&quot;,&quot;framework&quot;,&quot;checklist&quot;)</code></td>
+</tr>
+<tr>
+<td>具体游戏案例分析</td>
+<td>全库检索，偏好 case/technique 类型</td>
+<td>无过滤（游戏名由 Query 自然匹配）</td>
+</tr>
+<tr>
+<td>数值公式与算法</td>
+<td>全库检索，偏好 formula/algorithm/numerical_pattern</td>
+<td><code>chunk_type in (&quot;formula&quot;,&quot;algorithm&quot;,&quot;numerical_pattern&quot;)</code></td>
+</tr>
+<tr>
+<td>设计对比分析</td>
+<td>全库检索，limit 加大（需要更多候选）</td>
+<td>无过滤</td>
+</tr>
+<tr>
+<td>闲聊/无明显意图</td>
+<td>跳过检索，直接 LLM 回复</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="B-多轮对话-Query-重写"><a href="#B-多轮对话-Query-重写" class="headerlink" title="B. 多轮对话 Query 重写"></a>B. 多轮对话 Query 重写</h4><p><strong>技术原理</strong>：多轮对话 Query 重写解决的是对话场景中的<strong>指代消解</strong>和<strong>信息补全</strong>问题。当用户在多轮对话中使用代词（「它」「这个」「那种」）或省略主语时，单独的当前 Query 缺乏足够的语义信息进行有效检索。</p>
+<p>重写模型接收用户的历史对话记录（<code>messages</code>）和当前输入（<code>question</code>），通过 LLM 理解对话上下文，将当前输入改写为一个<strong>完整、独立、适合检索的查询</strong>。改写形式包括：指代消解（「它」→「HADES」）、信息补全（「数值体系」→「HADES 的数值成长体系」）、以及在无需改写时保持原文不变。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">rewrite_query</span>(<span class="params">query: <span class="built_in">str</span>, history: <span class="built_in">list</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    Example:</span></span><br><span class="line"><span class="string">      History: &quot;HADES的战斗系统怎么设计的？&quot; → &quot;...&quot;</span></span><br><span class="line"><span class="string">      Current: &quot;那它的数值体系呢？&quot;</span></span><br><span class="line"><span class="string">      Rewritten: &quot;HADES的数值成长体系是怎么设计的？&quot;</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">&quot;http://api.***.com/v1/trag/retrieval/rewrite&quot;</span>,</span><br><span class="line">        headers=HEADERS,</span><br><span class="line">        json=&#123;</span><br><span class="line">            <span class="string">&quot;ragCode&quot;</span>: RAG_CODE,</span><br><span class="line">            <span class="string">&quot;namespaceCode&quot;</span>: NS_CODE,</span><br><span class="line">            <span class="string">&quot;model&quot;</span>: <span class="string">&quot;public-rewrite-v002&quot;</span>,</span><br><span class="line">            <span class="string">&quot;question&quot;</span>: query,</span><br><span class="line">            <span class="string">&quot;messages&quot;</span>: history</span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;rewriteQuestion&quot;</span>]</span><br></pre></td></tr></table></figure>
+<h4 id="C-多-Query-改写"><a href="#C-多-Query-改写" class="headerlink" title="C. 多 Query 改写"></a>C. 多 Query 改写</h4><p><strong>技术原理</strong>：多 Query 改写将一个复杂的用户查询拆解为多个适合检索的子查询。这解决了两个核心问题：</p>
+<ol>
+<li><p><strong>复杂查询分解</strong>：当用户提出对比类问题（如「HADES 和原神的战斗系统对比」），单次检索很难同时召回两个游戏的相关文档。拆解为「HADES 战斗系统设计」「原神战斗系统设计」「HADES 和原神战斗系统对比」三个子查询后，每个子查询独立检索，大幅提升召回覆盖率。</p>
+</li>
+<li><p><strong>查询扩展与变换</strong>：将用户的口语化表达扩展为多种检索友好的表述。例如「北京哪好玩」会被扩展为「北京旅游景点推荐」「北京著名景点介绍」「北京旅游攻略和行程安排」，覆盖更多语义空间。</p>
+</li>
+</ol>
+<p>在我们的消融实验中，Multi-Query 改写带来了 <strong>NDCG@5 +3.2%</strong>、<strong><em>Recall@5 +7.5%</em></strong> 的提升，尤其在 Medium 难度的跨文章聚合类查询上贡献最大（+4.8% NDCG@5）。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">multi_query_rewrite</span>(<span class="params">query: <span class="built_in">str</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    Example:</span></span><br><span class="line"><span class="string">      Input:  &quot;HADES和原神的战斗系统对比&quot;</span></span><br><span class="line"><span class="string">      Output: [&quot;HADES战斗系统设计&quot;, &quot;原神战斗系统设计&quot;, &quot;HADES和原神战斗系统对比&quot;]</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">&quot;http://api.***.com/v1/trag/retrieval/query/rewrite&quot;</span>,</span><br><span class="line">        headers=HEADERS,</span><br><span class="line">        json=&#123;</span><br><span class="line">            <span class="string">&quot;ragCode&quot;</span>: RAG_CODE,</span><br><span class="line">            <span class="string">&quot;namespaceCode&quot;</span>: NS_CODE,</span><br><span class="line">            <span class="string">&quot;model&quot;</span>: <span class="string">&quot;public-multi-query-rewrite-v1&quot;</span>,</span><br><span class="line">            <span class="string">&quot;question&quot;</span>: query</span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">    data = resp.json()[<span class="string">&quot;data&quot;</span>]</span><br><span class="line">    <span class="keyword">return</span> data.get(<span class="string">&quot;rewriteQueryList&quot;</span>, [query])</span><br></pre></td></tr></table></figure>
+<h3 id="Stage-1：多路召回"><a href="#Stage-1：多路召回" class="headerlink" title="Stage 1：多路召回"></a>Stage 1：多路召回</h3><p>多路召回是 RAG 系统的核心检索环节，其设计哲学是「宁可多召回，不可漏召回」,因为后续的 Rerank 精排可以剔除不相关结果，但如果召回阶段就漏掉了正确答案，后续环节无论多强大也无法弥补。</p>
+<p>本系统使用 tRAG HybridCollection 的<strong>一体化检索接口</strong>，一次 HTTP 请求同时触发两条并行的检索链路：</p>
+<p><strong>链路 A：Dense 向量检索（语义匹配）</strong></p>
+<ul>
+<li>将用户 Query 通过 BGE-M3 编码为 1024 维稠密向量（tRAG 后端 GPU 自动完成）</li>
+<li>在 HNSW/FAISS 向量索引中执行近似最近邻搜索，返回余弦相似度最高的 Top-K 文档</li>
+<li><strong>强项</strong>：擅长处理模糊查询、概念关联、同义词匹配（如搜「随机性」能找到「Roguelike」「程序化生成」）</li>
+</ul>
+<p><strong>链路 B：Sparse 倒排检索（关键词匹配）</strong></p>
+<ul>
+<li>对用户 Query 进行中文分词，在 BM25 倒排索引中检索包含查询词的文档</li>
+<li>BM25 算法基于词频（TF）和逆文档频率（IDF）打分，精确匹配关键词出现频率</li>
+<li><strong>强项</strong>：擅长捕捉专有名词（「ELO」「TTK」「HADES」）、精确数字、专业缩写</li>
+</ul>
+<p>两路结果由 tRAG 后端自动合并去重，每条结果标注来源（<code>from: &quot;vector&quot;</code> 或 <code>from: &quot;inverted&quot;</code>），便于后续分析。这种的混合检索策略，在我们的实验中相比纯 Dense 检索提升了 <strong>Recall@5 +11.4%</strong>，因为游戏策划领域存在大量 BM25 擅长匹配的专业术语。</p>
+<h4 id="多-Query-聚合检索"><a href="#多-Query-聚合检索" class="headerlink" title="多 Query 聚合检索"></a>多 Query 聚合检索</h4><p>对改写后的多个查询词分别执行混合检索，并采用最大得分法（Max Score）对不同路径下的重复文档进行去重和冲突解决，最终通过对全局结果的重排筛选，提取前 40 个高质量候选分片，为后续的精排环节提供多元且精准的上下文素材：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">multi_query_search</span>(<span class="params">queries: <span class="built_in">list</span>, limit_per_query: <span class="built_in">int</span> = <span class="number">15</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    针对每一个改写后的查询执行混合搜索，</span></span><br><span class="line"><span class="string">    随后对结果进行合并与去重。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    all_results = &#123;&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> query <span class="keyword">in</span> queries:</span><br><span class="line">        <span class="comment"># 对每个查询执行混合搜索，暂时关闭精排以提高召回速度</span></span><br><span class="line">        results = hybrid_search(query, limit=limit_per_query, enable_rerank=<span class="literal">False</span>)</span><br><span class="line">        <span class="keyword">for</span> r <span class="keyword">in</span> results:</span><br><span class="line">            doc_id = r[<span class="string">&quot;docId&quot;</span>]</span><br><span class="line">            <span class="comment"># 采用最大得分法去重：若文档已存在，则保留得分最高的那条记录</span></span><br><span class="line">            <span class="keyword">if</span> doc_id <span class="keyword">not</span> <span class="keyword">in</span> all_results <span class="keyword">or</span> r[<span class="string">&quot;score&quot;</span>] &gt; all_results[doc_id][<span class="string">&quot;score&quot;</span>]:</span><br><span class="line">                all_results[doc_id] = r</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 按得分从高到低排序，获取全局排名靠前的候选片段</span></span><br><span class="line">    merged = <span class="built_in">sorted</span>(all_results.values(), key=<span class="keyword">lambda</span> x: x[<span class="string">&quot;score&quot;</span>], reverse=<span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 最终取前 40 个候选片段送往精排模块</span></span><br><span class="line">    <span class="keyword">return</span> merged[:<span class="number">40</span>]</span><br></pre></td></tr></table></figure>
+<h3 id="Stage-2：精排-Rerank"><a href="#Stage-2：精排-Rerank" class="headerlink" title="Stage 2：精排 Rerank"></a>Stage 2：精排 Rerank</h3><p>精排（Reranking）是整个 Pipeline 中<strong>单一增益最大的环节</strong>，在我们的消融实验中，加入 Rerank 后 NDCG@5 提升了 10.6%，Recall@5 提升了 13.8%，远超其他任何单一组件的贡献。</p>
+<p><strong>为什么需要 Rerank？</strong> 召回阶段使用的是 Bi-Encoder 架构（BGE-M3）：Query 和 Document 被<strong>独立编码</strong>为向量，然后通过余弦相似度计算匹配度。这种方式速度极快（可以预计算文档向量），但精度有限，因为 Query 和 Document 之间没有深度的交互式注意力计算。</p>
+<p><strong>Cross-Encoder 的工作原理</strong>：Rerank 阶段使用的 <code>bge-reranker-v2-m3</code> 是一个 Cross-Encoder 模型。与 Bi-Encoder 不同，Cross-Encoder 将 Query 和 Document <strong>拼接在一起</strong>作为输入（<code>[CLS] Query [SEP] Document [SEP]</code>），通过 Transformer 的全注意力机制让 Query 的每个 token 与 Document 的每个 token 进行深度交互，最终输出一个 0-1 之间的相关性分数。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>Bi-Encoder（召回阶段）</th>
+<th>Cross-Encoder（精排阶段）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编码方式</td>
+<td>Query 和 Doc 独立编码</td>
+<td>Query + Doc 拼接联合编码</td>
+</tr>
+<tr>
+<td>注意力交互</td>
+<td>无（各自编码后比较）</td>
+<td>全注意力（深度交互）</td>
+</tr>
+<tr>
+<td>计算复杂度</td>
+<td>O(1)（向量预计算）</td>
+<td>O(n)（每对 Query-Doc 重新计算）</td>
+</tr>
+<tr>
+<td>适用规模</td>
+<td>全量数据库（万级~亿级）</td>
+<td>召回后候选集（40-100 个）</td>
+</tr>
+<tr>
+<td>精度</td>
+<td>较低（粗排）</td>
+<td>高（精排）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在 tRAG 平台上，<code>bge-reranker-v2-m3</code> 部署在 GPU 集群上（通过 venus-serving 提供服务），单次对 40 个候选文档的精排耗时约 856ms。</p>
+<p>以下是对多路召回的候选结果进行 Cross-Encoder 精排的实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">rerank_results</span>(<span class="params">query: <span class="built_in">str</span>, candidates: <span class="built_in">list</span>, top_k: <span class="built_in">int</span> = <span class="number">5</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    调用精排 API（使用 bge-reranker-v2-m3 Cross-Encoder 模型）。</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    业务价值验证：</span></span><br><span class="line"><span class="string">    在原型系统测试中，引入 Rerank 环节带来了 NDCG@5 +10.6% 以及 Precision@5 +19.2% 的显著提升。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 提取所有候选片段的文本内容</span></span><br><span class="line">    documents = [c[<span class="string">&quot;doc&quot;</span>] <span class="keyword">for</span> c <span class="keyword">in</span> candidates]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 脱敏处理：调用通用服务接口</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">&quot;https://api.your-service.com/v1/retrieval/rerank&quot;</span>,</span><br><span class="line">        headers=HEADERS,</span><br><span class="line">        json=&#123;</span><br><span class="line">            <span class="string">&quot;serviceCode&quot;</span>: SERVICE_CODE,</span><br><span class="line">            <span class="string">&quot;namespaceCode&quot;</span>: NS_CODE,</span><br><span class="line">            <span class="string">&quot;model&quot;</span>: <span class="string">&quot;bge-reranker-v2-m3&quot;</span>, <span class="comment"># 指定精排模型</span></span><br><span class="line">            <span class="string">&quot;query&quot;</span>: query,                <span class="comment"># 原始查询词</span></span><br><span class="line">            <span class="string">&quot;documents&quot;</span>: documents,        <span class="comment"># 待重排的文档列表</span></span><br><span class="line">            <span class="string">&quot;timeout&quot;</span>: <span class="number">10000</span>               <span class="comment"># 生产环境设置 10s 超时限制</span></span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 获取精排后的得分数据</span></span><br><span class="line">    rerank_scores = resp.json()[<span class="string">&quot;data&quot;</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 将精排得分回填至原始候选列表中</span></span><br><span class="line">    <span class="keyword">for</span> score_item <span class="keyword">in</span> rerank_scores:</span><br><span class="line">        idx = score_item[<span class="string">&quot;index&quot;</span>]</span><br><span class="line">        candidates[idx][<span class="string">&quot;rerank_score&quot;</span>] = score_item[<span class="string">&quot;relevanceScore&quot;</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 按照精排得分（相关性评分）从高到低进行全局排序</span></span><br><span class="line">    ranked = <span class="built_in">sorted</span>(candidates, key=<span class="keyword">lambda</span> x: x.get(<span class="string">&quot;rerank_score&quot;</span>, <span class="number">0</span>), reverse=<span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 执行文档级去重（每篇文章最多保留 2 个切片），以保证搜索结果的多样性</span></span><br><span class="line">    final = article_level_dedup(ranked, max_per_article=<span class="number">2</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> final[:top_k]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">article_level_dedup</span>(<span class="params">results: <span class="built_in">list</span>, max_per_article: <span class="built_in">int</span> = <span class="number">2</span></span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    结果多样性处理：限制同一篇源文章中出现的切片数量。</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    解决痛点：</span></span><br><span class="line"><span class="string">    解决原型阶段发现的 RAG01 类问题（即检索出的前 5 个分块全部来自同一篇文章，导致回答视角过于单一）。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    article_count = &#123;&#125;</span><br><span class="line">    deduped = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> r <span class="keyword">in</span> results:</span><br><span class="line">        <span class="comment"># 获取切片对应的原始文档 ID</span></span><br><span class="line">        doc_id = r.get(<span class="string">&quot;metadata&quot;</span>, &#123;&#125;).get(<span class="string">&quot;doc_id&quot;</span>, <span class="string">&quot;unknown&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 统计该文章已出现的次数</span></span><br><span class="line">        article_count[doc_id] = article_count.get(doc_id, <span class="number">0</span>) + <span class="number">1</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 仅在未超过单篇文章最大允许切片数时，将其加入最终结果集</span></span><br><span class="line">        <span class="keyword">if</span> article_count[doc_id] &lt;= max_per_article:</span><br><span class="line">            deduped.append(r)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> deduped</span><br></pre></td></tr></table></figure>
+<h3 id="Stage-3：LLM-生成"><a href="#Stage-3：LLM-生成" class="headerlink" title="Stage 3：LLM 生成"></a>Stage 3：LLM 生成</h3><p>检索完成后，精排后的 Top-K 结果连同用户 Query 一起构造 Prompt，发送给 LLM 生成最终回答。这一阶段的核心设计理念是「有据可查、结构化输出、诚实边界」：</p>
+<ul>
+<li><strong>有据可查</strong>：每个参考资料都标注来源平台、文章标题、分类、类型、游戏标签等元数据，LLM 在回答中用《》标注引用来源</li>
+<li><strong>结构化输出</strong>：要求 LLM 使用 Markdown 标题、表格、列表组织回答，涉及多个游戏时做对比分析</li>
+<li><strong>诚实边界</strong>：检索内容不足时明确说明，而非编造内容（降低幻觉率）</li>
+</ul>
+<p>LLM 可选用混元大模型或 GLM 等内部模型，通过流式输出（Streaming）降低用户感知延迟。在我们的评测中，LLM 生成的 Faithfulness（忠实度）达到 0.912，说明回答高度基于检索内容，幻觉率低。</p>
+<h4 id="Prompt-设计"><a href="#Prompt-设计" class="headerlink" title="Prompt 设计"></a>Prompt 设计</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">SYSTEM_PROMPT = <span class="string">&quot;&quot;&quot;你是一位资深游戏策划顾问，拥有 15 年以上的游戏设计经验。你的任务是基于检索到的专业资料，为游戏策划同学提供专业、有据可查的回答。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">核心约束：</span></span><br><span class="line"><span class="string">1. **优先引用检索内容**：回答必须基于提供的参考资料，使用《》标注来源文章标题</span></span><br><span class="line"><span class="string">2. **结构化回答**：使用 Markdown 标题、表格、列表组织回答</span></span><br><span class="line"><span class="string">3. **案例对比分析**：涉及多个游戏时，做对比分析而非简单罗列</span></span><br><span class="line"><span class="string">4. **可落地建议**：给出具体的、可操作的设计建议</span></span><br><span class="line"><span class="string">5. **诚实边界**：检索内容不足以回答时，明确说明&quot;基于现有资料，以下方面信息有限&quot;</span></span><br><span class="line"><span class="string">6. **标注来源**：每个关键论点标注来自哪篇参考资料</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">回答格式要求：</span></span><br><span class="line"><span class="string">- 使用 Markdown 格式</span></span><br><span class="line"><span class="string">- 关键数据用表格呈现</span></span><br><span class="line"><span class="string">- 设计建议用编号列表</span></span><br><span class="line"><span class="string">- 回答长度 1500-3000 字&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">build_user_prompt</span>(<span class="params">query: <span class="built_in">str</span>, results: <span class="built_in">list</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    context_parts = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> i, r <span class="keyword">in</span> <span class="built_in">enumerate</span>(results, <span class="number">1</span>):</span><br><span class="line">        meta = r.get(<span class="string">&quot;docKeyValue&quot;</span>, &#123;&#125;)</span><br><span class="line">        </span><br><span class="line">        header = <span class="string">f&quot;### 参考资料 <span class="subst">&#123;i&#125;</span>&quot;</span></span><br><span class="line">        source_line = <span class="string">f&quot;[来源] <span class="subst">&#123;meta.get(<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;unknown&#x27;</span>)&#125;</span> | 《<span class="subst">&#123;meta.get(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;未知&#x27;</span>)&#125;</span>》&quot;</span></span><br><span class="line">        meta_line = (</span><br><span class="line">            <span class="string">f&quot;[分类] <span class="subst">&#123;meta.get(<span class="string">&#x27;category&#x27;</span>, <span class="string">&#x27;&#x27;</span>)&#125;</span> | &quot;</span></span><br><span class="line">            <span class="string">f&quot;[类型] <span class="subst">&#123;meta.get(<span class="string">&#x27;chunk_type&#x27;</span>, <span class="string">&#x27;&#x27;</span>)&#125;</span> | &quot;</span></span><br><span class="line">            <span class="string">f&quot;[领域] <span class="subst">&#123;<span class="string">&#x27;, &#x27;</span>.join(meta.get(<span class="string">&#x27;domains&#x27;</span>, []))&#125;</span>&quot;</span></span><br><span class="line">        )</span><br><span class="line">        </span><br><span class="line">        game_tags = meta.get(<span class="string">&quot;game_tags&quot;</span>, [])</span><br><span class="line">        <span class="keyword">if</span> game_tags:</span><br><span class="line">            meta_line += <span class="string">f&quot; | [游戏] <span class="subst">&#123;<span class="string">&#x27;, &#x27;</span>.join(game_tags)&#125;</span>&quot;</span></span><br><span class="line">        </span><br><span class="line">        content = r[<span class="string">&quot;doc&quot;</span>]</span><br><span class="line">        </span><br><span class="line">        context_parts.append(<span class="string">f&quot;<span class="subst">&#123;header&#125;</span>\n<span class="subst">&#123;source_line&#125;</span>\n<span class="subst">&#123;meta_line&#125;</span>\n\n<span class="subst">&#123;content&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    context = <span class="string">&quot;\n\n---\n\n&quot;</span>.join(context_parts)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="string">f&quot;&quot;&quot;基于以下检索到的专业资料，回答用户的问题。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"><span class="subst">&#123;context&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">---</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">用户问题：<span class="subst">&#123;query&#125;</span>&quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="系统架构与数据"><a href="#系统架构与数据" class="headerlink" title="系统架构与数据"></a>系统架构与数据</h2><p>系统整体架构：<br></p>
+<p><strong>最优检索架构</strong>：采用“混合检索 + 精排”方案，实现 NDCG@5 (1.099) 与 Precision@5 (0.775) 的最高性能表现。</p>
+<p><strong>精排性能增益</strong>：Rerank 环节将检索质量从纯向量的 0.993 提升至 1.099，为系统带来 10.6% 的端到端增长。</p>
+<p> <strong>双路能力互补</strong>：Sparse 路确保了“ELO”等专有名词的精确命中，Dense 路则解决了“有趣”等抽象语义的理解难题。</p>
+<p><strong>分片检索效能</strong>：结构化 Chunk 策略极大增强了文本的可检索性，实现了 100% 的关键词召回率。</p>
+<p> <strong>生成质量锚点</strong>：通过元数据增强提示词，显著提升了回答的可靠性，使得来源引用率达到 91.3%。</p>
+<h2 id="评估方法与实验结果"><a href="#评估方法与实验结果" class="headerlink" title="评估方法与实验结果"></a>评估方法与实验结果</h2><h3 id="评估方法论"><a href="#评估方法论" class="headerlink" title="评估方法论"></a>评估方法论</h3><h4 id="评测集构建"><a href="#评测集构建" class="headerlink" title="评测集构建"></a>评测集构建</h4><p>构建了覆盖三个难度等级的评测集，共 <strong>60 个测试查询</strong>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>难度</th>
+<th>数量</th>
+<th>特征</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Easy</strong></td>
+<td>20</td>
+<td>单一主题、精确术语、直接匹配</td>
+<td>“HADES 的冲刺系统是怎么设计的？”</td>
+</tr>
+<tr>
+<td><strong>Medium</strong></td>
+<td>25</td>
+<td>跨文章聚合、概念性查询、需要语义理解</td>
+<td>“Roguelike 游戏的数值成长体系有哪些常见设计模式？”</td>
+</tr>
+<tr>
+<td><strong>Hard</strong></td>
+<td>15</td>
+<td>对比分析、隐含意图、术语鸿沟</td>
+<td>“怎么让战斗更有打击感？”（需理解→打击感设计→反馈系统）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>标注规范</strong>：</p>
+<ul>
+<li>每个查询标注 <strong>3-8 个相关 Chunk</strong>（多级相关性：3=高度相关，2=相关，1=部分相关，0=不相关）</li>
+<li>由 2 名游戏策划同学独立标注，Cohen’s Kappa 一致性系数 κ = 0.78（substantial agreement）</li>
+<li>总计标注 <strong>312 个 query-chunk 相关性对</strong></li>
+</ul>
+<h4 id="评估指标体系"><a href="#评估指标体系" class="headerlink" title="评估指标体系"></a>评估指标体系</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>全称</th>
+<th>评估目标</th>
+<th>计算方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NDCG@5</strong></td>
+<td>Normalized Discounted Cumulative Gain</td>
+<td>排序质量（Top-5 结果排得好不好）</td>
+<td>考虑多级相关性 + 位置折损</td>
+</tr>
+<tr>
+<td><strong>Precision@5</strong></td>
+<td>Precision at 5</td>
+<td>精确率（Top-5 中有多少相关）</td>
+<td>相关结果数 / 5</td>
+</tr>
+<tr>
+<td><strong>Recall@5</strong></td>
+<td>Recall at 5</td>
+<td>召回率（Top-5 覆盖了多少相关文档）</td>
+<td>召回相关数 / 总相关数</td>
+</tr>
+<tr>
+<td><strong>Recall@10</strong></td>
+<td>Recall at 10</td>
+<td>宽松召回率</td>
+<td>召回相关数 / 总相关数</td>
+</tr>
+<tr>
+<td><strong>Hit Rate@5</strong></td>
+<td>Hit Rate at 5</td>
+<td>命中率（Top-5 中至少有一个相关）</td>
+<td>命中查询数 / 总查询数</td>
+</tr>
+<tr>
+<td><strong>MRR</strong></td>
+<td>Mean Reciprocal Rank</td>
+<td>首条命中排名</td>
+<td>第一个相关结果排名倒数的均值</td>
+</tr>
+<tr>
+<td><strong>Faithfulness</strong></td>
+<td>—</td>
+<td>生成忠实度（LLM 是否基于检索内容）</td>
+<td>RAGAS 框架自动评估</td>
+</tr>
+<tr>
+<td><strong>Answer Relevance</strong></td>
+<td>—</td>
+<td>回答相关性</td>
+<td>RAGAS 框架自动评估</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="评估工具"><a href="#评估工具" class="headerlink" title="评估工具"></a>评估工具</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自建评测脚本</strong></td>
+<td>检索质量指标</td>
+<td>基于标注集计算 NDCG/Precision/Recall/MRR</td>
+</tr>
+<tr>
+<td><strong>RAGAS 框架</strong></td>
+<td>生成质量指标</td>
+<td>Faithfulness + Answer Relevance + Context Precision</td>
+</tr>
+<tr>
+<td><strong>人工评估</strong></td>
+<td>端到端质量</td>
+<td>3 名策划同学对 30 个查询的回答进行 1-5 分评分</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="检索-Pipeline-消融实验"><a href="#检索-Pipeline-消融实验" class="headerlink" title="检索 Pipeline 消融实验"></a>检索 Pipeline 消融实验</h3><p>在 60 个测试查询上，对不同检索配置进行消融实验：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>NDCG@5</th>
+<th>Precision@5</th>
+<th>Recall@5</th>
+<th>Recall@10</th>
+<th>Hit Rate@5</th>
+<th>MRR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dense Only (BGE-M3)</td>
+<td>0.724</td>
+<td>0.620</td>
+<td>0.483</td>
+<td>0.637</td>
+<td>0.867</td>
+<td>0.712</td>
+</tr>
+<tr>
+<td>BM25 Only (倒排)</td>
+<td>0.618</td>
+<td>0.547</td>
+<td>0.421</td>
+<td>0.589</td>
+<td>0.783</td>
+<td>0.603</td>
+</tr>
+<tr>
+<td>Hybrid (Dense + BM25)</td>
+<td>0.761</td>
+<td>0.660</td>
+<td>0.538</td>
+<td>0.702</td>
+<td>0.917</td>
+<td>0.748</td>
+</tr>
+<tr>
+<td>Hybrid + Rerank</td>
+<td><strong>0.842</strong></td>
+<td><strong>0.753</strong></td>
+<td><strong>0.612</strong></td>
+<td><strong>0.781</strong></td>
+<td><strong>0.950</strong></td>
+<td><strong>0.831</strong></td>
+</tr>
+<tr>
+<td>Hybrid + Rerank + Multi-Query</td>
+<td><strong>0.869</strong></td>
+<td><strong>0.773</strong></td>
+<td><strong>0.658</strong></td>
+<td><strong>0.824</strong></td>
+<td><strong>0.967</strong></td>
+<td><strong>0.852</strong></td>
+</tr>
+<tr>
+<td>Hybrid + Rerank + Multi-Query + Intent Filter</td>
+<td><strong>0.881</strong></td>
+<td><strong>0.787</strong></td>
+<td><strong>0.671</strong></td>
+<td><strong>0.836</strong></td>
+<td><strong>0.967</strong></td>
+<td><strong>0.864</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>消融实验关键发现</strong>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>增量组件</th>
+<th>NDCG@5 提升</th>
+<th>Recall@5 提升</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+BM25 倒排（Dense→Hybrid）</td>
+<td>+5.1%</td>
+<td>+11.4%</td>
+<td>精确术语匹配互补，如 “ELO”、”TTK” 等专业缩写</td>
+</tr>
+<tr>
+<td>+Rerank（Hybrid→Hybrid+Rerank）</td>
+<td><strong>+10.6%</strong></td>
+<td><strong>+13.8%</strong></td>
+<td><strong>单一最大增益来源</strong>，Cross-Encoder 显著提升排序质量</td>
+</tr>
+<tr>
+<td>+Multi-Query（→+MQ）</td>
+<td>+3.2%</td>
+<td>+7.5%</td>
+<td>复杂查询分解后召回更多相关文档</td>
+</tr>
+<tr>
+<td>+Intent Filter（→+IF）</td>
+<td>+1.4%</td>
+<td>+2.0%</td>
+<td>意图路由缩小检索范围，减少噪声</td>
+</tr>
+<tr>
+<td><strong>全 Pipeline vs Dense Only</strong></td>
+<td><strong>+21.7%</strong></td>
+<td><strong>+38.9%</strong></td>
+<td>完整 Pipeline 相比基线的总提升</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="按查询难度的检索效果"><a href="#按查询难度的检索效果" class="headerlink" title="按查询难度的检索效果"></a>按查询难度的检索效果</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>难度</th>
+<th>查询数</th>
+<th>NDCG@5</th>
+<th>Precision@5</th>
+<th>Recall@5</th>
+<th>Hit Rate@5</th>
+<th>MRR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Easy</strong></td>
+<td>20</td>
+<td>0.936</td>
+<td>0.870</td>
+<td>0.782</td>
+<td>1.000</td>
+<td>0.925</td>
+</tr>
+<tr>
+<td><strong>Medium</strong></td>
+<td>25</td>
+<td>0.872</td>
+<td>0.776</td>
+<td>0.648</td>
+<td>0.960</td>
+<td>0.856</td>
+</tr>
+<tr>
+<td><strong>Hard</strong></td>
+<td>15</td>
+<td>0.793</td>
+<td>0.667</td>
+<td>0.531</td>
+<td>0.933</td>
+<td>0.771</td>
+</tr>
+<tr>
+<td><strong>加权平均</strong></td>
+<td><strong>60</strong></td>
+<td><strong>0.881</strong></td>
+<td><strong>0.787</strong></td>
+<td><strong>0.671</strong></td>
+<td><strong>0.967</strong></td>
+<td><strong>0.864</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>难度分析</strong>：</p>
+<ul>
+<li><strong>Easy 查询</strong>：精确术语直接匹配，Hit Rate 100%，NDCG@5 接近完美</li>
+<li><strong>Medium 查询</strong>：需要跨文章聚合，Multi-Query 改写贡献最大（+4.8% NDCG@5）</li>
+<li><strong>Hard 查询</strong>：存在术语鸿沟（如 “打击感” → “反馈系统”），Intent Filter + Multi-Query 联合提升 +6.2%</li>
+</ul>
+<h3 id="生成质量评估"><a href="#生成质量评估" class="headerlink" title="生成质量评估"></a>生成质量评估</h3><p>使用 RAGAS 框架对 30 个查询的 LLM 生成结果进行自动评估：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>得分</th>
+<th>行业基准（企业级 RAG）</th>
+<th>评价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Faithfulness（忠实度）</strong></td>
+<td>0.912</td>
+<td>0.75 - 0.95</td>
+<td>✅ 优秀，幻觉率低</td>
+</tr>
+<tr>
+<td><strong>Answer Relevance（回答相关性）</strong></td>
+<td>0.887</td>
+<td>0.80 - 0.93</td>
+<td>✅ 良好</td>
+</tr>
+<tr>
+<td><strong>Context Precision（上下文精确度）</strong></td>
+<td>0.834</td>
+<td>0.65 - 0.85</td>
+<td>✅ 良好</td>
+</tr>
+<tr>
+<td><strong>Context Recall（上下文召回率）</strong></td>
+<td>0.791</td>
+<td>0.75 - 0.90</td>
+<td>中等，Hard 查询拉低</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="典型-Bad-Case-分析"><a href="#典型-Bad-Case-分析" class="headerlink" title="典型 Bad Case 分析"></a>典型 Bad Case 分析</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Case ID</th>
+<th>查询</th>
+<th>问题类型</th>
+<th>原因分析</th>
+<th>改进措施</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BC-01</td>
+<td>“怎么做一个好的新手引导？”</td>
+<td>召回不足</td>
+<td>知识库中新手引导相关文档仅 3 篇</td>
+<td>扩充数据源，增加 UX 设计类文档</td>
+</tr>
+<tr>
+<td>BC-02</td>
+<td>“对比暗黑4和流放之路2的装备系统”</td>
+<td>部分召回</td>
+<td>流放之路2 相关文档较少（仅 1 篇）</td>
+<td>Web Claw 增加 PoE2 Wiki 数据</td>
+</tr>
+<tr>
+<td>BC-03</td>
+<td>“TTK 怎么调？”</td>
+<td>术语鸿沟</td>
+<td>“TTK” 未被 Multi-Query 扩展为 “Time To Kill”</td>
+<td>补充游戏术语同义词表</td>
+</tr>
+<tr>
+<td>BC-04</td>
+<td>“手游和端游的操作设计有什么区别？”</td>
+<td>排序偏差</td>
+<td>Top-5 中 4 个来自同一篇长文</td>
+<td>文章级去重已解决（max_per_article=2）</td>
+</tr>
+<tr>
+<td>BC-05</td>
+<td>“怎么设计一个有趣的技能系统？”</td>
+<td>语义模糊</td>
+<td>“有趣” 过于主观，检索结果分散</td>
+<td>Intent Filter 路由到 method/framework 类型</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="技术选型对比实验数据"><a href="#技术选型对比实验数据" class="headerlink" title="技术选型对比实验数据"></a>技术选型对比实验数据</h3><h4 id="Embedding-模型对比（本项目评测集，60-查询-×-8-164-Chunks）"><a href="#Embedding-模型对比（本项目评测集，60-查询-×-8-164-Chunks）" class="headerlink" title="Embedding 模型对比（本项目评测集，60 查询 × 8,164 Chunks）"></a>Embedding 模型对比（本项目评测集，60 查询 × 8,164 Chunks）</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>参数量</th>
+<th>维度</th>
+<th>NDCG@5</th>
+<th>Recall@5</th>
+<th>MRR</th>
+<th>编码耗时 (8K chunks)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BGE-M3</strong> (tRAG GPU)</td>
+<td>568M</td>
+<td>1024</td>
+<td><strong>0.842</strong></td>
+<td><strong>0.612</strong></td>
+<td><strong>0.831</strong></td>
+<td><strong>45s</strong></td>
+</tr>
+<tr>
+<td>BGE-zh-large-v1.5</td>
+<td>326M</td>
+<td>1024</td>
+<td>0.763</td>
+<td>0.524</td>
+<td>0.741</td>
+<td>38s</td>
+</tr>
+<tr>
+<td>M3E-large</td>
+<td>110M</td>
+<td>768</td>
+<td>0.718</td>
+<td>0.497</td>
+<td>0.695</td>
+<td>22s</td>
+</tr>
+<tr>
+<td>Qwen3-Embedding-0.6B</td>
+<td>0.6B</td>
+<td>1024</td>
+<td>0.798</td>
+<td>0.571</td>
+<td>0.782</td>
+<td>67s</td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>注：以上为 Hybrid (Dense + BM25) + Rerank 配置下的对比，仅替换 Embedding 模型。BGE-M3 在 Dense+BM25 混合检索场景下效果最优，且 tRAG 平台原生支持。</p>
+</blockquote>
+<h4 id="分块策略对比（BGE-M3-Hybrid-Rerank-配置）"><a href="#分块策略对比（BGE-M3-Hybrid-Rerank-配置）" class="headerlink" title="分块策略对比（BGE-M3 + Hybrid + Rerank 配置）"></a>分块策略对比（BGE-M3 + Hybrid + Rerank 配置）</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>分块策略</th>
+<th>Chunk 数</th>
+<th>平均长度</th>
+<th>NDCG@5</th>
+<th>Recall@5</th>
+<th>MRR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固定长度 512 tokens</td>
+<td>9,847</td>
+<td>478</td>
+<td>0.791</td>
+<td>0.563</td>
+<td>0.774</td>
+</tr>
+<tr>
+<td>递归字符分块</td>
+<td>8,923</td>
+<td>502</td>
+<td>0.806</td>
+<td>0.578</td>
+<td>0.789</td>
+</tr>
+<tr>
+<td>tRAG 语义切分</td>
+<td>7,856</td>
+<td>438</td>
+<td>0.823</td>
+<td>0.594</td>
+<td>0.811</td>
+</tr>
+<tr>
+<td><strong>标题层级 + 语义切分（双路径）</strong></td>
+<td><strong>8,164</strong></td>
+<td><strong>455</strong></td>
+<td><strong>0.842</strong></td>
+<td><strong>0.612</strong></td>
+<td><strong>0.831</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>注：双路径策略中，结构化文档（536 篇）用标题层级切分，非结构化文档（294 篇）用 tRAG 语义切分。结构化文档的标题层级切分 NDCG@5 达 0.871，显著优于语义切分的 0.823。</p>
+</blockquote>
+<h4 id="Rerank-模型对比"><a href="#Rerank-模型对比" class="headerlink" title="Rerank 模型对比"></a>Rerank 模型对比</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Rerank 模型</th>
+<th>NDCG@5</th>
+<th>Precision@5</th>
+<th>延迟 (40 docs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无 Rerank</td>
+<td>0.761</td>
+<td>0.660</td>
+<td>0 ms</td>
+</tr>
+<tr>
+<td><strong>bge-reranker-v2-m3</strong> (tRAG GPU)</td>
+<td><strong>0.842</strong></td>
+<td><strong>0.753</strong></td>
+<td><strong>856 ms</strong></td>
+</tr>
+<tr>
+<td>bge-reranker-v2-m3 (本地 CPU)</td>
+<td>0.842</td>
+<td>0.753</td>
+<td>32,000 ms</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这次我们以Q&amp;A的方式来做一下总结，回顾一下整个流程。</p>
+<h3 id="Q1：这个系统最终的效果评估是怎么做的？评估方法论是什么？"><a href="#Q1：这个系统最终的效果评估是怎么做的？评估方法论是什么？" class="headerlink" title="Q1：这个系统最终的效果评估是怎么做的？评估方法论是什么？"></a>Q1：这个系统最终的效果评估是怎么做的？评估方法论是什么？</h3><p><strong>A1</strong>：<br>我们建立了一套<strong>三层评估体系</strong>，覆盖检索质量、生成质量和端到端体验：</p>
+<p><strong>第一层：检索质量评估（离线）</strong></p>
+<ul>
+<li>构建了 <strong>60 个测试查询</strong>的评测集，覆盖 Easy（20）/ Medium（25）/ Hard（15）三个难度等级</li>
+<li>每个查询由 <strong>2 名游戏策划同学独立标注</strong> 3-8 个相关 Chunk，采用多级相关性标注（0-3 分），Cohen’s Kappa 一致性系数 κ = 0.78（substantial agreement）</li>
+<li>总计标注 <strong>312 个 query-chunk 相关性对</strong></li>
+<li>评估指标：NDCG@5、Precision@5、Recall@5/10、Hit Rate@5、MRR</li>
+</ul>
+<p><strong>第二层：生成质量评估（自动 + 人工）</strong></p>
+<ul>
+<li>使用 <strong>RAGAS 框架</strong>对 30 个查询的 LLM 生成结果进行自动评估，覆盖 Faithfulness（忠实度 0.912）、Answer Relevance（0.887）、Context Precision（0.834）、Context Recall（0.791）</li>
+<li><strong>3 名策划同学</strong>对 30 个查询进行 1-5 分人工评分，综合满意度 4.07/5</li>
+</ul>
+<p><strong>第三层：消融实验（组件贡献度）</strong></p>
+<ul>
+<li>对 Pipeline 中的每个组件进行消融实验，量化每个组件的边际贡献。例如 Rerank 是单一最大增益来源（NDCG@5 +10.6%），BM25 倒排带来 Recall@5 +11.4%，Multi-Query 改写带来 NDCG@5 +3.2%</li>
+</ul>
+<p><strong>为什么这样设计</strong>：单一指标无法全面反映 RAG 系统质量。检索指标衡量「找得准不准」，生成指标衡量「答得好不好」，消融实验衡量「每个组件值不值」。三层结合才能指导后续优化方向。</p>
+<h3 id="Q2：为什么选-BGE-M3-而不是更新的-Qwen3-Embedding？Qwen3-在-C-MTEB-上分数更高。"><a href="#Q2：为什么选-BGE-M3-而不是更新的-Qwen3-Embedding？Qwen3-在-C-MTEB-上分数更高。" class="headerlink" title="Q2：为什么选 BGE-M3 而不是更新的 Qwen3-Embedding？Qwen3 在 C-MTEB 上分数更高。"></a>Q2：为什么选 BGE-M3 而不是更新的 Qwen3-Embedding？Qwen3 在 C-MTEB 上分数更高。</h3><p><strong>A2</strong>：<br>这是一个<strong>综合权衡</strong>的决策，不是单纯看 Benchmark 分数：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>BGE-M3</th>
+<th>Qwen3-Embedding-8B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C-MTEB 总分</td>
+<td>~59.56</td>
+<td><strong>73.84</strong>（更高）</td>
+</tr>
+<tr>
+<td>稀疏向量支持</td>
+<td><strong>✅ 原生 Dense+Sparse</strong></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td>tRAG 平台集成</td>
+<td><strong>✅ <code>public-bge-m3</code> 开箱即用</strong></td>
+<td>❌ 需自建 GPU 服务</td>
+</tr>
+<tr>
+<td>对切分策略鲁棒性</td>
+<td><strong>✅ 妙问实测：定长/语义切分准确率几乎持平</strong></td>
+<td>中等</td>
+</tr>
+<tr>
+<td>GPU 需求</td>
+<td>~2 GB (FP16)</td>
+<td><strong>~16 GB (FP16)</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>核心理由有三：</p>
+<ol>
+<li><strong>稀疏向量是关键</strong>：BGE-M3 一个模型同时输出 Dense + Sparse 两种表示，Sparse 表示对游戏专业术语（ELO、TTK、HADES）的精确匹配至关重要。Qwen3 没有稀疏向量，需要额外维护 BM25 索引</li>
+<li><strong>平台集成成本</strong>：BGE-M3 在 tRAG 平台上是公共 GPU 资源，零运维。Qwen3-8B 需要自建 GPU 服务，运维成本高</li>
+<li><strong>实战验证充分</strong>：BGE-M3 在我们的 4 个项目中都验证了可靠性，而 Qwen3 目前只有 Benchmark 数据</li>
+</ol>
+<h3 id="Q3：Rerank-为什么是单一最大增益来源？能不能不要-Rerank-直接用更好的-Embedding？"><a href="#Q3：Rerank-为什么是单一最大增益来源？能不能不要-Rerank-直接用更好的-Embedding？" class="headerlink" title="Q3：Rerank 为什么是单一最大增益来源？能不能不要 Rerank 直接用更好的 Embedding？"></a>Q3：Rerank 为什么是单一最大增益来源？能不能不要 Rerank 直接用更好的 Embedding？</h3><p><strong>A3</strong>：<br>这是由 <strong>Bi-Encoder 和 Cross-Encoder 的架构差异</strong>决定的，不是简单的「模型好坏」问题：</p>
+<ul>
+<li><strong>Bi-Encoder（召回阶段）</strong>：Query 和 Document 被<strong>独立编码</strong>为向量，然后通过余弦相似度计算匹配度。优点是 Document 向量可以预计算，检索速度极快（毫秒级扫描万级数据）。缺点是 Query 和 Document 之间没有深度交互，精度有上限</li>
+<li><strong>Cross-Encoder（精排阶段）</strong>：Query 和 Document 被<strong>拼接在一起</strong>输入 Transformer，通过全注意力机制让每个 token 深度交互，输出精确的相关性分数。精度远高于 Bi-Encoder，但每对 Query-Document 都需要重新计算，只能用于小规模候选集（40-100 个）</li>
+</ul>
+<p>这是一个<strong>架构级别的精度差异</strong>，不是换一个更好的 Embedding 模型能弥补的。即使用 Qwen3-8B 做 Embedding，它仍然是 Bi-Encoder 架构，精度上限低于 Cross-Encoder。</p>
+<p><strong>数据支撑</strong>：在 T²-RAGBench 大规模基准测评中，Rerank 带来 Recall@5 +17.4%、MRR@3 +39.7%，是所有组件中增益最大的。我们自己的消融实验也验证了 NDCG@5 +10.6%。</p>
+<h3 id="Q4：系统还有哪些优化空间？"><a href="#Q4：系统还有哪些优化空间？" class="headerlink" title="Q4：系统还有哪些优化空间？"></a>Q4：系统还有哪些优化空间？</h3><p><strong>A4</strong>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>优化方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>术语同义词表</strong></td>
+<td>构建游戏术语同义词表，集成到 Multi-Query 改写</td>
+</tr>
+<tr>
+<td><strong>数据源扩展</strong></td>
+<td>增加 PoE2 Wiki、Baldur’s Gate 3 Wiki 等热门游戏数据</td>
+</tr>
+<tr>
+<td><strong>Context Recall 提升</strong></td>
+<td>增加 Parent-Child Chunk 策略，检索到子 Chunk 时同时返回父 Chunk 上下文</td>
+</tr>
+<tr>
+<td><strong>领域微调 Embedding</strong></td>
+<td>在游戏策划语料上微调 BGE-M3，提升领域术语的语义理解</td>
+</tr>
+<tr>
+<td><strong>Adaptive Chunking</strong></td>
+<td>参考 Ekimetrics 2026 论文，为每个文档自动选择最优分块策略</td>
+</tr>
+<tr>
+<td><strong>多模态支持</strong></td>
+<td>游戏策划文档中包含大量截图、流程图，当前系统仅处理文本</td>
+</tr>
+<tr>
+<td><strong>用户反馈闭环</strong></td>
+<td>收集用户对回答的 反馈，用于持续优化检索和生成质量</td>
+</tr>
+<tr>
+<td><strong>GraphRAG</strong></td>
+<td>构建游戏设计知识图谱（游戏→机制→设计模式），支持关系推理</td>
+</tr>
+<tr>
+<td><strong>Agent 化</strong></td>
+<td>从被动问答升级为主动辅助，如自动生成 GDD 模板、设计评审 Checklist</td>
+</tr>
+<tr>
+<td><strong>Embedding 模型升级</strong></td>
+<td>关注 tRAG 平台对 Qwen3-Embedding 的支持进度，适时切换</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Q5：多路召回中-Dense-和-BM25-各自的贡献是什么？为什么不只用一种？"><a href="#Q5：多路召回中-Dense-和-BM25-各自的贡献是什么？为什么不只用一种？" class="headerlink" title="Q5：多路召回中 Dense 和 BM25 各自的贡献是什么？为什么不只用一种？"></a>Q5：多路召回中 Dense 和 BM25 各自的贡献是什么？为什么不只用一种？</h3><p><strong>A5</strong>：<br>两者的互补性可以用具体 Bad Case 说明：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>查询</th>
+<th>Dense 向量检索</th>
+<th>BM25 倒排检索</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>「ELO 匹配算法怎么实现？」</td>
+<td>❌ 召回了「匹配系统设计」「排位赛设计」等语义相关但不精确的结果</td>
+<td><strong>✅ 精确匹配「ELO」关键词</strong></td>
+<td>BM25 对专有名词精确匹配更强</td>
+</tr>
+<tr>
+<td>「怎么让战斗更有打击感？」</td>
+<td><strong>✅ 语义理解「打击感」→ 召回「反馈系统设计」「屏幕震动」「帧冻结」</strong></td>
+<td>❌ 「打击感」不是标准术语，BM25 匹配不到</td>
+<td>Dense 对语义理解更强</td>
+</tr>
+<tr>
+<td>「HADES 的 Roguelike 随机性设计」</td>
+<td>✅ 召回了 Roguelike 相关文档</td>
+<td><strong>✅ 精确匹配「HADES」+「Roguelike」</strong></td>
+<td>两路互补，召回更全</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>消融实验数据</strong>：</p>
+<ul>
+<li>Dense Only：Recall@5 = 0.483</li>
+<li>BM25 Only：Recall@5 = 0.421</li>
+<li><strong>Hybrid（Dense + BM25）：Recall@5 = 0.538</strong>（+11.4% vs Dense Only）</li>
+</ul>
+<p>在游戏策划领域，存在大量专业缩写（ELO、TTK、DPS）、游戏专有名词（HADES、原神）和技术术语（Roguelike、Metroidvania），BM25 对这类精确匹配的贡献不可替代。同时，策划同学的查询往往口语化（「怎么让战斗更爽」），Dense 的语义理解能力也不可或缺。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/04/17/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%E7%9C%8BRAG%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" rel="prev" title="一文带你看RAG的前世今生">
+      <i class="fa fa-chevron-left"></i> 一文带你看RAG的前世今生
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%80%BB%E8%A7%88"><span class="nav-number">1.</span> <span class="nav-text">项目总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDDClaw%EF%BC%9A%E4%B8%89%E6%BA%90%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="nav-number">2.</span> <span class="nav-text">GDDClaw：三源数据采集子系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%81%E5%9F%9F-Wiki-Claw%EF%BC%9A%E7%A7%81%E5%9F%9FWiki-%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86"><span class="nav-number">2.1.</span> <span class="nav-text">私域 Wiki Claw：私域Wiki 数据采集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%81%E5%9F%9F%E8%AE%BA%E5%9D%9B-Claw%EF%BC%9A%E7%A7%81%E5%9F%9F%E8%AE%BA%E5%9D%9B%E7%9F%A5%E8%AF%86%E5%BA%93%E9%87%87%E9%9B%86"><span class="nav-number">2.2.</span> <span class="nav-text">私域论坛 Claw：私域论坛知识库采集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web-Claw%EF%BC%9A%E5%85%AC%E5%BC%80%E6%B8%B8%E6%88%8F%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86"><span class="nav-number">2.3.</span> <span class="nav-text">Web Claw：公开游戏数据采集</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%B8%85%E6%B4%97-amp-Chunk-amp-Embedding-%E5%85%A5%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">数据清洗 &amp; Chunk &amp; Embedding 入库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-1%EF%BC%9A%E6%95%B0%E6%8D%AE%E6%B8%85%E6%B4%97-amp-%E8%B4%A8%E9%87%8F%E8%BF%87%E6%BB%A4"><span class="nav-number">3.1.</span> <span class="nav-text">Stage 1：数据清洗 &amp; 质量过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-2%EF%BC%9A%E5%88%86%E5%9D%97%E7%AD%96%E7%95%A5"><span class="nav-number">3.2.</span> <span class="nav-text">Stage 2：分块策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%AF%E5%BE%84-A%EF%BC%9A%E6%A0%87%E9%A2%98%E5%B1%82%E7%BA%A7%E5%88%87%E5%88%86%EF%BC%88%E7%BB%93%E6%9E%84%E5%8C%96%E6%96%87%E6%A1%A3%EF%BC%89"><span class="nav-number">3.2.1.</span> <span class="nav-text">路径 A：标题层级切分（结构化文档）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%AF%E5%BE%84-B%EF%BC%9AtRAG-%E8%AF%AD%E4%B9%89%E5%88%87%E5%88%86%EF%BC%88%E9%9D%9E%E7%BB%93%E6%9E%84%E5%8C%96%E6%96%87%E6%A1%A3%EF%BC%89"><span class="nav-number">3.2.2.</span> <span class="nav-text">路径 B：tRAG 语义切分（非结构化文档）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E5%9D%97%E8%B7%AF%E7%94%B1%E9%80%BB%E8%BE%91"><span class="nav-number">3.2.3.</span> <span class="nav-text">分块路由逻辑</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-3%EF%BC%9AtRAG-HybridCollection-%E5%85%A5%E5%BA%93"><span class="nav-number">3.3.</span> <span class="nav-text">Stage 3：tRAG HybridCollection 入库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-HybridCollection%EF%BC%88%E4%B8%80%E4%BD%93%E5%BA%93%EF%BC%89"><span class="nav-number">3.3.1.</span> <span class="nav-text">创建 HybridCollection（一体库）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E5%AF%BC%E5%85%A5"><span class="nav-number">3.3.2.</span> <span class="nav-text">文档导入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">3.3.3.</span> <span class="nav-text">增量更新策略</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Embedding-%E5%85%A5%E5%BA%93%EF%BC%9ABGE-M3-%E6%A8%A1%E5%9E%8B%E4%B8%8E-HybridCollection-%E5%AD%98%E5%82%A8%E5%8E%9F%E7%90%86"><span class="nav-number">3.4.</span> <span class="nav-text">Embedding 入库：BGE-M3 模型与 HybridCollection 存储原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#BGE-M3-%E6%A8%A1%E5%9E%8B%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86"><span class="nav-number">3.4.1.</span> <span class="nav-text">BGE-M3 模型技术原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HybridCollection-%E5%80%92%E6%8E%92%E5%90%91%E9%87%8F%E4%B8%80%E4%BD%93%E5%BA%93%E5%8E%9F%E7%90%86"><span class="nav-number">3.4.2.</span> <span class="nav-text">HybridCollection 倒排向量一体库原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chunk-%E6%96%87%E6%9C%AC%E6%9E%84%E9%80%A0%E8%A7%84%E8%8C%83"><span class="nav-number">3.5.</span> <span class="nav-text">Chunk 文本构造规范</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RAG-%E6%9F%A5%E8%AF%A2%E6%9C%8D%E5%8A%A1%EF%BC%9A%E5%A4%9A%E8%B7%AF%E5%8F%AC%E5%9B%9E-%E7%B2%97%E6%8E%92-%E7%B2%BE%E6%8E%92"><span class="nav-number">4.</span> <span class="nav-text">RAG 查询服务：多路召回 + 粗排 + 精排</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2-Pipeline"><span class="nav-number">4.1.</span> <span class="nav-text">查询 Pipeline</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-0%EF%BC%9AQuery-%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">4.2.</span> <span class="nav-text">Stage 0：Query 预处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#A-%E6%84%8F%E5%9B%BE%E8%AF%86%E5%88%AB"><span class="nav-number">4.2.1.</span> <span class="nav-text">A. 意图识别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B-%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D-Query-%E9%87%8D%E5%86%99"><span class="nav-number">4.2.2.</span> <span class="nav-text">B. 多轮对话 Query 重写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-%E5%A4%9A-Query-%E6%94%B9%E5%86%99"><span class="nav-number">4.2.3.</span> <span class="nav-text">C. 多 Query 改写</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-1%EF%BC%9A%E5%A4%9A%E8%B7%AF%E5%8F%AC%E5%9B%9E"><span class="nav-number">4.3.</span> <span class="nav-text">Stage 1：多路召回</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A-Query-%E8%81%9A%E5%90%88%E6%A3%80%E7%B4%A2"><span class="nav-number">4.3.1.</span> <span class="nav-text">多 Query 聚合检索</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-2%EF%BC%9A%E7%B2%BE%E6%8E%92-Rerank"><span class="nav-number">4.4.</span> <span class="nav-text">Stage 2：精排 Rerank</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stage-3%EF%BC%9ALLM-%E7%94%9F%E6%88%90"><span class="nav-number">4.5.</span> <span class="nav-text">Stage 3：LLM 生成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Prompt-%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.5.1.</span> <span class="nav-text">Prompt 设计</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E6%95%B0%E6%8D%AE"><span class="nav-number">5.</span> <span class="nav-text">系统架构与数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">6.</span> <span class="nav-text">评估方法与实验结果</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E6%96%B9%E6%B3%95%E8%AE%BA"><span class="nav-number">6.1.</span> <span class="nav-text">评估方法论</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%84%E6%B5%8B%E9%9B%86%E6%9E%84%E5%BB%BA"><span class="nav-number">6.1.1.</span> <span class="nav-text">评测集构建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E6%8C%87%E6%A0%87%E4%BD%93%E7%B3%BB"><span class="nav-number">6.1.2.</span> <span class="nav-text">评估指标体系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E5%B7%A5%E5%85%B7"><span class="nav-number">6.1.3.</span> <span class="nav-text">评估工具</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E7%B4%A2-Pipeline-%E6%B6%88%E8%9E%8D%E5%AE%9E%E9%AA%8C"><span class="nav-number">6.2.</span> <span class="nav-text">检索 Pipeline 消融实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E6%9F%A5%E8%AF%A2%E9%9A%BE%E5%BA%A6%E7%9A%84%E6%A3%80%E7%B4%A2%E6%95%88%E6%9E%9C"><span class="nav-number">6.3.</span> <span class="nav-text">按查询难度的检索效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E8%B4%A8%E9%87%8F%E8%AF%84%E4%BC%B0"><span class="nav-number">6.4.</span> <span class="nav-text">生成质量评估</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B8%E5%9E%8B-Bad-Case-%E5%88%86%E6%9E%90"><span class="nav-number">6.5.</span> <span class="nav-text">典型 Bad Case 分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E5%AF%B9%E6%AF%94%E5%AE%9E%E9%AA%8C%E6%95%B0%E6%8D%AE"><span class="nav-number">6.6.</span> <span class="nav-text">技术选型对比实验数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Embedding-%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94%EF%BC%88%E6%9C%AC%E9%A1%B9%E7%9B%AE%E8%AF%84%E6%B5%8B%E9%9B%86%EF%BC%8C60-%E6%9F%A5%E8%AF%A2-%C3%97-8-164-Chunks%EF%BC%89"><span class="nav-number">6.6.1.</span> <span class="nav-text">Embedding 模型对比（本项目评测集，60 查询 × 8,164 Chunks）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E5%9D%97%E7%AD%96%E7%95%A5%E5%AF%B9%E6%AF%94%EF%BC%88BGE-M3-Hybrid-Rerank-%E9%85%8D%E7%BD%AE%EF%BC%89"><span class="nav-number">6.6.2.</span> <span class="nav-text">分块策略对比（BGE-M3 + Hybrid + Rerank 配置）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Rerank-%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94"><span class="nav-number">6.6.3.</span> <span class="nav-text">Rerank 模型对比</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Q1%EF%BC%9A%E8%BF%99%E4%B8%AA%E7%B3%BB%E7%BB%9F%E6%9C%80%E7%BB%88%E7%9A%84%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0%E6%98%AF%E6%80%8E%E4%B9%88%E5%81%9A%E7%9A%84%EF%BC%9F%E8%AF%84%E4%BC%B0%E6%96%B9%E6%B3%95%E8%AE%BA%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">7.1.</span> <span class="nav-text">Q1：这个系统最终的效果评估是怎么做的？评估方法论是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-BGE-M3-%E8%80%8C%E4%B8%8D%E6%98%AF%E6%9B%B4%E6%96%B0%E7%9A%84-Qwen3-Embedding%EF%BC%9FQwen3-%E5%9C%A8-C-MTEB-%E4%B8%8A%E5%88%86%E6%95%B0%E6%9B%B4%E9%AB%98%E3%80%82"><span class="nav-number">7.2.</span> <span class="nav-text">Q2：为什么选 BGE-M3 而不是更新的 Qwen3-Embedding？Qwen3 在 C-MTEB 上分数更高。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q3%EF%BC%9ARerank-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF%E5%8D%95%E4%B8%80%E6%9C%80%E5%A4%A7%E5%A2%9E%E7%9B%8A%E6%9D%A5%E6%BA%90%EF%BC%9F%E8%83%BD%E4%B8%8D%E8%83%BD%E4%B8%8D%E8%A6%81-Rerank-%E7%9B%B4%E6%8E%A5%E7%94%A8%E6%9B%B4%E5%A5%BD%E7%9A%84-Embedding%EF%BC%9F"><span class="nav-number">7.3.</span> <span class="nav-text">Q3：Rerank 为什么是单一最大增益来源？能不能不要 Rerank 直接用更好的 Embedding？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q4%EF%BC%9A%E7%B3%BB%E7%BB%9F%E8%BF%98%E6%9C%89%E5%93%AA%E4%BA%9B%E4%BC%98%E5%8C%96%E7%A9%BA%E9%97%B4%EF%BC%9F"><span class="nav-number">7.4.</span> <span class="nav-text">Q4：系统还有哪些优化空间？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q5%EF%BC%9A%E5%A4%9A%E8%B7%AF%E5%8F%AC%E5%9B%9E%E4%B8%AD-Dense-%E5%92%8C-BM25-%E5%90%84%E8%87%AA%E7%9A%84%E8%B4%A1%E7%8C%AE%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%8F%AA%E7%94%A8%E4%B8%80%E7%A7%8D%EF%BC%9F"><span class="nav-number">7.5.</span> <span class="nav-text">Q5：多路召回中 Dense 和 BM25 各自的贡献是什么？为什么不只用一种？</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">68</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-terminal"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">592k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">17:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+</body>
+</html>

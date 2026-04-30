@@ -25,16 +25,23 @@
   <meta name="description" content="基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki&#x2F;论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一个RAG系统的技术选型与pipeline">
-<meta property="og:url" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/index.html">
+<meta property="og:url" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/index.html">
 <meta property="og:site_name" content="Tianyao&#39; s BLOG">
 <meta property="og:description" content="基于原型验证的实验结论，本文档设计一套可落地的RAG部署方案，由于种种原因，系统依托平台不便透露，以下称 tRAG 平台。系统基于  tRAG 平台，整合私域Wiki&#x2F;论坛数据与公开游戏 Wiki 数据，构建面向游戏策划领域的专业 RAG 系统。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/gamedesignsrag.png">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E9%87%87%E9%9B%86%E6%B5%81%E7%A8%8B.png">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/webclaw%E9%87%87%E9%9B%86%E6%B5%81%E7%A8%8B.png">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/HybridCollection%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E6%9F%A5%E8%AF%A2Pipeline.png">
+<meta property="og:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E5%9B%BE.png">
 <meta property="article:published_time" content="2026-04-29T14:00:45.000Z">
 <meta property="article:modified_time" content="2026-04-30T14:01:31.210Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/gamedesignsrag.png">
 
-<link rel="canonical" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/">
+<link rel="canonical" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/">
 
 
 <script id="page-configurations">
@@ -170,7 +177,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AA%20RAG%20%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%20pipeline/">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -261,7 +268,7 @@
 <li>RAG 查询服务系统，包含多路召回、精排等功能</li>
 </ul>
 <p>如下图所示：</p>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/gamedesignsrag.png" class="" title="gamedesignrag">
 <table>
 <thead>
 <tr>
@@ -315,7 +322,7 @@
 </table>
 <h2 id="gddclaw三源数据采集子系统"><a class="markdownIt-Anchor" href="#gddclaw三源数据采集子系统"></a> GDDClaw：三源数据采集子系统</h2>
 <p>GDDClaw（Game Design Document Crawler）负责从三个数据源持续采集游戏策划领域的文档数据。</p>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E9%87%87%E9%9B%86%E6%B5%81%E7%A8%8B.png" class="" title="采集流程">
 <h3 id="私域-wiki-claw私域wiki-数据采集"><a class="markdownIt-Anchor" href="#私域-wiki-claw私域wiki-数据采集"></a> 私域 Wiki Claw：私域Wiki 数据采集</h3>
 <p>通过 <strong>私域Wiki MCP</strong> 或 <strong>私域Wiki API</strong> 采集指定空间下的策划文档。</p>
 <p><strong>采集流程</strong>为：</p>
@@ -383,7 +390,7 @@
 <p>在处理<strong>私域Wiki</strong>与<strong>私域论坛</strong>的业务差异时，主要体现在四个维度：首先，Wiki 采用原生 <strong>Markdown</strong> 格式，可通过 <code>Wiki2md</code> 插件直接转换，而论坛内容以 <strong>HTML</strong> 为主，需通过 <code>docx2md</code> 或 HTML 转译工具处理；其次，在权限管理上，Wiki 侧重<strong>空间级</strong>授权，论坛则细化到<strong>团队或文章级</strong>；最后，针对增量更新的识别，Wiki 依赖 <code>modifyTime</code> 字段，而论坛则通过<strong>文章更新时间戳</strong>进行校验。</p>
 <h3 id="web-claw公开游戏数据采集"><a class="markdownIt-Anchor" href="#web-claw公开游戏数据采集"></a> Web Claw：公开游戏数据采集</h3>
 <p>采用 <strong>通用爬虫模板 + Agent 自主生成代码</strong> 的混合链路。</p>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/webclaw%E9%87%87%E9%9B%86%E6%B5%81%E7%A8%8B.png" class="" title="webclaw采集流程">
 <p>对于结构复杂的站点（如游戏 Wiki），采用 Agent 链路：</p>
 <ul>
 <li>
@@ -492,7 +499,7 @@
 <p>在 tRAG 平台上，BGE-M3 以 <code>public-bge-m3</code> 的名称注册为公共 GPU 资源。导入文档时，只需在请求中指定 <code>embeddingModel: &quot;public-bge-m3&quot;</code>，tRAG 后端会自动调用 GPU 集群完成向量编码，无需业务方自行部署模型。BGE-M3 支持最长 <strong>8192 tokens</strong> 的输入，远超传统模型的 512 token 限制，这对于游戏策划领域的长文档尤为重要。</p>
 <h4 id="hybridcollection-倒排向量一体库原理"><a class="markdownIt-Anchor" href="#hybridcollection-倒排向量一体库原理"></a> HybridCollection 倒排向量一体库原理</h4>
 <p>tRAG 团队开发的 <strong>HybridCollection（倒排向量一体库）</strong> 是本系统的核心存储引擎。它将传统的向量数据库和倒排索引库合二为一，一个知识库同时支持两种检索模式：</p>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/HybridCollection%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84.png" class="" title="HybridCollection存储架构">
 <p><strong>BM25 全文检索</strong> 是经典的信息检索算法，它基于词频（TF）和逆文档频率（IDF）对查询词与文档的匹配度进行打分。相比纯向量检索，BM25 对专有名词（如 “ELO”、“TTK”）、游戏名称（如 “HADES”、“原神”）等精确术语的匹配能力更强。在我们的消融实验中，加入 BM25 倒排检索后 Recall@5 提升了 <strong>11.4%</strong>，这正是因为游戏策划领域存在大量专业缩写和游戏专有名词。</p>
 <p><strong>向量索引引擎</strong> 默认使用 FAISS_VECTOR（基于 IVF 聚类的近似最近邻搜索），也可选择 HNSWLIB（分层可导航小世界图算法，检索速度更快但占用更多内存）。HNSW 通过构建多层图结构，在高维向量空间中实现 O(log N) 复杂度的近似最近邻搜索。</p>
 <h3 id="chunk-文本构造规范"><a class="markdownIt-Anchor" href="#chunk-文本构造规范"></a> Chunk 文本构造规范</h3>
@@ -506,7 +513,7 @@
 </ol>
 <h2 id="rag-查询服务多路召回-粗排-精排"><a class="markdownIt-Anchor" href="#rag-查询服务多路召回-粗排-精排"></a> RAG 查询服务：多路召回 + 粗排 + 精排</h2>
 <h3 id="查询-pipeline"><a class="markdownIt-Anchor" href="#查询-pipeline"></a> 查询 Pipeline</h3>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E6%9F%A5%E8%AF%A2Pipeline.png" class="" title="查询Pipeline">
 <h3 id="stage-0query-预处理"><a class="markdownIt-Anchor" href="#stage-0query-预处理"></a> Stage 0：Query 预处理</h3>
 <p>在原型系统中，用户的 Query 被直接编码为向量进行检索。这种「一刀切」的方式存在三个问题：</p>
 <ul>
@@ -645,7 +652,7 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">SYSTEM_PROMPT = <span class="string">&quot;&quot;&quot;你是一位资深游戏策划顾问，拥有 15 年以上的游戏设计经验。你的任务是基于检索到的专业资料，为游戏策划同学提供专业、有据可查的回答。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">核心约束：</span></span><br><span class="line"><span class="string">1. **优先引用检索内容**：回答必须基于提供的参考资料，使用《》标注来源文章标题</span></span><br><span class="line"><span class="string">2. **结构化回答**：使用 Markdown 标题、表格、列表组织回答</span></span><br><span class="line"><span class="string">3. **案例对比分析**：涉及多个游戏时，做对比分析而非简单罗列</span></span><br><span class="line"><span class="string">4. **可落地建议**：给出具体的、可操作的设计建议</span></span><br><span class="line"><span class="string">5. **诚实边界**：检索内容不足以回答时，明确说明&quot;基于现有资料，以下方面信息有限&quot;</span></span><br><span class="line"><span class="string">6. **标注来源**：每个关键论点标注来自哪篇参考资料</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">回答格式要求：</span></span><br><span class="line"><span class="string">- 使用 Markdown 格式</span></span><br><span class="line"><span class="string">- 关键数据用表格呈现</span></span><br><span class="line"><span class="string">- 设计建议用编号列表</span></span><br><span class="line"><span class="string">- 回答长度 1500-3000 字&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">build_user_prompt</span>(<span class="params">query: <span class="built_in">str</span>, results: <span class="built_in">list</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    context_parts = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> i, r <span class="keyword">in</span> <span class="built_in">enumerate</span>(results, <span class="number">1</span>):</span><br><span class="line">        meta = r.get(<span class="string">&quot;docKeyValue&quot;</span>, &#123;&#125;)</span><br><span class="line">        </span><br><span class="line">        header = <span class="string">f&quot;### 参考资料 <span class="subst">&#123;i&#125;</span>&quot;</span></span><br><span class="line">        source_line = <span class="string">f&quot;[来源] <span class="subst">&#123;meta.get(<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;unknown&#x27;</span>)&#125;</span> | 《<span class="subst">&#123;meta.get(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;未知&#x27;</span>)&#125;</span>》&quot;</span></span><br><span class="line">        meta_line = (</span><br><span class="line">            <span class="string">f&quot;[分类] <span class="subst">&#123;meta.get(<span class="string">&#x27;category&#x27;</span>, <span class="string">&#x27;&#x27;</span>)&#125;</span> | &quot;</span></span><br><span class="line">            <span class="string">f&quot;[类型] <span class="subst">&#123;meta.get(<span class="string">&#x27;chunk_type&#x27;</span>, <span class="string">&#x27;&#x27;</span>)&#125;</span> | &quot;</span></span><br><span class="line">            <span class="string">f&quot;[领域] <span class="subst">&#123;<span class="string">&#x27;, &#x27;</span>.join(meta.get(<span class="string">&#x27;domains&#x27;</span>, []))&#125;</span>&quot;</span></span><br><span class="line">        )</span><br><span class="line">        </span><br><span class="line">        game_tags = meta.get(<span class="string">&quot;game_tags&quot;</span>, [])</span><br><span class="line">        <span class="keyword">if</span> game_tags:</span><br><span class="line">            meta_line += <span class="string">f&quot; | [游戏] <span class="subst">&#123;<span class="string">&#x27;, &#x27;</span>.join(game_tags)&#125;</span>&quot;</span></span><br><span class="line">        </span><br><span class="line">        content = r[<span class="string">&quot;doc&quot;</span>]</span><br><span class="line">        </span><br><span class="line">        context_parts.append(<span class="string">f&quot;<span class="subst">&#123;header&#125;</span>\n<span class="subst">&#123;source_line&#125;</span>\n<span class="subst">&#123;meta_line&#125;</span>\n\n<span class="subst">&#123;content&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    context = <span class="string">&quot;\n\n---\n\n&quot;</span>.join(context_parts)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="string">f&quot;&quot;&quot;基于以下检索到的专业资料，回答用户的问题。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"><span class="subst">&#123;context&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">---</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">用户问题：<span class="subst">&#123;query&#125;</span>&quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
 <h2 id="系统架构与数据"><a class="markdownIt-Anchor" href="#系统架构与数据"></a> 系统架构与数据</h2>
 <p>系统整体架构：</p>
-
+<img src="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E5%9B%BE.png" class="" title="整体架构图">
 <p><strong>最优检索架构</strong>：采用“混合检索 + 精排”方案，实现 NDCG@5 (1.099) 与 Precision@5 (0.775) 的最高性能表现。</p>
 <p><strong>精排性能增益</strong>：Rerank 环节将检索质量从纯向量的 0.993 提升至 1.099，为系统带来 10.6% 的端到端增长。</p>
 <p><strong>双路能力互补</strong>：Sparse 路确保了“ELO”等专有名词的精确命中，Dense 路则解决了“有趣”等抽象语义的理解难题。</p>

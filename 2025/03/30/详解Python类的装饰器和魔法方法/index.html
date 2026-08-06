@@ -551,7 +551,7 @@
         <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
       </span>
       <span class="links-of-author-item">
-        <a href="https://geo.ecnu.edu.cn/" title="华东师范大学，地图学与地理信息系统 → https:&#x2F;&#x2F;geo.ecnu.edu.cn&#x2F;" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>华东师范大学，地图学与地理信息系统</a>
+        <a href="https://github.com/ATFfang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ATFfang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
       </span>
   </div>
 
@@ -742,6 +742,22 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
         apply(e.matches);
       });
     }
+  })();
+</script>
+
+<script>
+  // 侧边栏：在社交链接中插入纯文本项（华东师范大学，非链接）
+  // social 配置无法表达"纯文字不链接"，故删除配置项后在此处插入
+  (function() {
+    var links = document.querySelector('.links-of-author');
+    if (!links) return;
+    var items = links.querySelectorAll('.links-of-author-item');
+    if (items.length < 2) return; // E-Mail + GitHub 至少两项
+    var text = document.createElement('span');
+    text.className = 'links-of-author-item sidebar-plain-text';
+    text.innerHTML = '<i class="fa fa-graduation-cap fa-fw"></i>华东师范大学，地图学与地理信息系统';
+    // 插在第一个链接（E-Mail）之后
+    items[0].after(text);
   })();
 </script>
 

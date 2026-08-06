@@ -34,9 +34,9 @@
     <category term="LLM应用开发" scheme="https://atffang.github.io/categories/LLM%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/"/>
     
     
-    <category term="OpenGIS" scheme="https://atffang.github.io/tags/OpenGIS/"/>
-    
     <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
+    
+    <category term="OpenGIS" scheme="https://atffang.github.io/tags/OpenGIS/"/>
     
     <category term="harness" scheme="https://atffang.github.io/tags/harness/"/>
     
@@ -65,9 +65,9 @@
     
     <category term="GIS" scheme="https://atffang.github.io/tags/GIS/"/>
     
-    <category term="OpenGIS" scheme="https://atffang.github.io/tags/OpenGIS/"/>
-    
     <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
+    
+    <category term="OpenGIS" scheme="https://atffang.github.io/tags/OpenGIS/"/>
     
     <category term="LLM" scheme="https://atffang.github.io/tags/LLM/"/>
     
@@ -377,11 +377,11 @@
     <category term="编程学习-Python" scheme="https://atffang.github.io/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/"/>
     
     
-    <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
-    
     <category term="LangChain" scheme="https://atffang.github.io/tags/LangChain/"/>
     
     <category term="LangGraph" scheme="https://atffang.github.io/tags/LangGraph/"/>
+    
+    <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
     
   </entry>
   
@@ -402,9 +402,9 @@
     <category term="编程学习-Python" scheme="https://atffang.github.io/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0-Python/"/>
     
     
-    <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
-    
     <category term="LangChain" scheme="https://atffang.github.io/tags/LangChain/"/>
+    
+    <category term="Agent" scheme="https://atffang.github.io/tags/Agent/"/>
     
     <category term="工具调用" scheme="https://atffang.github.io/tags/%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8/"/>
     

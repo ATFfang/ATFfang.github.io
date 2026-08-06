@@ -41,8 +41,8 @@
 <meta property="article:published_time" content="2026-08-03T06:50:20.000Z">
 <meta property="article:modified_time" content="2026-08-06T07:17:50.756Z">
 <meta property="article:author" content="Fang Tianyao">
-<meta property="article:tag" content="Agent">
 <meta property="article:tag" content="OpenGIS">
+<meta property="article:tag" content="Agent">
 <meta property="article:tag" content="harness">
 <meta property="article:tag" content="架构设计">
 <meta name="twitter:card" content="summary">
@@ -775,8 +775,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/Agent/" rel="tag"># Agent</a>
               <a href="/tags/OpenGIS/" rel="tag"># OpenGIS</a>
+              <a href="/tags/Agent/" rel="tag"># Agent</a>
               <a href="/tags/harness/" rel="tag"># harness</a>
               <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="tag"># 架构设计</a>
           </div>
@@ -1028,6 +1028,14 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
 
 
   
+<script>
+  // 强制文章页从顶部开始展示：禁用浏览器滚动位置恢复
+  // 解决"打开文章时页面往下偏移一点"的问题
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+</script>
 
 </body>
 </html>

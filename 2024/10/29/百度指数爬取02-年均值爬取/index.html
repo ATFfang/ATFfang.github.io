@@ -521,6 +521,14 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
 
 
   
+<script>
+  // 强制文章页从顶部开始展示：禁用浏览器滚动位置恢复
+  // 解决"打开文章时页面往下偏移一点"的问题
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+</script>
 
 </body>
 </html>

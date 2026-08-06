@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #1ac7aa;
+  background: #a8ffff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2828,6 +2828,15 @@ hr {
 }
 .post-block {
   animation: fadeInUp 0.5s ease both;
+}
+.post-block.animated {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-block {
+    animation: none;
+    transform: none;
+  }
 }
 .sidebar {
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);

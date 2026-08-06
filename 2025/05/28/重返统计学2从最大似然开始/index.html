@@ -34,8 +34,8 @@
 <meta property="article:modified_time" content="2026-08-06T07:17:50.793Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta property="article:tag" content="统计学">
-<meta property="article:tag" content="最大似然估计">
 <meta property="article:tag" content="概率论">
+<meta property="article:tag" content="最大似然估计">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://atffang.github.io/2025/05/28/重返统计学2从最大似然开始/MLE.png">
 
@@ -261,8 +261,8 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/" rel="tag"># 统计学</a>
-              <a href="/tags/%E6%9C%80%E5%A4%A7%E4%BC%BC%E7%84%B6%E4%BC%B0%E8%AE%A1/" rel="tag"># 最大似然估计</a>
               <a href="/tags/%E6%A6%82%E7%8E%87%E8%AE%BA/" rel="tag"># 概率论</a>
+              <a href="/tags/%E6%9C%80%E5%A4%A7%E4%BC%BC%E7%84%B6%E4%BC%B0%E8%AE%A1/" rel="tag"># 最大似然估计</a>
           </div>
 
         
@@ -514,6 +514,14 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
 
 
   
+<script>
+  // 强制文章页从顶部开始展示：禁用浏览器滚动位置恢复
+  // 解决"打开文章时页面往下偏移一点"的问题
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+</script>
 
 </body>
 </html>

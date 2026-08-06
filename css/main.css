@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #d0bd4d;
+  background: #25abdd;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2628,7 +2628,7 @@ span.exturl:hover {
   color: #c4b8a8;
 }
 .post-body {
-  color: #3d3429;
+  color: #2a231c;
   line-height: 1.8;
 }
 .post-body h1,
@@ -2673,8 +2673,8 @@ blockquote {
   font-style: italic;
 }
 code {
-  background: rgba(232,224,212,0.6);
-  color: #3d3429;
+  background: rgba(232,224,212,0.4);
+  color: #2a231c;
   border-radius: 3px;
   padding: 2px 6px;
   font-size: 0.88em;
@@ -2869,39 +2869,43 @@ figure.highlight .gutter pre,
 figure.highlight .code pre {
   border-radius: 0 !important;
 }
+figure.highlight .gutter pre {
+  color: #8a8178 !important;
+}
 figure.highlight .code pre {
+  color: #24211e !important;
   padding-left: 14px;
 }
 figure.highlight .code pre .class_ {
-  color: #3d8fd1;
+  color: #2d7cb8;
 }
 figure.highlight .code pre .function_ {
-  color: #3d8fd1;
+  color: #2d7cb8;
 }
 figure.highlight .code pre .title {
-  color: #608e7e;
+  color: #4e7a6a;
 }
 figure.highlight .code pre .params {
-  color: #9c9491;
+  color: #7d756d;
   font-style: italic;
 }
 figure.highlight .code pre .meta {
-  color: #dbbc7f;
+  color: #b08a3e;
 }
 figure.highlight .code pre .built_in {
-  color: #f29718;
+  color: #d97e0d;
 }
 figure.highlight .code pre .attr {
-  color: #2c6f44;
+  color: #235c38;
 }
 figure.highlight .code pre .string {
-  color: #2c6f44;
+  color: #235c38;
 }
 figure.highlight .code pre .number {
-  color: #f29718;
+  color: #d97e0d;
 }
 figure.highlight .code pre .comment {
-  color: #9c9491;
+  color: #7d756d;
   font-style: italic;
 }
 .copy-btn {

@@ -406,11 +406,11 @@
 </tbody>
 </table>
 <div style="width: 90%;margin: 0 auto">
-    <canvas id="chart3871" style="height: 300px"></canvas>
+    <canvas id="chart3838" style="height: 300px"></canvas>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 <script type="text/javascript">
-    var ctx = document.getElementById('chart3871').getContext('2d');
+    var ctx = document.getElementById('chart3838').getContext('2d');
     var options =   
     {  
     type: 'line',  
@@ -747,22 +747,6 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
         apply(e.matches);
       });
     }
-  })();
-</script>
-
-<script>
-  // 侧边栏：在社交链接中插入纯文本项（华东师范大学，非链接）
-  // social 配置无法表达"纯文字不链接"，故删除配置项后在此处插入
-  (function() {
-    var links = document.querySelector('.links-of-author');
-    if (!links) return;
-    var items = links.querySelectorAll('.links-of-author-item');
-    if (items.length < 2) return; // E-Mail + GitHub 至少两项
-    var text = document.createElement('span');
-    text.className = 'links-of-author-item sidebar-plain-text';
-    text.innerHTML = '<i class="fa fa-graduation-cap fa-fw"></i>华东师范大学，地图学与地理信息系统';
-    // 插在第一个链接（E-Mail）之后
-    items[0].after(text);
   })();
 </script>
 

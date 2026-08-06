@@ -32,9 +32,9 @@
 <meta property="article:published_time" content="2026-01-11T01:13:19.000Z">
 <meta property="article:modified_time" content="2026-08-06T07:17:50.752Z">
 <meta property="article:author" content="Fang Tianyao">
+<meta property="article:tag" content="Agent">
 <meta property="article:tag" content="LangChain">
 <meta property="article:tag" content="LangGraph">
-<meta property="article:tag" content="Agent">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://atffang.github.io/2026/01/11/LangGraph/">
@@ -364,9 +364,9 @@
 
       <footer class="post-footer">
           <div class="post-tags">
+              <a href="/tags/Agent/" rel="tag"># Agent</a>
               <a href="/tags/LangChain/" rel="tag"># LangChain</a>
               <a href="/tags/LangGraph/" rel="tag"># LangGraph</a>
-              <a href="/tags/Agent/" rel="tag"># Agent</a>
           </div>
 
         
@@ -670,22 +670,6 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
         apply(e.matches);
       });
     }
-  })();
-</script>
-
-<script>
-  // 侧边栏：在社交链接中插入纯文本项（华东师范大学，非链接）
-  // social 配置无法表达"纯文字不链接"，故删除配置项后在此处插入
-  (function() {
-    var links = document.querySelector('.links-of-author');
-    if (!links) return;
-    var items = links.querySelectorAll('.links-of-author-item');
-    if (items.length < 2) return; // E-Mail + GitHub 至少两项
-    var text = document.createElement('span');
-    text.className = 'links-of-author-item sidebar-plain-text';
-    text.innerHTML = '<i class="fa fa-graduation-cap fa-fw"></i>华东师范大学，地图学与地理信息系统';
-    // 插在第一个链接（E-Mail）之后
-    items[0].after(text);
   })();
 </script>
 

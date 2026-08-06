@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #2f7eff;
+  background: #d0bd4d;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2841,6 +2841,103 @@ hr {
   height: 120px;
   background: linear-gradient(180deg, rgba(196,112,75,0.06) 0%, transparent 100%);
   pointer-events: none;
+}
+.post-body img {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+figure.highlight {
+  overflow: hidden;
+}
+figure.highlight .table-container {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+figure.highlight .table-container::-webkit-scrollbar {
+  display: none;
+}
+figure.highlight table {
+  width: 100% !important;
+  background: transparent;
+}
+figure.highlight tr,
+figure.highlight td {
+  background: transparent !important;
+}
+figure.highlight .gutter pre,
+figure.highlight .code pre {
+  border-radius: 0 !important;
+}
+figure.highlight .code pre {
+  padding-left: 14px;
+}
+figure.highlight .code pre .class_ {
+  color: #3d8fd1;
+}
+figure.highlight .code pre .function_ {
+  color: #3d8fd1;
+}
+figure.highlight .code pre .title {
+  color: #608e7e;
+}
+figure.highlight .code pre .params {
+  color: #9c9491;
+  font-style: italic;
+}
+figure.highlight .code pre .meta {
+  color: #dbbc7f;
+}
+figure.highlight .code pre .built_in {
+  color: #f29718;
+}
+figure.highlight .code pre .attr {
+  color: #2c6f44;
+}
+figure.highlight .code pre .string {
+  color: #2c6f44;
+}
+figure.highlight .code pre .number {
+  color: #f29718;
+}
+figure.highlight .code pre .comment {
+  color: #9c9491;
+  font-style: italic;
+}
+.copy-btn {
+  background: rgba(255,255,255,0.92) !important;
+  border: 1px solid #e8e0d4 !important;
+  border-radius: 6px !important;
+  color: #6b5d4f !important;
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+  padding: 2px 10px !important;
+  right: 8px !important;
+  top: 8px !important;
+  box-shadow: 0 1px 4px rgba(42,35,28,0.08);
+  transition: all 0.25s ease;
+}
+.copy-btn:hover {
+  background: #c4704b !important;
+  border-color: #c4704b !important;
+  color: #fff !important;
+}
+.post-body table th {
+  background: rgba(232,224,212,0.35) !important;
+  border: none !important;
+  border-bottom: 1px solid #c4b8a8 !important;
+  font-weight: 600;
+}
+.post-body table td {
+  border: none !important;
+  border-bottom: 1px solid rgba(232,224,212,0.7) !important;
+  background: transparent !important;
+}
+.post-body table tr {
+  background: transparent !important;
+}
+.post-body table tr:hover {
+  background: rgba(232,224,212,0.25) !important;
 }
 @-moz-keyframes fadeInUp {
   from {

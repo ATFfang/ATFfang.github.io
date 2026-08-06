@@ -42,6 +42,13 @@
     lang   : 'zh-CN'
   };
 </script>
+<script>
+  // 尽早禁用浏览器滚动位置恢复（Chrome 在页面加载早期就会尝试恢复，
+  // 必须放在 head 里执行才拦得住；body-end 里设置已太晚）
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
 
   <title>标签: 地理流 | Tianyao' s BLOG</title>
   
@@ -435,12 +442,17 @@ document.querySelectorAll('.pdfobject-container').forEach(element => {
 
   
 <script>
-  // 强制文章页从顶部开始展示：禁用浏览器滚动位置恢复
-  // 解决"打开文章时页面往下偏移一点"的问题
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-  }
-  window.scrollTo(0, 0);
+  // 强制页面从顶部开始展示（head.swig 已禁用浏览器滚动恢复，这里兜底拉回顶部）
+  // load 事件：图片等资源加载完成后浏览器可能再次调整滚动位置
+  // pageshow 事件：覆盖 bfcache（前进/后退）场景
+  var scrollToTop = function() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  scrollToTop();
+  window.addEventListener('load', scrollToTop);
+  window.addEventListener('pageshow', scrollToTop);
 </script>
 
 </body>

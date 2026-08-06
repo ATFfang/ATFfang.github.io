@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #ffe4ff;
+  background: #ff3;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2438,6 +2438,7 @@ span.exturl:hover {
   color: #c4704b;
 }
 .header {
+  background: transparent;
   border-bottom: 1px solid #e8e0d4;
   box-shadow: none;
 }
@@ -2478,35 +2479,36 @@ span.exturl:hover {
   font-weight: 600;
 }
 .sidebar {
-  background: #4a4038;
-  box-shadow: 2px 0 16px rgba(42,35,28,0.1);
+  background: rgba(250,246,241,0.92);
+  border-right: 1px solid #e8e0d4;
+  box-shadow: 2px 0 16px rgba(42,35,28,0.06);
+  backdrop-filter: blur(4px);
 }
 .sidebar-inner {
   padding: 28px 18px;
 }
 .sidebar a,
 .sidebar span.exturl {
-  border-bottom-color: rgba(196,184,168,0.2);
-  color: #d4c8b8;
+  border-bottom-color: rgba(196,184,168,0.4);
+  color: #6b5d4f;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 .sidebar a:hover,
 .sidebar span.exturl:hover {
-  color: #faf6f1;
+  color: #c4704b;
   border-bottom-color: #c4704b;
 }
 .site-author-image {
-  border: 2px solid rgba(196,184,168,0.5);
+  border: none;
   border-radius: 12px;
-  padding: 3px;
-  transition: border-color 0.3s ease, transform 0.3s ease;
+  padding: 0;
+  transition: transform 0.3s ease;
 }
 .site-author-image:hover {
-  border-color: #c4704b;
   transform: scale(1.02);
 }
 .site-author-name {
-  color: #faf6f1;
+  color: #2a231c;
   font-weight: 600;
   letter-spacing: 0.02em;
   margin-top: 12px;
@@ -2520,14 +2522,14 @@ span.exturl:hover {
 .site-state {
   margin-top: 16px;
   padding: 12px 0;
-  border-top: 1px solid rgba(196,184,168,0.2);
-  border-bottom: 1px solid rgba(196,184,168,0.2);
+  border-top: 1px solid #e8e0d4;
+  border-bottom: 1px solid #e8e0d4;
 }
 .site-state-item:not(:first-child) {
-  border-left-color: rgba(196,184,168,0.2);
+  border-left-color: #e8e0d4;
 }
 .site-state-item-count {
-  color: #faf6f1;
+  color: #2a231c;
   font-weight: 700;
 }
 .site-state-item-name {
@@ -2542,7 +2544,7 @@ span.exturl:hover {
 .links-of-author a,
 .links-of-author span.exturl {
   font-size: 0.8em;
-  color: #d4c8b8;
+  color: #6b5d4f;
   border-bottom: none;
   padding: 3px 0;
   display: block;
@@ -2559,10 +2561,10 @@ span.exturl:hover {
 }
 .links-of-author a:hover,
 .links-of-author span.exturl:hover {
-  color: #faf6f1;
+  color: #c4704b;
 }
 .sidebar-nav {
-  border-bottom: 1px solid rgba(196,184,168,0.2);
+  border-bottom: 1px solid #e8e0d4;
   padding-bottom: 10px;
   margin-bottom: 10px;
 }
@@ -2573,7 +2575,7 @@ span.exturl:hover {
   letter-spacing: 0.03em;
 }
 .sidebar-nav-active {
-  color: #faf6f1;
+  color: #2a231c;
   font-weight: 600;
 }
 .post-toc .nav .active > a {
@@ -2581,11 +2583,11 @@ span.exturl:hover {
   border-bottom-color: #c4704b;
 }
 .post-toc ol a {
-  color: #d4c8b8;
+  color: #6b5d4f;
   border-bottom: none;
 }
 .post-toc ol a:hover {
-  color: #faf6f1;
+  color: #c4704b;
 }
 .content-wrap {
   background: transparent;
@@ -2815,8 +2817,25 @@ hr {
 .tag-cloud a:hover {
   color: #c4704b !important;
 }
+.sidebar-toggle {
+  background: rgba(232,224,212,0.7);
+}
 .sidebar-toggle .toggle-line {
-  background: #3d3429;
+  background: #6b5d4f;
+}
+.sidebar-toggle:hover {
+  background: #c4704b;
+}
+.sidebar-toggle:hover .toggle-line {
+  background: #fff;
+}
+::selection {
+  background: rgba(232,224,212,0.8);
+  color: #2a231c;
+}
+.highlight ::selection {
+  background: rgba(196,184,168,0.4);
+  color: inherit;
 }
 .katex,
 .katex-display,

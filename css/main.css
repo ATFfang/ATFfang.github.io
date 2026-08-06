@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #532a50;
+  background: #ffe4ff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2884,21 +2884,6 @@ figure.highlight .gutter pre {
 figure.highlight .code pre {
   color: #24211e !important;
   padding-left: 14px;
-}
-figure.highlight pre br {
-  display: none;
-}
-figure.highlight .gutter pre span.line,
-figure.highlight .code pre span.line {
-  display: block;
-  line-height: 1.6;
-}
-figure.highlight .gutter pre span.line:nth-of-type(even),
-figure.highlight .code pre span.line:nth-of-type(even) {
-  background: rgba(232,224,212,0.18);
-}
-figure.highlight td {
-  vertical-align: top !important;
 }
 figure.highlight .code pre .class_ {
   color: #2d7cb8;

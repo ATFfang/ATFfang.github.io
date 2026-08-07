@@ -1196,7 +1196,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #ffb6f4;
+  background: #f924ff;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -3149,6 +3149,11 @@ html.dark .post-toc .nav .active > a {
 html.dark code {
   background: rgba(255,255,255,0.08);
   color: #ce9178;
+}
+html.dark .post-body div[style*="border-radius"],
+html.dark .post-body span[style*="border-radius"] {
+  color: #2a231c !important;
+  font-weight: 600 !important;
 }
 html.dark figure.highlight,
 html.dark .highlight,

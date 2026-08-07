@@ -30,7 +30,7 @@
 <meta property="og:description" content="在本文中，我们将简要讨论 Agent 系统 input token 失控的问题与治理方法。对于一个 Agent 系统，缺乏有效的 token 治理会导致成本飙升、模型注意力稀释等问题，因此，合理的治理可以给系统带来极大的增益。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-07-07T08:10:53.000Z">
-<meta property="article:modified_time" content="2026-08-07T08:40:42.819Z">
+<meta property="article:modified_time" content="2026-08-07T09:25:04.895Z">
 <meta property="article:author" content="Fang Tianyao">
 <meta property="article:tag" content="Agent">
 <meta property="article:tag" content="LLM">
@@ -212,7 +212,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-08-07 16:40:42" itemprop="dateModified" datetime="2026-08-07T16:40:42+08:00">2026-08-07</time>
+                <time title="修改时间：2026-08-07 17:25:04" itemprop="dateModified" datetime="2026-08-07T17:25:04+08:00">2026-08-07</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -256,8 +256,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>在本文中，我们将简要讨论 Agent 系统 input token 失控的问题与治理方法。对于一个 Agent 系统，缺乏有效的 token 治理会导致成本飙升、模型注意力稀释等问题，因此，合理的治理可以给系统带来极大的增益。<br><span id="more"></span></p>
-<h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h2><p>Anthropic 在 Building Effective Agents 中把 Agent 定义为模型自主驱动的决策过程，即执行过程中每一步都要从环境拿到 ground truth（工具调用结果或代码执行输出）来评估进展，并需要停止条件（最大迭代次数之类）维持控制，这就是当前主流Agent Loop 的本质。而更加具体一些，譬如 Lilian Weng 总结的 ReAct 范式，给出了 <strong>推理（thought）→ 行动（action）→ 观察（observation）</strong> 的循环结构。</p>
+        <p>在本文中，我们将简要讨论 Agent 系统 input token 失控的问题与治理方法。对于一个 Agent 系统，缺乏有效的 token 治理会导致成本飙升、模型注意力稀释等问题，因此，合理的治理可以给系统带来极大的增益。</p>
+<span id="more"></span>
+<h2 id="问题背景"><a class="markdownIt-Anchor" href="#问题背景"></a> 问题背景</h2>
+<p>Anthropic 在 Building Effective Agents 中把 Agent 定义为模型自主驱动的决策过程，即执行过程中每一步都要从环境拿到 ground truth（工具调用结果或代码执行输出）来评估进展，并需要停止条件（最大迭代次数之类）维持控制，这就是当前主流Agent Loop 的本质。而更加具体一些，譬如 Lilian Weng 总结的 ReAct 范式，给出了 <strong>推理（thought）→ 行动（action）→ 观察（observation）</strong> 的循环结构。</p>
 <p>因此，Agent 系统与单次 LLM 调用不同，它在一个循环里反复向模型发起请求：识别意图、调用工具、观察结果、再决定下一步。每一次请求都不是孤立的，系统提示词、工具定义、历史对话、记忆检索结果和工具返回的 observation 都会随请求一并发送，作为模型决策的依据。任务越复杂，循环轮次越多，请求承载的内容就越重。以一个涉及文件读取、代码执行和多轮修正的任务为例，可能在多轮以后，历史与 observation 已经占据请求的主体，而真正影响当前决策的信息只占一小部分。</p>
 <p>这种膨胀并非某一条 prompt 设计不当所致，而是多类上下文来源叠加累积的结果。工具规模随注册数量增长，历史随对话轮次增长，工具返回随数据规模增长，每一类来源都有独立的增长动力，共同推高输入规模。若各模块均可向请求追加内容而缺乏统一约束，input token 便随任务推进持续膨胀，成本、延迟和模型注意力随之恶化。</p>
 <p>在前段时间测试 OpenGIS 项目（指路文章《Agent驱动的GIS客户端OpenGIS：harness的架构升级》）时，发现 OpenGIS 每次任务耗费 token 惊人的高而 cache 命中率惊人的低，譬如一个简单的地图操控任务，其输入 token 可达约50k，但 cache 命中率仅约 10%-20%，这回导致使用成本相当昂贵！分析下来，我总结出下面三个问题：</p>
@@ -268,8 +270,7 @@
 </ul>
 <p>其中，第三点显然是设计意图导致的必有缺陷，因此，我们需要考虑的是升级架构、优化暴露面以降低使用成本，最终的结果是，OpenGIS的简单地图操控任务可以压缩到10-20k，cache 命中率不同的任务场景浮动很大，但是在30%-70%的范围内浮动，整体使用成本降低至了原先的 1/5 甚至更多，但是仍然和主流 Agent 存在差异，还在继续优化。</p>
 <p>本文是对优化工作一些内容的总结凝练，以及对主流相关工作的整理。闲言少叙，我们先来了解一些前置知识。在前文中，我们提到了请求承载的内容膨胀的问题，那么要优化这个问题，必须了解其构成，通常意义上一次 provider request 里的输入可以拆成：</p>
-<script type="math/tex; mode=display">
-T_{\text{input}}
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>T</mi><mtext>input</mtext></msub><mo>=</mo><msub><mi>T</mi><mtext>system</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>tools</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>history</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>memory</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>retrieval</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>observation</mtext></msub><mo>+</mo><msub><mi>T</mi><mtext>scratchpad</mtext></msub></mrow><annotation encoding="application/x-tex">T_{\text{input}}
 =
 T_{\text{system}}
 +
@@ -283,10 +284,14 @@ T_{\text{retrieval}}
 +
 T_{\text{observation}}
 +
-T_{\text{scratchpad}}</script><p>对应到工程对象，就是：</p>
-<script type="math/tex; mode=display">
-\text{系统提示词} + \text{工具 Schema} + \text{历史对话} + \text{长短期记忆} + \text{检索内容} + \text{工具返回结果} + \text{Agent 中间轨迹}</script><p>我们必须首先明确一个事实：<strong>模型看到的上下文是系统组装出来的产物</strong>。如果每个模块都可以往 request 里追加内容，input token 会随着任务轮次、工具数量、文件大小和日志长度一起增长。因此，我们的优化对象不应该只是 prompt 文字，而是更加总体的对象： <strong>provider request 编排</strong>。</p>
-<h2 id="从-Prompt-Engineering-转向-Context-Engineering"><a href="#从-Prompt-Engineering-转向-Context-Engineering" class="headerlink" title="从 Prompt Engineering 转向 Context Engineering"></a>从 Prompt Engineering 转向 Context Engineering</h2><p>我们需要知道，<strong>Prompt Engineering</strong> 与 <strong>Context Engineering</strong> 是两个层次的问题，其中 Prompt 是发送给模型的一段静态文本，Prompt Engineering 处理的是这段文本本身，包括措辞、示例、指令结构等。Context 则是模型在每一轮实际看到的所有内容，包括系统指令、工具定义、历史对话、检索结果和工具返回。</p>
+T_{\text{scratchpad}}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.317502em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">input</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.28055599999999997em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">system</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">tools</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">history</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.15139200000000003em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">memory</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">retrieval</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">observation</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">scratchpad</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<p>对应到工程对象，就是：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>系统提示词</mtext><mo>+</mo><mtext>工具 Schema</mtext><mo>+</mo><mtext>历史对话</mtext><mo>+</mo><mtext>长短期记忆</mtext><mo>+</mo><mtext>检索内容</mtext><mo>+</mo><mtext>工具返回结果</mtext><mo>+</mo><mtext>Agent 中间轨迹</mtext></mrow><annotation encoding="application/x-tex">\text{系统提示词} + \text{工具 Schema} + \text{历史对话} + \text{长短期记忆} + \text{检索内容} + \text{工具返回结果} + \text{Agent 中间轨迹}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">系统提示词</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.77777em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">工具</span><span class="mord"> Schema</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">历史对话</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">长短期记忆</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">检索内容</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord text"><span class="mord cjk_fallback">工具返回结果</span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord text"><span class="mord">Agent </span><span class="mord cjk_fallback">中间轨迹</span></span></span></span></span></span></p>
+<p>我们必须首先明确一个事实：<strong>模型看到的上下文是系统组装出来的产物</strong>。如果每个模块都可以往 request 里追加内容，input token 会随着任务轮次、工具数量、文件大小和日志长度一起增长。因此，我们的优化对象不应该只是 prompt 文字，而是更加总体的对象： <strong>provider request 编排</strong>。</p>
+<h2 id="从-prompt-engineering-转向-context-engineering"><a class="markdownIt-Anchor" href="#从-prompt-engineering-转向-context-engineering"></a> 从 Prompt Engineering 转向 Context Engineering</h2>
+<p>我们需要知道，<strong>Prompt Engineering</strong> 与 <strong>Context Engineering</strong> 是两个层次的问题，其中 Prompt 是发送给模型的一段静态文本，Prompt Engineering 处理的是这段文本本身，包括措辞、示例、指令结构等。Context 则是模型在每一轮实际看到的所有内容，包括系统指令、工具定义、历史对话、检索结果和工具返回。</p>
 <p>Anthropic 在 2025 年的工程实践中给出了更完整的定义：<strong>Context Engineering 是从不断演化的可能信息集合中，策展出进入有限上下文窗口的内容</strong>。与写 prompt 的一次性任务不同，策展发生在每一次决定传给模型什么的时候，是循环中反复执行的动作。</p>
 <p>传统 Agent 实现倾向于 Full Context，即每轮都把系统指令、全部工具、完整历史、所有检索文档和完整工具结果塞进请求，这种方式在任务稍长的背景下就会暴露三个问题：</p>
 <ul>
@@ -295,97 +300,65 @@ T_{\text{scratchpad}}</script><p>对应到工程对象，就是：</p>
 <li><strong>缓存失效</strong>。Prompt caching 依赖稳定前缀，任何每轮变化的内容插进前缀都会让缓存整体失效，可以说，动态内容越多，命中率越低，成本优化空间越小。</li>
 </ul>
 <p>Context Engineering 的目标是<strong>把 Agent 从 Full Context 变成 Context-on-Demand</strong>，对于后者来说，每次请求的流程可以依次加入：</p>
-<div style="
-display:flex;
-align-items:center;
-justify-content:center;
-gap:10px;
-margin:16px 0;
-font-family:Arial,sans-serif;
-font-size:14px;
-">
-
+<div style="display:flex; align-items:center; justify-content:center; gap:10px; margin:16px 0; font-family:Arial,sans-serif; font-size:14px;">
 <div style="padding:8px 14px;border:1px solid #4A90E2;border-radius:8px;background:#F5FAFF;">
 当前任务需要的规则
 </div>
-
-<p><span style="font-size:18px;">➜</span></p>
+<span style="font-size:18px;">➜</span>
 <div style="padding:8px 14px;border:1px solid #50C878;border-radius:8px;background:#F5FFF8;">
 当前任务需要的工具
 </div>
-
-<p><span style="font-size:18px;">➜</span></p>
+<span style="font-size:18px;">➜</span>
 <div style="padding:8px 14px;border:1px solid #F5A623;border-radius:8px;background:#FFFBF3;">
 当前任务状态摘要
 </div>
-
-<p><span style="font-size:18px;">➜</span></p>
+<span style="font-size:18px;">➜</span>
 <div style="padding:8px 14px;border:1px solid #9B59B6;border-radius:8px;background:#FBF8FF;">
 重排后的少量证据
 </div>
-
-<p><span style="font-size:18px;">➜</span></p>
+<span style="font-size:18px;">➜</span>
 <div style="padding:8px 14px;border:1px solid #E67E22;border-radius:8px;background:#FFF8F2;">
 工具结果摘要<br/>+ 证据指针
 </div>
-
-<p>&lt;/div&gt;</p>
+</div>
 <p>从工程实现看，上下文不是静态 prompt，而是每轮根据任务目标、工具状态、历史依赖、检索结果和预算约束生成的 request。这意味着上下文治理不能只靠写好一段 prompt，而要把组装动作本身做成系统的一部分，在介绍完总体的内容后，我们将在下面的章节中介绍具体方法。</p>
-<h2 id="构成一：Token-Budget-Manager"><a href="#构成一：Token-Budget-Manager" class="headerlink" title="构成一：Token Budget Manager"></a>构成一：Token Budget Manager</h2><p>要让 Context-on-Demand 真正落地，系统需要一个显式的 <strong>Token Budget Manager</strong>。它负责为每一类上下文分配预算上限（譬如分配系统提示词、工具 schema、历史对话、检索内容这些部分各自给多少预算），并在请求组装过程中执行这些约束，请求组装过程中的每一步取舍都由这个管理器来裁决。</p>
+<h2 id="构成一token-budget-manager"><a class="markdownIt-Anchor" href="#构成一token-budget-manager"></a> 构成一：Token Budget Manager</h2>
+<p>要让 Context-on-Demand 真正落地，系统需要一个显式的 <strong>Token Budget Manager</strong>。它负责为每一类上下文分配预算上限（譬如分配系统提示词、工具 schema、历史对话、检索内容这些部分各自给多少预算），并在请求组装过程中执行这些约束，请求组装过程中的每一步取舍都由这个管理器来裁决。</p>
 <p>一个常见的请求组装流程是：</p>
-<div style="
-display:flex;
-align-items:center;
-justify-content:center;
-flex-wrap:wrap;
-gap:8px;
-margin:16px 0;
-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-font-size:14px;
-">
-
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px;">
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 用户请求
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 任务识别
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 工具选择
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 记忆检索
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 文档检索
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 工具结果压缩
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
 历史状态压缩
 </div>
-
-<p><span style="color:#94A3B8;">→</span></p>
+<span style="color:#94A3B8;">→</span>
 <div style="padding:8px 14px;border:1px solid #2563EB;border-radius:8px;background:#DBEAFE;font-weight:600;">
 组装 Provider Request
 </div>
-
-<p>&lt;/div&gt;</p>
+</div>
 <p>在组装之前，每一步都受预算约束，譬如说下表展示的预算比例（当然，这只是一个例子，具体的构成与比例还需要按照需求定夺）：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -424,7 +397,6 @@ font-size:14px;
 </tr>
 </tbody>
 </table>
-</div>
 <p>这些比例不是固定配置，而是 <strong>admission control（准入控制）的输入</strong>。</p>
 <p>以一个 RAG 任务为例：系统按照用户提问召回 50 篇文档，压缩后准备注入 top-5，但此时预算只够满足 top-3，同时这一轮的历史对话和工具返回也超了。这时候压缩就要按优先级进行：</p>
 <ul>
@@ -432,7 +404,8 @@ font-size:14px;
 <li>检索内容从 top-5 减少 top-3</li>
 <li>历史只保留最近几轮和任务状态摘要</li>
 </ul>
-<h2 id="构成二：Agent-上下文压缩"><a href="#构成二：Agent-上下文压缩" class="headerlink" title="构成二：Agent 上下文压缩"></a>构成二：Agent 上下文压缩</h2><p>在长任务中，历史对话、工具返回、中间轨迹都会持续累积，上下文不可能无限增长，所以压缩是绕不开的环节。但我们需要明确一点：<strong>压缩不能只按时间截断</strong>，不能简单粗暴地”只保留最近 N 轮”。原因在于 Agent context 的信息价值不由时间顺序决定，而由任务依赖关系决定。</p>
+<h2 id="构成二agent-上下文压缩"><a class="markdownIt-Anchor" href="#构成二agent-上下文压缩"></a> 构成二：Agent 上下文压缩</h2>
+<p>在长任务中，历史对话、工具返回、中间轨迹都会持续累积，上下文不可能无限增长，所以压缩是绕不开的环节。但我们需要明确一点：<strong>压缩不能只按时间截断</strong>，不能简单粗暴地&quot;只保留最近 N 轮&quot;。原因在于 Agent context 的信息价值不由时间顺序决定，而由任务依赖关系决定。</p>
 <p>基于这个原则，需要保留的信息通常包括：</p>
 <ul>
 <li><strong>当前目标</strong></li>
@@ -460,8 +433,9 @@ font-size:14px;
 </ul>
 <p>实际系统中这几种手段通常组合使用，譬如<strong>对历史对话采用摘要加结构化，对工具结果采用占位符，将日志直接截断</strong>。</p>
 <p>压缩的时机也需要考虑。比较好的做法是<strong>触发式压缩</strong>，即当 token 估算超过某个阈值，或者工具结果在上下文中占比过高时，才执行压缩。压缩时还需要保护最近的一小段消息，它们是当前决策的直接上下文，不应该被压掉。</p>
-<h2 id="构成三：工具按需注入"><a href="#构成三：工具按需注入" class="headerlink" title="构成三：工具按需注入"></a>构成三：工具按需注入</h2><p>工具 schema 是 Agent 系统里最容易被低估的 token 来源。工具数量上来以后，每轮注入几十个甚至上百个完整 schema，会让简单任务也背上很重的上下文。</p>
-<p>但”按需注入”不能理解成每轮都去检索一次工具，更常见的形态是把工具分成三层：</p>
+<h2 id="构成三工具按需注入"><a class="markdownIt-Anchor" href="#构成三工具按需注入"></a> 构成三：工具按需注入</h2>
+<p>工具 schema 是 Agent 系统里最容易被低估的 token 来源。工具数量上来以后，每轮注入几十个甚至上百个完整 schema，会让简单任务也背上很重的上下文。</p>
+<p>但&quot;按需注入&quot;不能理解成每轮都去检索一次工具，更常见的形态是把工具分成三层：</p>
 <ul>
 <li><strong>核心工具</strong>：永远注入。文件读写、代码执行这类基础能力几乎所有任务都用得上，不值得为它们做检索。</li>
 <li><strong>领域工具包</strong>：按任务类型成组注入。地图操作、栅格处理、样式调整这类能力，一个任务通常只涉及其中一组。</li>
@@ -473,48 +447,33 @@ font-size:14px;
 <li><strong>语义检索</strong>：把工具描述向量化，用 embedding 检索当前任务相关的工具。好处是灵活，能覆盖规则想不到的组合；代价是每次请求多一次检索开销，而且检索结果有随机性，工具集合不稳定。</li>
 </ul>
 <p>一个常见的流程是：</p>
-<div style="
-display:flex;
-align-items:center;
-justify-content:center;
-flex-wrap:wrap;
-gap:8px;
-margin:16px 0;
-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-font-size:14px;
-line-height:1.3;
-">
-
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 用户任务
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 任务类型识别
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 检索相关工具
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 注入 Tool Schema
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 按需读取 Tool Docs / Skill
 </div>
-
-<p>&lt;/div&gt;</p>
+</div>
 <p>这里有一个容易被忽略的权衡：按需注入的目的是减少 schema 数量，但工具集合如果每轮都在变，prompt 前缀的缓存就会频繁失效。所以注入的粒度很关键。按工具包粒度路由，集合粗、变化少，缓存稳定；按单个工具粒度检索，集合细、每轮都可能不同，缓存命中率会受影响。因此，还需要在实践中进行调整。</p>
 <p>工具 schema 本身也需要压缩。schema 只描述接口，不承载业务文档。推荐形态：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;search_code&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Search project code by symbol or text.&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;parameters&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;query&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;path&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;required&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;query&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>当然，在 schema 里放大量背景、示例、异常分支和业务说明是不合适的。这些内容应该移到工具内部、工具文档、skill 或 operation contract 中。模型需要时再读取，不需要时不进入 request。</p>
-<h2 id="构成四：历史对话转结构化状态"><a href="#构成四：历史对话转结构化状态" class="headerlink" title="构成四：历史对话转结构化状态"></a>构成四：历史对话转结构化状态</h2><p>在多轮对话中，如果每轮都把全部 messages 发给模型，token 会线性增长。因此，替代方案是把历史对话投影成结构化 task state，比如下面这样：</p>
+<h2 id="构成四历史对话转结构化状态"><a class="markdownIt-Anchor" href="#构成四历史对话转结构化状态"></a> 构成四：历史对话转结构化状态</h2>
+<p>在多轮对话中，如果每轮都把全部 messages 发给模型，token 会线性增长。因此，替代方案是把历史对话投影成结构化 task state，比如下面这样：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;goal&quot;</span><span class="punctuation">:</span> <span class="string">&quot;修复角色攻击动画播放但没有伤害的问题&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;confirmed_facts&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;引擎：Unity&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;角色：Knight_01&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;技能 ID：skill_1024&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;现象：动画播放但未触发伤害&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;constraints&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;不能修改公共伤害公式&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;优先检查配置表和动画事件&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;current_hypothesis&quot;</span><span class="punctuation">:</span> <span class="string">&quot;skill_1024 的 damageEvent 配置可能缺失&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;last_action&quot;</span><span class="punctuation">:</span> <span class="string">&quot;已读取 SkillConfig.json&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;open_questions&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;是否只在联机模式复现&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>一段多轮自然语言对话压缩成这样的结构通常只要几百 token，却也保留了决策所需的事实和约束。为了做到这一点，我们需要一个投影机制，常用的做法有两种：</p>
 <ul>
@@ -522,9 +481,8 @@ line-height:1.3;
 <li><strong>全量重建</strong>：每轮把全部历史重新过一遍，重新生成 task state。准确，但每次都付出重读历史的成本，省下的 token 又花回去了。</li>
 </ul>
 <p>在实践中，我们更倾向增量更新，这和前面讲的锚定合并（摘要带上上一轮摘要）是同一个思路，即旧状态是基底，新对话只做增量修补。并且在结构化之后，最近几轮应该保留原文，因为模型经常需要看细节，比如用户的原话、具体的代码片段；更早的轮次才转成 task state。</p>
-<p>不可避免的，task state 必然会丢信息。用户原话的精确措辞（”不要用 X 方法”和”尽量避免 X”语义不同）、长代码片段、日志这类内容都不适合塞进结构化状态。所以当状态里出现矛盾或者模型对某个事实不确定时，应该需要回退到原始对话。</p>
+<p>不可避免的，task state 必然会丢信息。用户原话的精确措辞（&quot;不要用 X 方法&quot;和&quot;尽量避免 X&quot;语义不同）、长代码片段、日志这类内容都不适合塞进结构化状态。所以当状态里出现矛盾或者模型对某个事实不确定时，应该需要回退到原始对话。</p>
 <p>一个较完整的记忆分层可以是：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -561,9 +519,9 @@ line-height:1.3;
 </tr>
 </tbody>
 </table>
-</div>
 <p>这样，「完整历史」可以被拆成多个可检索、可替换、可裁剪的对象。</p>
-<h2 id="构成五：Observation-Compression"><a href="#构成五：Observation-Compression" class="headerlink" title="构成五：Observation Compression"></a>构成五：Observation Compression</h2><p>工具返回结果是另一个 token 黑洞。例如代码搜索返回多个文件，而每个文件可能存在几百行，如果全部进入上下文无疑会大大增加模型的压力与噪声。因此工具结果也需要压缩，但压缩发生在哪一层，决定了整个系统的形态。</p>
+<h2 id="构成五observation-compression"><a class="markdownIt-Anchor" href="#构成五observation-compression"></a> 构成五：Observation Compression</h2>
+<p>工具返回结果是另一个 token 黑洞。例如代码搜索返回多个文件，而每个文件可能存在几百行，如果全部进入上下文无疑会大大增加模型的压力与噪声。因此工具结果也需要压缩，但压缩发生在哪一层，决定了整个系统的形态。</p>
 <p>相比工具侧压缩，现阶段在实践中更推荐的做法是运行时统一处理，即工具照常返回完整结果，由统一的 observation normalizer 转成标准结构，比如：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;skill_1024 未配置 damageEvent，可能导致动画播放但无伤害。&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;evidence&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Config/SkillConfig.json&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;line&quot;</span><span class="punctuation">:</span> <span class="number">903</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;field&quot;</span><span class="punctuation">:</span> <span class="string">&quot;damageEvent&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;value&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">null</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Combat/SkillExecutor.cs&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;line&quot;</span><span class="punctuation">:</span> <span class="number">128</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;snippet&quot;</span><span class="punctuation">:</span> <span class="string">&quot;if (config.damageEvent != null) TriggerDamageEvent();&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;next_step&quot;</span><span class="punctuation">:</span> <span class="string">&quot;确认该技能是否应该配置 damageEvent。&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>这个结构中的字段可以包括：</p>
@@ -574,55 +532,38 @@ line-height:1.3;
 <li>完整内容落盘，模型需要时再通过 artifact id、文件路径、行号读取。</li>
 </ul>
 <p>压缩的时机有两层。第一层是工具结果进入上下文之前，先压成 summary 加 evidence；第二层是进入上下文之后，按预算触发式再次压缩，旧的 observation 退化成占位符，只保留工具名和调用 id，对应前文所说的触发式压缩。</p>
-<h2 id="构成六：如果你需要-RAG-检索，那请多召回少注入"><a href="#构成六：如果你需要-RAG-检索，那请多召回少注入" class="headerlink" title="构成六：如果你需要 RAG 检索，那请多召回少注入"></a>构成六：如果你需要 RAG 检索，那请多召回少注入</h2><p>RAG Agent 容易把 top-n chunk 直接送进模型，<strong>但检索是廉价的，注入是昂贵的</strong>。召回阶段多取几篇文档几乎不花什么代价，但多注入多注入的 chunk 会占用模型的注意力，因此，正确的关系应该是<strong>召回阶段尽量多，注入阶段尽量少</strong>。</p>
+<h2 id="构成六如果你需要-rag-检索那请多召回少注入"><a class="markdownIt-Anchor" href="#构成六如果你需要-rag-检索那请多召回少注入"></a> 构成六：如果你需要 RAG 检索，那请多召回少注入</h2>
+<p>RAG Agent 容易把 top-n chunk 直接送进模型，<strong>但检索是廉价的，注入是昂贵的</strong>。召回阶段多取几篇文档几乎不花什么代价，但多注入多注入的 chunk 会占用模型的注意力，因此，正确的关系应该是<strong>召回阶段尽量多，注入阶段尽量少</strong>。</p>
 <p>一个典型的流程是：</p>
-<div style="
-display:flex;
-align-items:center;
-justify-content:center;
-flex-wrap:wrap;
-gap:8px;
-margin:16px 0;
-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-font-size:14px;
-line-height:1.3;
-">
-
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 用户问题
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 Query Rewrite /<br>Decomposition
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 Recall<br>Top-20 / Top-50
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 Rerank
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 Select<br>Top-3 / Top-5
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #D1D5DB;border-radius:8px;background:#F9FAFB;">
 Chunk<br>Compression
 </div>
-
-<p><span style="color:#9CA3AF;font-size:18px;">→</span></p>
+<span style="color:#9CA3AF;font-size:18px;">→</span>
 <div style="padding:8px 16px;border:1px solid #3B82F6;border-radius:8px;background:#EFF6FF;font-weight:600;">
 注入最终证据
 </div>
-
-<p>&lt;/div&gt;</p>
+</div>
 <p>中间的每一步都有它的作用：</p>
 <ul>
 <li>Query Rewrite 把模糊的用户问题改写成适合检索的形式</li>
@@ -632,7 +573,8 @@ Chunk<br>Compression
 <p>最终进入 request 的不是文档堆，而是压缩后的证据对象：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;evidence_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;doc_142_p3_chunk_2&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;该文档规定技能伤害必须通过 damageEvent 触发。&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;quote&quot;</span><span class="punctuation">:</span> <span class="string">&quot;damageEvent is required for damage-triggering animation events.&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;source&quot;</span><span class="punctuation">:</span> <span class="string">&quot;CombatDesign.md#L120-L135&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>每个证据对象都带 source 引用，模型引用时有据可查。这样既降低了 token，也提高了可追溯性。</p>
-<h2 id="构成七：Prompt-Compression-与-Context-Compression-模型"><a href="#构成七：Prompt-Compression-与-Context-Compression-模型" class="headerlink" title="构成七：Prompt Compression 与 Context Compression 模型"></a>构成七：Prompt Compression 与 Context Compression 模型</h2><p><strong>Prompt Compression</strong> 可以用于历史对话、长文档、工具 observation、日志、搜索结果和 Agent 轨迹。它的目标不是把句子统一缩短，而是删除低信息量 token，保留对决策有意义的实体和约束。</p>
+<h2 id="构成七prompt-compression-与-context-compression-模型"><a class="markdownIt-Anchor" href="#构成七prompt-compression-与-context-compression-模型"></a> 构成七：Prompt Compression 与 Context Compression 模型</h2>
+<p><strong>Prompt Compression</strong> 可以用于历史对话、长文档、工具 observation、日志、搜索结果和 Agent 轨迹。它的目标不是把句子统一缩短，而是删除低信息量 token，保留对决策有意义的实体和约束。</p>
 <p>适合保留的内容：</p>
 <ul>
 <li>文件路径</li>
@@ -653,10 +595,13 @@ Chunk<br>Compression
 <li>中间推理过程</li>
 <li>非关键输出样本</li>
 </ul>
-<p>压缩前：<br><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这个函数主要用于在玩家点击攻击按钮之后，根据当前角色状态、技能冷却状态、资源消耗情况以及目标选择结果，最终决定是否可以释放技能。</span><br></pre></td></tr></table></figure></p>
-<p>压缩后：<br><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">函数：判断玩家点击后是否可释放技能。</span><br><span class="line">依赖：角色状态、CD、资源、目标。</span><br></pre></td></tr></table></figure></p>
+<p>压缩前：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这个函数主要用于在玩家点击攻击按钮之后，根据当前角色状态、技能冷却状态、资源消耗情况以及目标选择结果，最终决定是否可以释放技能。</span><br></pre></td></tr></table></figure>
+<p>压缩后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">函数：判断玩家点击后是否可释放技能。</span><br><span class="line">依赖：角色状态、CD、资源、目标。</span><br></pre></td></tr></table></figure>
 <p>可以注意到，压缩后保留的全是实体（函数、依赖项），删掉的都是修饰和解释。执行压缩的方式有多种，譬如规则提取实体，或者使用专门的压缩模型，抑或直接让主 LLM 完成，三者成本和质量不同，需要开发者按场景选择。</p>
-<h2 id="构成八：Agent-轨迹压缩"><a href="#构成八：Agent-轨迹压缩" class="headerlink" title="构成八：Agent 轨迹压缩"></a>构成八：Agent 轨迹压缩</h2><p>ReAct 类 Agent 每一步都会产生一组：</p>
+<h2 id="构成八agent-轨迹压缩"><a class="markdownIt-Anchor" href="#构成八agent-轨迹压缩"></a> 构成八：Agent 轨迹压缩</h2>
+<p>ReAct 类 Agent 每一步都会产生一组：</p>
 <ul>
 <li>Thought</li>
 <li>Action</li>
@@ -674,108 +619,72 @@ Chunk<br>Compression
 </ul>
 <p>例如，一段十几步的排查过程可以压缩成：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;investigation_summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;当前证据指向 skill_1024 的 damageEvent 配置缺失。&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;evidence&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;SkillConfig.json: skill_1024.damageEvent = null&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;SkillExecutor.cs: damageEvent 为空时不触发伤害&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;discarded_paths&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;已检查技能 ID 存在，不是 ID 错误&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>discarded_paths 是这段压缩的关键，它把模型”查过但无关”的路径也记录下来，模型后续不会重复排查。这类压缩比删除旧消息更可靠，因为它保留了当前决策仍然依赖的证据，也保留了已经排除的可能。</p>
-<h2 id="构成九：大文件使用-Artifact-Pointer"><a href="#构成九：大文件使用-Artifact-Pointer" class="headerlink" title="构成九：大文件使用 Artifact Pointer"></a>构成九：大文件使用 Artifact Pointer</h2><p>代码、日志、PDF、表格、图片和地理数据不应该直接进入 prompt，它们应该作为 artifact 存储，上下文里只放必要摘要和引用：</p>
+<p>discarded_paths 是这段压缩的关键，它把模型&quot;查过但无关&quot;的路径也记录下来，模型后续不会重复排查。这类压缩比删除旧消息更可靠，因为它保留了当前决策仍然依赖的证据，也保留了已经排除的可能。</p>
+<h2 id="构成九大文件使用-artifact-pointer"><a class="markdownIt-Anchor" href="#构成九大文件使用-artifact-pointer"></a> 构成九：大文件使用 Artifact Pointer</h2>
+<p>代码、日志、PDF、表格、图片和地理数据不应该直接进入 prompt，它们应该作为 artifact 存储，上下文里只放必要摘要和引用：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;artifact_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;log_2026_06_08_001&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;battle_log&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;日志中未出现 DamageEvent.Trigger，攻击动画正常播放。&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;time_range&quot;</span><span class="punctuation">:</span> <span class="string">&quot;10:21:00-10:23:00&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;relevant_lines&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="number">1203</span><span class="punctuation">,</span> <span class="number">1210</span><span class="punctuation">,</span> <span class="number">1224</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>指针里应当包含两个内容：</p>
 <ul>
 <li><strong>摘要</strong>（模型判断是否需要看细节的依据）</li>
 <li><strong>定位信息</strong>（文件、时间范围、相关行号）</li>
 </ul>
-<p>模型需要细节时再发起读取：<br><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read_artifact_lines(log_2026_06_08_001, 1200, 1230)</span><br></pre></td></tr></table></figure></p>
+<p>模型需要细节时再发起读取：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read_artifact_lines(log_2026_06_08_001, 1200, 1230)</span><br></pre></td></tr></table></figure>
 <p>大部分轮次模型只需要摘要，只有少数时候需要精读，这样可以按需支付精读的代价。当然，指针同样存在生命周期问题，artifact 落盘后需要约定保留策略，任务结束或不再被引用时清理，否则存储会无限增长。</p>
-<h2 id="构成十：多-Agent-只传结构化摘要"><a href="#构成十：多-Agent-只传结构化摘要" class="headerlink" title="构成十：多 Agent 只传结构化摘要"></a>构成十：多 Agent 只传结构化摘要</h2><p>多 Agent 系统容易发生 token 乘法级别的增长，试想我们激活了 N 个子 Agent，如果每个都拿到完整上下文，再把完整过程传回主 Agent，上下文不是线性增长，而是乘数增长。实际上，<strong>每个子 Agent 的工作过程对主 Agent 并没有价值，主 Agent 只需要结论和关键依据</strong>。</p>
+<h2 id="构成十多-agent-只传结构化摘要"><a class="markdownIt-Anchor" href="#构成十多-agent-只传结构化摘要"></a> 构成十：多 Agent 只传结构化摘要</h2>
+<p>多 Agent 系统容易发生 token 乘法级别的增长，试想我们激活了 N 个子 Agent，如果每个都拿到完整上下文，再把完整过程传回主 Agent，上下文不是线性增长，而是乘数增长。实际上，<strong>每个子 Agent 的工作过程对主 Agent 并没有价值，主 Agent 只需要结论和关键依据</strong>。</p>
 <p>更合适的通信格式是：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;reviewer&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;result&quot;</span><span class="punctuation">:</span> <span class="string">&quot;fail&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;issues&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;severity&quot;</span><span class="punctuation">:</span> <span class="string">&quot;high&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;SkillExecutor.cs&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;line&quot;</span><span class="punctuation">:</span> <span class="number">128</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;未处理 damageEvent 为空时的错误提示&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;suggested_action&quot;</span><span class="punctuation">:</span> <span class="string">&quot;补充配置校验，不直接改伤害公式&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>也就是每种角色只传自己的产出物：</p>
-<div style="
-display:flex;
-justify-content:center;
-align-items:stretch;
-gap:14px;
-margin:16px 0;
-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-font-size:14px;
-flex-wrap:wrap;
-">
-
-<div style="
-width:190px;
-padding:14px;
-border:1px solid #BFD7FF;
-background:#F4F8FF;
-border-radius:10px;
-box-sizing:border-box;
-">
+<div style="display:flex; justify-content:center; align-items:stretch; gap:14px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; flex-wrap:wrap;">
+<div style="width:190px; padding:14px; border:1px solid #BFD7FF; background:#F4F8FF; border-radius:10px; box-sizing:border-box;">
 <div style="font-weight:700;color:#2F5FD0;margin-bottom:8px;text-align:center;">
 Research Agent
 </div>
 <div>• Conclusion</div>
 <div>• Evidence ID</div>
 </div>
-
-<div style="
-width:190px;
-padding:14px;
-border:1px solid #BFE8CF;
-background:#F4FCF7;
-border-radius:10px;
-box-sizing:border-box;
-">
+<div style="width:190px; padding:14px; border:1px solid #BFE8CF; background:#F4FCF7; border-radius:10px; box-sizing:border-box;">
 <div style="font-weight:700;color:#2E8B57;margin-bottom:8px;text-align:center;">
 Planner
 </div>
 <div>• Task Decomposition</div>
 <div>• Constraints</div>
 </div>
-
-<div style="
-width:190px;
-padding:14px;
-border:1px solid #F5D89B;
-background:#FFF9F0;
-border-radius:10px;
-box-sizing:border-box;
-">
+<div style="width:190px; padding:14px; border:1px solid #F5D89B; background:#FFF9F0; border-radius:10px; box-sizing:border-box;">
 <div style="font-weight:700;color:#B7791F;margin-bottom:8px;text-align:center;">
 Coder
 </div>
 <div>• Code Diff</div>
 <div>• Change Summary</div>
 </div>
-
-<div style="
-width:190px;
-padding:14px;
-border:1px solid #F2B8B5;
-background:#FFF5F5;
-border-radius:10px;
-box-sizing:border-box;
-">
+<div style="width:190px; padding:14px; border:1px solid #F2B8B5; background:#FFF5F5; border-radius:10px; box-sizing:border-box;">
 <div style="font-weight:700;color:#C0392B;margin-bottom:8px;text-align:center;">
 Reviewer
 </div>
 <div>• Issue List</div>
 <div>• Risk Level</div>
 </div>
-
-<p>&lt;/div&gt;</p>
-<p>跨 Agent 传递的是接口和摘要，不是完整上下文。这要求每个 Agent 的出口是结构化的 handoff contract，而不是一段对话记录。</p>
-<h2 id="构成十一：模型分层"><a href="#构成十一：模型分层" class="headerlink" title="构成十一：模型分层"></a>构成十一：模型分层</h2><p>减少 input token 还可以通过模型分层实现，把工作按难度拆给不同规模的模型：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">小模型 / 规则系统：</span><br><span class="line">- 意图识别</span><br><span class="line">- 工具选择</span><br><span class="line">- 文档初筛</span><br><span class="line">- 历史摘要</span><br><span class="line">- 风险判断</span><br><span class="line"></span><br><span class="line">大模型：</span><br><span class="line">- 复杂推理</span><br><span class="line">- 代码生成</span><br><span class="line">- 方案设计</span><br><span class="line">- 最终决策</span><br></pre></td></tr></table></figure>
-<p>思路是大模型不需要看到所有原始输入，只接收筛选和压缩后的高价值上下文，前置的小模型承担 routing、summarization、filtering、guard 这类低风险任务。</p>
-<p>需要说明的是，模型分层不是免费的，即多一层调用就多一次延迟，小模型的选择质量可能影响下游，两个模型的输出一致性也需要维护。它的适用场景是高频、低风险、判定规则明确的任务，比如意图识别和文档初筛；复杂推理和最终决策仍然留给大模型。</p>
-<h2 id="构成十二：Prompt-Caching-的边界"><a href="#构成十二：Prompt-Caching-的边界" class="headerlink" title="构成十二：Prompt Caching 的边界"></a>构成十二：Prompt Caching 的边界</h2><p>Prompt Caching 通常降低的是重复前缀的计算成本和延迟，不一定减少发送给 provider 的 input token。它的收益来自前缀复用，所以只对稳定内容有效：</p>
+</div>
+跨 Agent 传递的是接口和摘要，不是完整上下文。这要求每个 Agent 的出口是结构化的 handoff contract，而不是一段对话记录。
+<h2 id="构成十一模型分层"><a class="markdownIt-Anchor" href="#构成十一模型分层"></a> 构成十一：模型分层</h2>
+<p>减少 input token 还可以通过模型分层实现，把工作按难度拆给不同规模的模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">小模型 / 规则系统：</span><br><span class="line">- 意图识别</span><br><span class="line">- 工具选择</span><br><span class="line">- 文档初筛</span><br><span class="line">- 历史摘要</span><br><span class="line">- 风险判断</span><br><span class="line">大模型：</span><br><span class="line">- 复杂推理</span><br><span class="line">- 代码生成</span><br><span class="line">- 方案设计</span><br><span class="line">- 最终决策</span><br></pre></td></tr></table></figure>
+<p>思路是大模型不需要看到所有原始输入，只接收筛选和压缩后的高价值上下文，前置的小模型承担 routing、summarization、filtering、guard 这类低风险任务。<br />
+需要说明的是，模型分层不是免费的，即多一层调用就多一次延迟，小模型的选择质量可能影响下游，两个模型的输出一致性也需要维护。它的适用场景是高频、低风险、判定规则明确的任务，比如意图识别和文档初筛；复杂推理和最终决策仍然留给大模型。</p>
+<h2 id="构成十二prompt-caching-的边界"><a class="markdownIt-Anchor" href="#构成十二prompt-caching-的边界"></a> 构成十二：Prompt Caching 的边界</h2>
+<p>Prompt Caching 通常降低的是重复前缀的计算成本和延迟，不一定减少发送给 provider 的 input token。它的收益来自前缀复用，所以只对稳定内容有效：</p>
 <ul>
 <li>稳定 system prompt</li>
 <li>稳定工具 schema 顺序</li>
 <li>固定公共规则前缀</li>
-<li>动态内容后置</li>
+<li>动态内容后置<br />
+也就是说，缓存的前提是前缀稳定。如果每轮动态内容插在前缀里，缓存频繁失效，收益就很小。但缓存不能替代上下文治理：即使缓存命中率很高，每轮仍然发送长 system prompt、长工具 schema、长历史和长 observation，系统结构依然臃肿，只是重复部分便宜了一些。<br />
+两者的分工可以这样区分：</li>
 </ul>
-<p>也就是说，缓存的前提是前缀稳定。如果每轮动态内容插在前缀里，缓存频繁失效，收益就很小。但缓存不能替代上下文治理：即使缓存命中率很高，每轮仍然发送长 system prompt、长工具 schema、长历史和长 observation，系统结构依然臃肿，只是重复部分便宜了一些。</p>
-<p>两者的分工可以这样区分：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Prompt Caching 解决重复前缀的计算成本。</span><br><span class="line">Context Engineering 解决不该进入 request 的输入。</span><br></pre></td></tr></table></figure>
-<h2 id="构成十三：可观测性与评测"><a href="#构成十三：可观测性与评测" class="headerlink" title="构成十三：可观测性与评测"></a>构成十三：可观测性与评测</h2><p>Input token 治理必须有观测面，建议至少记录这些指标：</p>
+<h2 id="构成十三可观测性与评测"><a class="markdownIt-Anchor" href="#构成十三可观测性与评测"></a> 构成十三：可观测性与评测</h2>
+<p>Input token 治理必须有观测面，建议至少记录这些指标：</p>
 <ul>
 <li>每轮 input tokens、output tokens</li>
 <li>system / tools / history / memory / retrieval / observation 分项 token</li>
@@ -785,10 +694,9 @@ Reviewer
 <li>tool observation 被压缩前后的大小</li>
 <li>artifact pointer 数量</li>
 <li>auto-final 命中次数</li>
-<li>request pressure：ok / warm / hot / overflow</li>
+<li>request pressure：ok / warm / hot / overflow<br />
+更进一步，可以建立固定的 regression case，把典型任务变成可比较的基准：</li>
 </ul>
-<p>更进一步，可以建立固定的 regression case，把典型任务变成可比较的基准：</p>
-<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -823,9 +731,19 @@ Reviewer
 </tr>
 </tbody>
 </table>
-</div>
 <p>每个 case 记录 total tokens、schema tokens、history tokens、observation tokens、cache hit、LLM call count 等指标，以帮助我们进行量化观测。</p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p>[1] Anthropic. Building Effective Agents[EB/OL]. (2024-12-19). <a target="_blank" rel="noopener" href="https://www.anthropic.com/research/building-effective-agents">https://www.anthropic.com/research/building-effective-agents</a>.<br>[2] Weng L. LLM Powered Autonomous Agents[EB/OL]. (2023-06-23). <a target="_blank" rel="noopener" href="https://lilianweng.github.io/posts/2023-06-23-agent/">https://lilianweng.github.io/posts/2023-06-23-agent/</a>.<br>[3] Anthropic. Effective Context Engineering for AI Agents[EB/OL]. (2025-09-29). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a>.<br>[4] Liu N F, Lin K, Hewitt J, et al. Lost in the Middle: How Language Models Use Long Contexts[J]. Transactions of the Association for Computational Linguistics, 2024, 12: 157-173. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2307.03172">https://arxiv.org/abs/2307.03172</a>.<br>[5] Yao S, Zhao J, Yu D, et al. ReAct: Synergizing Reasoning and Acting in Language Models[C]. ICLR 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2210.03629">https://arxiv.org/abs/2210.03629</a>.<br>[6] Anthropic. Contextual Retrieval[EB/OL]. (2024-09-19). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/contextual-retrieval">https://www.anthropic.com/engineering/contextual-retrieval</a>.<br>[7] Anthropic. Prompt Caching[EB/OL]. (2024-08-07). <a target="_blank" rel="noopener" href="https://www.anthropic.com/news/prompt-caching">https://www.anthropic.com/news/prompt-caching</a>.<br>[8] Jiang H, Wu Q, Lin C, et al. LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models[C]. EMNLP 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2310.05736">https://arxiv.org/abs/2310.05736</a>.<br>[9] Packer C, Wooders S, Lin K, et al. MemGPT: Towards LLMs as Operating Systems[EB/OL]. (2023-10). <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2310.08560">https://arxiv.org/abs/2310.08560</a>.<br>[10] OpenAI. A Practical Guide to Building Agents[EB/OL]. (2024-12). <a target="_blank" rel="noopener" href="https://openai.com/index/a-practical-guide-to-building-agents/">https://openai.com/index/a-practical-guide-to-building-agents/</a>.<br>[11] Anthropic. Claude Code Best Practices[EB/OL]. (2025-02-21). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/claude-code-best-practices">https://www.anthropic.com/engineering/claude-code-best-practices</a>.</p>
+<h2 id="参考文章"><a class="markdownIt-Anchor" href="#参考文章"></a> 参考文章</h2>
+<p>[1] Anthropic. Building Effective Agents[EB/OL]. (2024-12-19). <a target="_blank" rel="noopener" href="https://www.anthropic.com/research/building-effective-agents">https://www.anthropic.com/research/building-effective-agents</a>.</p>
+<p>[2] Weng L. LLM Powered Autonomous Agents[EB/OL]. (2023-06-23). <a target="_blank" rel="noopener" href="https://lilianweng.github.io/posts/2023-06-23-agent/">https://lilianweng.github.io/posts/2023-06-23-agent/</a>.</p>
+<p>[3] Anthropic. Effective Context Engineering for AI Agents[EB/OL]. (2025-09-29). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a>.</p>
+<p>[4] Liu N F, Lin K, Hewitt J, et al. Lost in the Middle: How Language Models Use Long Contexts[J]. Transactions of the Association for Computational Linguistics, 2024, 12: 157-173. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2307.03172">https://arxiv.org/abs/2307.03172</a>.</p>
+<p>[5] Yao S, Zhao J, Yu D, et al. ReAct: Synergizing Reasoning and Acting in Language Models[C]. ICLR 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2210.03629">https://arxiv.org/abs/2210.03629</a>.</p>
+<p>[6] Anthropic. Contextual Retrieval[EB/OL]. (2024-09-19). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/contextual-retrieval">https://www.anthropic.com/engineering/contextual-retrieval</a>.</p>
+<p>[7] Anthropic. Prompt Caching[EB/OL]. (2024-08-07). <a target="_blank" rel="noopener" href="https://www.anthropic.com/news/prompt-caching">https://www.anthropic.com/news/prompt-caching</a>.</p>
+<p>[8] Jiang H, Wu Q, Lin C, et al. LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models[C]. EMNLP 2023. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2310.05736">https://arxiv.org/abs/2310.05736</a>.</p>
+<p>[9] Packer C, Wooders S, Lin K, et al. MemGPT: Towards LLMs as Operating Systems[EB/OL]. (2023-10). <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2310.08560">https://arxiv.org/abs/2310.08560</a>.</p>
+<p>[10] OpenAI. A Practical Guide to Building Agents[EB/OL]. (2024-12). <a target="_blank" rel="noopener" href="https://openai.com/index/a-practical-guide-to-building-agents/">https://openai.com/index/a-practical-guide-to-building-agents/</a>.</p>
+<p>[11] Anthropic. Claude Code Best Practices[EB/OL]. (2025-02-21). <a target="_blank" rel="noopener" href="https://www.anthropic.com/engineering/claude-code-best-practices">https://www.anthropic.com/engineering/claude-code-best-practices</a>.</p>
 
     </div>
 
@@ -913,7 +831,7 @@ Reviewer
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-Prompt-Engineering-%E8%BD%AC%E5%90%91-Context-Engineering"><span class="nav-number">2.</span> <span class="nav-text">从 Prompt Engineering 转向 Context Engineering</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%80%EF%BC%9AToken-Budget-Manager"><span class="nav-number">3.</span> <span class="nav-text">构成一：Token Budget Manager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%BA%8C%EF%BC%9AAgent-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8E%8B%E7%BC%A9"><span class="nav-number">4.</span> <span class="nav-text">构成二：Agent 上下文压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E6%8C%89%E9%9C%80%E6%B3%A8%E5%85%A5"><span class="nav-number">5.</span> <span class="nav-text">构成三：工具按需注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%9B%9B%EF%BC%9A%E5%8E%86%E5%8F%B2%E5%AF%B9%E8%AF%9D%E8%BD%AC%E7%BB%93%E6%9E%84%E5%8C%96%E7%8A%B6%E6%80%81"><span class="nav-number">6.</span> <span class="nav-text">构成四：历史对话转结构化状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%BA%94%EF%BC%9AObservation-Compression"><span class="nav-number">7.</span> <span class="nav-text">构成五：Observation Compression</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%85%AD%EF%BC%9A%E5%A6%82%E6%9E%9C%E4%BD%A0%E9%9C%80%E8%A6%81-RAG-%E6%A3%80%E7%B4%A2%EF%BC%8C%E9%82%A3%E8%AF%B7%E5%A4%9A%E5%8F%AC%E5%9B%9E%E5%B0%91%E6%B3%A8%E5%85%A5"><span class="nav-number">8.</span> <span class="nav-text">构成六：如果你需要 RAG 检索，那请多召回少注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%83%EF%BC%9APrompt-Compression-%E4%B8%8E-Context-Compression-%E6%A8%A1%E5%9E%8B"><span class="nav-number">9.</span> <span class="nav-text">构成七：Prompt Compression 与 Context Compression 模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%85%AB%EF%BC%9AAgent-%E8%BD%A8%E8%BF%B9%E5%8E%8B%E7%BC%A9"><span class="nav-number">10.</span> <span class="nav-text">构成八：Agent 轨迹压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B9%9D%EF%BC%9A%E5%A4%A7%E6%96%87%E4%BB%B6%E4%BD%BF%E7%94%A8-Artifact-Pointer"><span class="nav-number">11.</span> <span class="nav-text">构成九：大文件使用 Artifact Pointer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%EF%BC%9A%E5%A4%9A-Agent-%E5%8F%AA%E4%BC%A0%E7%BB%93%E6%9E%84%E5%8C%96%E6%91%98%E8%A6%81"><span class="nav-number">12.</span> <span class="nav-text">构成十：多 Agent 只传结构化摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%B8%80%EF%BC%9A%E6%A8%A1%E5%9E%8B%E5%88%86%E5%B1%82"><span class="nav-number">13.</span> <span class="nav-text">构成十一：模型分层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%BA%8C%EF%BC%9APrompt-Caching-%E7%9A%84%E8%BE%B9%E7%95%8C"><span class="nav-number">14.</span> <span class="nav-text">构成十二：Prompt Caching 的边界</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%B8%89%EF%BC%9A%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E4%B8%8E%E8%AF%84%E6%B5%8B"><span class="nav-number">15.</span> <span class="nav-text">构成十三：可观测性与评测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">16.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text"> 问题背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E-prompt-engineering-%E8%BD%AC%E5%90%91-context-engineering"><span class="nav-number">2.</span> <span class="nav-text"> 从 Prompt Engineering 转向 Context Engineering</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%80token-budget-manager"><span class="nav-number">3.</span> <span class="nav-text"> 构成一：Token Budget Manager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%BA%8Cagent-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8E%8B%E7%BC%A9"><span class="nav-number">4.</span> <span class="nav-text"> 构成二：Agent 上下文压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%89%E5%B7%A5%E5%85%B7%E6%8C%89%E9%9C%80%E6%B3%A8%E5%85%A5"><span class="nav-number">5.</span> <span class="nav-text"> 构成三：工具按需注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%9B%9B%E5%8E%86%E5%8F%B2%E5%AF%B9%E8%AF%9D%E8%BD%AC%E7%BB%93%E6%9E%84%E5%8C%96%E7%8A%B6%E6%80%81"><span class="nav-number">6.</span> <span class="nav-text"> 构成四：历史对话转结构化状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%BA%94observation-compression"><span class="nav-number">7.</span> <span class="nav-text"> 构成五：Observation Compression</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%85%AD%E5%A6%82%E6%9E%9C%E4%BD%A0%E9%9C%80%E8%A6%81-rag-%E6%A3%80%E7%B4%A2%E9%82%A3%E8%AF%B7%E5%A4%9A%E5%8F%AC%E5%9B%9E%E5%B0%91%E6%B3%A8%E5%85%A5"><span class="nav-number">8.</span> <span class="nav-text"> 构成六：如果你需要 RAG 检索，那请多召回少注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B8%83prompt-compression-%E4%B8%8E-context-compression-%E6%A8%A1%E5%9E%8B"><span class="nav-number">9.</span> <span class="nav-text"> 构成七：Prompt Compression 与 Context Compression 模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%85%ABagent-%E8%BD%A8%E8%BF%B9%E5%8E%8B%E7%BC%A9"><span class="nav-number">10.</span> <span class="nav-text"> 构成八：Agent 轨迹压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E4%B9%9D%E5%A4%A7%E6%96%87%E4%BB%B6%E4%BD%BF%E7%94%A8-artifact-pointer"><span class="nav-number">11.</span> <span class="nav-text"> 构成九：大文件使用 Artifact Pointer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E5%A4%9A-agent-%E5%8F%AA%E4%BC%A0%E7%BB%93%E6%9E%84%E5%8C%96%E6%91%98%E8%A6%81"><span class="nav-number">12.</span> <span class="nav-text"> 构成十：多 Agent 只传结构化摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%B8%80%E6%A8%A1%E5%9E%8B%E5%88%86%E5%B1%82"><span class="nav-number">13.</span> <span class="nav-text"> 构成十一：模型分层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%BA%8Cprompt-caching-%E7%9A%84%E8%BE%B9%E7%95%8C"><span class="nav-number">14.</span> <span class="nav-text"> 构成十二：Prompt Caching 的边界</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E6%88%90%E5%8D%81%E4%B8%89%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E4%B8%8E%E8%AF%84%E6%B5%8B"><span class="nav-number">15.</span> <span class="nav-text"> 构成十三：可观测性与评测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">16.</span> <span class="nav-text"> 参考文章</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -1008,13 +926,13 @@ Reviewer
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">642k</span>
+    <span title="站点总字数">653k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">19:27</span>
+    <span title="站点阅读时长">19:47</span>
 </div>
 
         

@@ -236,7 +236,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>834</span>
+              <span>826</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -255,13 +255,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>瞎捣鼓<br><span id="more"></span><br>最近有在实验室服务器的docker上部署服务的需求，将数据注入psql数据库并在docker环境中访问一切正常，然而在局域网下其他设备访问数据时，出现了一些问题，遂简单记录。</p>
+        <p>瞎捣鼓</p>
+<span id="more"></span>
+<p>最近有在实验室服务器的docker上部署服务的需求，将数据注入psql数据库并在docker环境中访问一切正常，然而在局域网下其他设备访问数据时，出现了一些问题，遂简单记录。</p>
 <p>首先，由于postgresql数据库的默认端口为5432，然而docker仅仅预留了几个映射端口与外部通信，因此，需要修改psql的运行端口，这里我选择的映射端口为25002:2002。在 Docker 中，端口映射的格式通常是 host_port:container_port，即 宿主机端口:容器内端口。因此，首先需要修改psql的运行端口为2002。</p>
 <p>找到<code>/etc/postgresql/14/main/postgresql.conf</code>配置文件，将<code>port = 5432</code>修改为制定端口，我这里为2002。</p>
-<p>并添加：<code>listen_addresses = &#39;*&#39;</code>开启远程访问。</p>
-<p>随后修改<code>/etc/postgresql/14/main/pg_hba.conf</code>来设置放行ip。设置规则为在实验室局域网下的ip全部放行，那么添加规则：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host    all             all             192.168.41.0/24          md5</span><br></pre></td></tr></table></figure></p>
-<p>最后，重启服务：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /etc/init.d/postgresql restart</span><br></pre></td></tr></table></figure></p>
-<p>那么通过局域网下其他设备访问服务器的25002端口即可访问数据库：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql -h 192.168.41.56 -p 25002 -U postgres -d shanghaipoidb</span><br></pre></td></tr></table></figure></p>
+<p>并添加：<code>listen_addresses = '*'</code>开启远程访问。</p>
+<p>随后修改<code>/etc/postgresql/14/main/pg_hba.conf</code>来设置放行ip。设置规则为在实验室局域网下的ip全部放行，那么添加规则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host    all             all             192.168.41.0/24          md5</span><br></pre></td></tr></table></figure>
+<p>最后，重启服务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /etc/init.d/postgresql restart</span><br></pre></td></tr></table></figure>
+<p>那么通过局域网下其他设备访问服务器的25002端口即可访问数据库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql -h 192.168.41.56 -p 25002 -U postgres -d shanghaipoidb</span><br></pre></td></tr></table></figure>
 <p>尝试在命令行中远程连接，并未发生什么问题，但在pgadmin中连接却提示错误为一个172.x.x.x的ip被拒绝访问，如果出现这种情况，意味着 Docker 容器内的 PostgreSQL 服务绑定的是容器的内部网络 IP（例如 <code>172.x.x.x</code>），而不是宿主机的 IP 地址（例如 <code>192.x.x.x</code>）。当你使用 pgAdmin 连接时，pgAdmin 可能尝试直接连接容器的内部 IP 地址，而不是宿主机的地址，因此连接被拒绝。只需将改ip使用上面相同的方式加入放行ip即可。</p>
 
     </div>
@@ -443,13 +448,13 @@
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">642k</span>
+    <span title="站点总字数">653k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">19:27</span>
+    <span title="站点阅读时长">19:47</span>
 </div>
 
         

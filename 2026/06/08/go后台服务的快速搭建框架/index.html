@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文简单梳理一下一套快速搭建后台服务的框架，包含rpc、go、k8s、docker、微服务等技术，以及数据存储、服务组织、入口路由、镜像构建、镜像编排和配置下发等工作要点。对于个人开发者与小型项目而言，应该够用了。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="后台服务的快速搭建框架：一套简单 Go 技术栈">
+<meta property="og:url" content="https://atffang.github.io/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="本文简单梳理一下一套快速搭建后台服务的框架，包含rpc、go、k8s、docker、微服务等技术，以及数据存储、服务组织、入口路由、镜像构建、镜像编排和配置下发等工作要点。对于个人开发者与小型项目而言，应该够用了。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/%E6%80%BB%E8%A7%88.png">
+<meta property="article:published_time" content="2026-06-08T04:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-08T05:36:42.886Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="tRPC-Go">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="Helm">
+<meta property="article:tag" content="Nacos">
+<meta property="article:tag" content="微服务">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/%E6%80%BB%E8%A7%88.png">
+
+<link rel="canonical" href="https://atffang.github.io/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<script>
+  // 尽早禁用浏览器滚动位置恢复（Chrome 在页面加载早期就会尝试恢复，
+  // 必须放在 head 里执行才拦得住；body-end 里设置已太晚）
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
+
+  <title>后台服务的快速搭建框架：一套简单 Go 技术栈 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          后台服务的快速搭建框架：一套简单 Go 技术栈
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2026-06-08 12:00:00" itemprop="dateCreated datePublished" datetime="2026-06-08T12:00:00+08:00">2026-06-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-08-08 13:36:42" itemprop="dateModified" datetime="2026-08-08T13:36:42+08:00">2026-08-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">后端开发</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>20 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文简单梳理一下一套快速搭建后台服务的框架，包含rpc、go、k8s、docker、微服务等技术，以及数据存储、服务组织、入口路由、镜像构建、镜像编排和配置下发等工作要点。对于个人开发者与小型项目而言，应该够用了。</p>
+<span id="more"></span>
+<h2 id="总览"><a class="markdownIt-Anchor" href="#总览"></a> 总览</h2>
+<img src="/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/%E6%80%BB%E8%A7%88.png" class="" title="概览">
+<p>在本文中，我们将一起从服务骨架到发布流水线，了解一套基于 Go 的后台技术栈。整条链路的所有组件要么开源，要么可以直接通过 docker 命令拉起，因此任何人都能照着搭出一套能用的后台基础设施。本文只讨论架构骨架，不涉及任何业务。</p>
+<p>整条链路为：</p>
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+客户端
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+Nginx 入口
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+Go 服务<br/>(tRPC-Go + Gin)
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+MySQL / Redis
+</div>
+</div>
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+Go 源码
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+Docker 镜像
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+K8s + Helm
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+Nacos 配置中心
+</div>
+</div>
+<p>上面两条线是本文的全部内容，其中第一条线是运行时链路，第二条线是交付链路。各组件的技术选型与开源情况如下：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>选型</th>
+<th>开源 / 部署方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语言</td>
+<td>Go 1.22+</td>
+<td>开源</td>
+</tr>
+<tr>
+<td>服务框架</td>
+<td>tRPC-Go + Gin</td>
+<td>开源（<code>trpc-group/trpc-go</code>，Apache 2.0）</td>
+</tr>
+<tr>
+<td>数据存储</td>
+<td>MySQL 8 / Redis 7</td>
+<td><code>docker run mysql:8</code> / <code>docker run redis:7</code></td>
+</tr>
+<tr>
+<td>入口网关</td>
+<td>Nginx / ingress-nginx</td>
+<td>开源</td>
+</tr>
+<tr>
+<td>容器化</td>
+<td>Docker</td>
+<td>Docker 社区版，镜像仓库用 <a target="_blank" rel="noopener" href="http://docker.io">docker.io</a> 或自建 Harbor</td>
+</tr>
+<tr>
+<td>编排平台</td>
+<td>Kubernetes + Helm</td>
+<td>minikube / k3s / kind 单机拉起集群，Helm 开源</td>
+</tr>
+<tr>
+<td>配置中心</td>
+<td>Nacos</td>
+<td><code>docker run nacos/nacos-server</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="服务骨架go-trpc-go-gin-中间件"><a class="markdownIt-Anchor" href="#服务骨架go-trpc-go-gin-中间件"></a> 服务骨架：Go + tRPC-Go + Gin 中间件</h2>
+<p>我们先从整条链路的中心，即服务本身说起。Go + tRPC-Go + Gin 中间件是相对流行的微服务框架，其中：</p>
+<ul>
+<li><strong>Go 是编程语言</strong>（说了等于没说），其优势在于：编译出的是单一静态二进制，运行镜像只需要二进制加配置文件；每个 goroutine 初始栈仅几 KB，其高并发性能适合后台服务的网络 I/O 密集特性；吞吐性能强，并且在事实上，我们后续要说的 Docker、Kubernetes、etcd、Prometheus 全是 Go 实现的。</li>
+<li><strong>tRPC-Go 是服务容器</strong>，负责进程生命周期、优雅退出（收到退出信号后排空存量连接再关闭）、统一配置加载和结构化日志；</li>
+<li><strong>Gin 是 HTTP 引擎</strong>，负责路由匹配、参数绑定和灵活的中间件链，一般来说，<strong>中间件链只放横切能力</strong>，也就是 Recovery、Logger、Auth 这类与业务无关的通用处理，业务逻辑不允许进中间件。</li>
+</ul>
+<p>两者的组合方式很简单，我们将 Gin 引擎作为 HTTP Service Handler 挂载进 tRPC-Go 服务容器。服务的代码组织采用四层结构，依赖方向为从外向内，禁止反向依赖，给出一个代码结构示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">cmd/                          # 入口层：main.go 只引导启动，不含业务逻辑</span><br><span class="line">└── demosvr/                  #   服务目录，一个服务一个入口</span><br><span class="line">internal/                     # 内部代码，禁止被外部包引用</span><br><span class="line">├── app/demosvr/              # 应用层：服务注册、router、logic</span><br><span class="line">│   ├── demosvr.go            #   Register() 组装依赖、注册路由和中间件</span><br><span class="line">│   ├── router/               #   路由层：参数解析校验、调用 logic</span><br><span class="line">│   └── logic/                #   业务逻辑层：接口定义与实现分离</span><br><span class="line">├── entity/                   # 实体层：DTO / Model / 错误码 / 配置结构</span><br><span class="line">├── infra/                    # 基础设施层：数据库访问、外部服务客户端</span><br><span class="line">└── pkg/                      # 公共包层：跨服务共享的中间件、缓存、工具</span><br></pre></td></tr></table></figure>
+<p>分层里最重要的一条约定是<strong>接口与实现分离</strong>，譬如，在 logic 目录下 <code>demo.go</code> 定义接口，<code>demo_impl.go</code> 提供实现，router 层只依赖接口。这样每个服务都能独立测试，替换实现不影响上层。</p>
+<p>回到组合方式，把 Gin 引擎挂进 tRPC-Go 容器的完整代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;                               <span class="comment">// 程序入口</span></span><br><span class="line">    s := trpc.NewServer()                   <span class="comment">// 创建 tRPC-Go 服务容器</span></span><br><span class="line"></span><br><span class="line">    engine := gin.New()                     <span class="comment">// 创建 Gin HTTP 引擎</span></span><br><span class="line">    engine.Use(middleware.Recovery(), middleware.Logger(), middleware.Auth())  <span class="comment">// 挂载中间件链：恢复、日志、鉴权</span></span><br><span class="line"></span><br><span class="line">    group := engine.Group(<span class="string">&quot;/demo/v1&quot;</span>)       <span class="comment">// 路由分组，统一服务前缀</span></span><br><span class="line">    router.NewDemoRouter(demoSvc).RegisterRoutes(group)  <span class="comment">// 注册路由，注入业务逻辑依赖</span></span><br><span class="line"></span><br><span class="line">    s.AddService(<span class="string">&quot;demo.demo.service&quot;</span>, server.New(        <span class="comment">// 把 Gin 引擎作为 HTTP 服务挂载进 tRPC-Go 容器</span></span><br><span class="line">        server.WithHandler(engine),                        <span class="comment">// 指定 HTTP 处理引擎</span></span><br><span class="line">    ))</span><br><span class="line">    s.Serve()                               <span class="comment">// 启动服务，阻塞等待退出信号</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>tRPC-Go 由腾讯开源，仓库 <code>github.com/trpc-group/trpc-go</code>，官方文档在 trpc.group。</p>
+<h2 id="数据层mysql-redis"><a class="markdownIt-Anchor" href="#数据层mysql-redis"></a> 数据层：MySQL &amp; Redis</h2>
+<p>数据层是整条链路里最不能出错的环节，分工原则也很简单，即<strong>MySQL 存事实，Redis 存热数据</strong>。事实指业务实体的最终状态，比如账户余额、订单状态，这类数据必须满足 ACID，靠 MySQL 的事务保证；热数据指被高频读取、可以随时重建的内容，比如缓存、会话、计数，放 Redis 用 TTL 管理生命周期。</p>
+<p>MySQL 侧有三个机制是标配：连接池、事务、悲观锁。连接池的初始化和参数决定并发上限；事务保证多步写操作的原子性；悲观锁（<code>SELECT FOR UPDATE</code>）用于转账、转让这类并发写场景，在事务内锁住目标行，防止竞态：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db, err := gorm.Open(mysql.Open(dsn), &amp;gorm.Config&#123;&#125;)  <span class="comment">// 连接 MySQL，dsn 含地址、账号、密码</span></span><br><span class="line">sqlDB, _ := db.DB()                                     <span class="comment">// 拿到底层 sql.DB 对象，用于配置连接池</span></span><br><span class="line">sqlDB.SetMaxOpenConns(<span class="number">100</span>)                              <span class="comment">// 最大连接数，决定并发上限</span></span><br><span class="line">sqlDB.SetMaxIdleConns(<span class="number">10</span>)                               <span class="comment">// 空闲连接数，减少建连开销</span></span><br><span class="line"></span><br><span class="line">err := db.Transaction(<span class="function"><span class="keyword">func</span><span class="params">(tx *gorm.DB)</span></span> <span class="type">error</span> &#123;         <span class="comment">// 开启事务，闭包内全部成功才提交</span></span><br><span class="line">    tx.Set(<span class="string">&quot;gorm:query_option&quot;</span>, <span class="string">&quot;FOR UPDATE&quot;</span>).First(&amp;account, id)  <span class="comment">// SELECT FOR UPDATE 锁住目标行，防并发竞态</span></span><br><span class="line">    <span class="comment">// 校验、扣减、写流水，全部在同一事务内</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>                                          <span class="comment">// 返回 nil 表示提交事务</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Redis 侧有两个机制：<strong>TTL 精确控制</strong>和 <strong>fail-open 降级</strong>。一个典型的例子是对象存储的预签名 URL：签名一次 24 小时有效，把它缓存进 Redis 时 TTL 设成 23 小时，留 1 小时缓冲，避免客户端拿到一个即将过期的地址。这里有一个必须遵守的原则：<strong>缓存是性能优化，不是核心链路</strong>。Redis 挂了要能退化为每次实时签名或直接查库，功能不中断，只是多一次调用开销，绝不能让缓存故障变成服务故障。</p>
+<p>数据层用一条 docker 命令就能拉起：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=xxx mysql:8   <span class="comment"># 拉起 MySQL 8：-d 后台运行，-p 映射端口，-e 设置 root 密码</span></span><br><span class="line">docker run -d -p 6379:6379 redis:7                               <span class="comment"># 拉起 Redis 7</span></span><br></pre></td></tr></table></figure>
+<p>同时，业务上线后，如果面临多 Pod 部署，那么数据的竞态问题需要额外考虑，必须谨慎对待。</p>
+<h2 id="入口层nginx"><a class="markdownIt-Anchor" href="#入口层nginx"></a> 入口层：Nginx</h2>
+<p>服务跑起来之后，对外只需要暴露一个域名和一个端口，多个服务按路径前缀分发到各自容器，这一部分工作由Nginx完成。</p>
+<p>最小的 Nginx 配置只需要 server 和 location 两层，location 的前缀规则与服务路由前缀一一对应：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;                                      <span class="comment"># 全局 http 配置块</span></span><br><span class="line">    <span class="section">upstream</span> demosvr2  &#123; <span class="attribute">server</span> demosvr2:<span class="number">8080</span>; &#125;   <span class="comment"># 上游组 demosvr2，指向服务容器名加端口</span></span><br><span class="line">    <span class="section">upstream</span> demosvr   &#123; <span class="attribute">server</span> demosvr:<span class="number">18082</span>; &#125;   <span class="comment"># 上游组 demosvr</span></span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;                                <span class="comment"># 虚拟主机配置块</span></span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;                          <span class="comment"># 监听 80 端口</span></span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /demo/ &#123;                   <span class="comment"># 匹配 /demo/ 前缀的请求</span></span><br><span class="line">            <span class="attribute">proxy_pass</span> http://demosvr;      <span class="comment"># 转发给 demosvr 上游组</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="section">location</span> / &#123;                        <span class="comment"># 其余所有请求</span></span><br><span class="line">            <span class="attribute">proxy_pass</span> http://demosvr2;     <span class="comment"># 转发给 demosvr2 上游组</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>本地或单机形态下，Nginx 以容器或系统包方式运行，而如果使用 Kubernetes，入口层的职责由 <strong>ingress-nginx</strong> 接管，nginx.conf 里的 location 前缀规则原样迁移成 Ingress 资源的 path 规则，一一对应。</p>
+<h2 id="构建层docker-两段式镜像"><a class="markdownIt-Anchor" href="#构建层docker-两段式镜像"></a> 构建层：Docker 两段式镜像</h2>
+<p>镜像的构建策略决定了交付物的大小和构建速度。这里采用<strong>两段式构建</strong>：</p>
+<ul>
+<li>先维护一个 builder 基础镜像，预装 Go 工具链并预缓存依赖，每个服务镜像从它编译出二进制。</li>
+<li>再把二进制和配置文件装进一个精简运行镜像。<br />
+构建依赖大而运行依赖小，分离之后运行镜像小、传输快、攻击面小。</li>
+</ul>
+<p>给出一个示例dockerfile配置：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 编译阶段：产出可执行二进制</span></span><br><span class="line"><span class="keyword">FROM</span> demo-builder:latest AS builder        <span class="comment"># 基于预装 Go 工具链的 builder 基础镜像</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /workspace                          <span class="comment"># 设置工作目录</span></span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> go.mod go.sum ./                       <span class="comment"># 先只复制依赖清单，依赖不变时利用分层缓存</span></span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> --mount=<span class="built_in">type</span>=cache,target=/go/pkg/mod go mod download   <span class="comment"># 预下载依赖，cache mount 让二次构建秒级完成</span></span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> . .                                    <span class="comment"># 复制全部源码</span></span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> --mount=<span class="built_in">type</span>=cache,target=/go/pkg/mod \</span></span><br><span class="line"><span class="language-bash">    --mount=<span class="built_in">type</span>=cache,target=/root/.cache/go-build \</span></span><br><span class="line"><span class="language-bash">    go build -ldflags=<span class="string">&quot;-s -w&quot;</span> -o /app/demosvr ./cmd/demosvr   <span class="comment"># 编译二进制，-s -w 去掉符号表缩小体积</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行阶段：只装二进制和配置</span></span><br><span class="line"><span class="keyword">FROM</span> tencentos4-minimal:latest              <span class="comment"># 精简基础镜像，运行镜像约 50MB</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app                                <span class="comment"># 设置工作目录</span></span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> --from=builder /app/demosvr .     <span class="comment"># 从编译阶段拷贝二进制</span></span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> configs/demosvr/trpc_go.yaml .    <span class="comment"># 拷贝框架配置文件</span></span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> [<span class="string">&quot;./demosvr&quot;</span>]                      <span class="comment"># 容器启动命令</span></span></span><br></pre></td></tr></table></figure>
+<p>我们可以将镜像构建和推送统一收敛到 <code>build.sh</code> 脚本，直接通过一条命令完成：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./docker/build.sh -s demosvr --push --tag v1.3.0   <span class="comment"># 构建 demosvr 镜像并推送，镜像 tag 为 v1.3.0</span></span><br></pre></td></tr></table></figure>
+<p>镜像仓库用 <a target="_blank" rel="noopener" href="http://docker.io">docker.io</a> 或自建 Harbor，两者都是公开可用的方案。</p>
+<h2 id="平台层kubernetes-与-helm"><a class="markdownIt-Anchor" href="#平台层kubernetes-与-helm"></a> 平台层：Kubernetes 与 Helm</h2>
+<p>Kubernetes 是容器编排平台，管理容器集群的调度、自愈、扩缩容和服务发现。它把一组容器打包成最小调度单元 Pod，围绕 Pod 提供四类核心能力：</p>
+<ul>
+<li>调度（决定 Pod 跑在哪台机器上）</li>
+<li>自愈（Pod 挂了自动重建）</li>
+<li>扩缩（按副本数增减 Pod）</li>
+<li>服务发现（Service 给一组 Pod 提供稳定的访问入口）。<br />
+我们后面要讲的滚动更新也来自它，即按策略逐个替换 Pod，全程不中断服务。</li>
+</ul>
+<p>Helm 是 Kubernetes 的包管理工具。K8s 里每个组件都对应众多 yaml 清单（Deployment、Service、Ingress、ConfigMap、Secret），直接维护的话，环境之间的差异无从处理。Helm 把一组清单打包成一个 Chart，清单里的差异部分用模板变量占位，由 values 文件在不同环境注入不同的值。</p>
+<p>一个服务在集群里需要的最小资源集是六个，透明各自的职责如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment</td>
+<td>无状态工作负载，管理副本和滚动更新</td>
+</tr>
+<tr>
+<td>Service</td>
+<td>集群内稳定的访问入口（ClusterIP）</td>
+</tr>
+<tr>
+<td>Ingress</td>
+<td>对外入口，与第三章的 Nginx 职责对应</td>
+</tr>
+<tr>
+<td>ConfigMap</td>
+<td>非敏感配置</td>
+</tr>
+<tr>
+<td>Secret</td>
+<td>敏感配置（密码、密钥）</td>
+</tr>
+<tr>
+<td>HPA</td>
+<td>按指标自动扩缩（可选）</td>
+</tr>
+</tbody>
+</table>
+<p>Helm 的价值在于 values 分层，默认配置写在 <code>values.yaml</code>，各环境用独立文件覆盖，发布时局部参数用 <code>--set</code> 覆盖，三者的优先级从低到高，下面是一些常见的哦诶之文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">helm/                         # Helm Chart 根目录</span><br><span class="line">├── Chart.yaml                # Chart 元信息：名称、版本、依赖</span><br><span class="line">├── values.yaml               # 默认配置</span><br><span class="line">├── values-test.yaml          # 测试环境覆盖</span><br><span class="line">├── values-prod.yaml          # 生产环境覆盖</span><br><span class="line">└── templates/                # K8s 资源模板目录，values 渲染进模板</span><br><span class="line">    ├── deployment.yaml       # Deployment 模板：工作负载与滚动策略</span><br><span class="line">    ├── service.yaml          # Service 模板：集群内访问入口</span><br><span class="line">    ├── ingress.yaml          # Ingress 模板：对外入口路由</span><br><span class="line">    ├── configmap.yaml        # ConfigMap 模板：非敏感配置</span><br><span class="line">    ├── secret.yaml           # Secret 模板：敏感配置</span><br><span class="line">    └── hpa.yaml              # HPA 模板：自动扩缩</span><br></pre></td></tr></table></figure>
+<p>滚动更新是这套栈里&quot;更新不中断&quot;的机制来源，配置在 Deployment 模板里：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">strategy:</span>                    <span class="comment"># 更新策略</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">RollingUpdate</span>        <span class="comment"># 滚动更新：逐个替换 Pod</span></span><br><span class="line">  <span class="attr">rollingUpdate:</span></span><br><span class="line">    <span class="attr">maxSurge:</span> <span class="number">1</span>              <span class="comment"># 更新时最多额外多起的 Pod 数</span></span><br><span class="line">    <span class="attr">maxUnavailable:</span> <span class="number">0</span>        <span class="comment"># 允许同时不可用的 Pod 数，0 表示零停机</span></span><br><span class="line"></span><br><span class="line"><span class="attr">livenessProbe:</span>               <span class="comment"># 存活探针：探测失败则重启容器</span></span><br><span class="line">  <span class="attr">httpGet:</span> &#123; <span class="attr">path:</span> <span class="string">/health</span>, <span class="attr">port:</span> <span class="number">8080</span> &#125;   <span class="comment"># 通过请求 /health 接口探测</span></span><br><span class="line">  <span class="attr">initialDelaySeconds:</span> <span class="number">10</span>    <span class="comment"># 容器启动 10 秒后才开始探测</span></span><br><span class="line"></span><br><span class="line"><span class="attr">readinessProbe:</span>              <span class="comment"># 就绪探针：探测失败则摘除流量</span></span><br><span class="line">  <span class="attr">httpGet:</span> &#123; <span class="attr">path:</span> <span class="string">/health</span>, <span class="attr">port:</span> <span class="number">8080</span> &#125;   <span class="comment"># 通过请求 /health 接口探测</span></span><br><span class="line">  <span class="attr">initialDelaySeconds:</span> <span class="number">5</span>     <span class="comment"># 容器启动 5 秒后开始探测</span></span><br></pre></td></tr></table></figure>
+<p>新 Pod 先起来，readinessProbe 通过后再把流量切过去，旧 Pod 等存量请求排空后再销毁，这就是零停机更新的全部机制。环境隔离也是平台层的职责，各环境在配置来源、镜像 tag、副本数三个维度上分层：</p>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>配置来源</th>
+<th>镜像 tag</th>
+<th>副本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>local</td>
+<td>本地 .env</td>
+<td>本地编译</td>
+<td>1</td>
+</tr>
+<tr>
+<td>dev</td>
+<td>docker-compose</td>
+<td>test</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test</td>
+<td>ConfigMap + Secret</td>
+<td>test</td>
+<td>1-2</td>
+</tr>
+<tr>
+<td>staging</td>
+<td>ConfigMap + Secret</td>
+<td>rc-x.x.x</td>
+<td>2</td>
+</tr>
+<tr>
+<td>prod</td>
+<td>ConfigMap + Secret</td>
+<td>v-x.x.x</td>
+<td>2-5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="配置层三层配置体系与-nacos"><a class="markdownIt-Anchor" href="#配置层三层配置体系与-nacos"></a> 配置层：三层配置体系与 Nacos</h2>
+<p>服务运行需要的参数由配置层提供与管理。这里采用三层结构，每层的变更成本不同：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>内容</th>
+<th>载体</th>
+<th>变更成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>框架级</td>
+<td>端口、日志、超时</td>
+<td>镜像内 trpc_go.yaml</td>
+<td>重新构建镜像</td>
+</tr>
+<tr>
+<td>业务级</td>
+<td>DB 地址密码、API Key</td>
+<td>.env / K8s Secret</td>
+<td>更新 Secret 并重启</td>
+</tr>
+<tr>
+<td>运行时动态</td>
+<td>开关、阈值、模型参数</td>
+<td>Nacos</td>
+<td>热更新，不重启</td>
+</tr>
+</tbody>
+</table>
+<p>Nacos 是阿里巴巴开源的动态服务发现与配置管理平台，名字取自 Naming 和 Configuration 两个词。它提供两大能力：服务注册与发现、配置管理。在这套架构里，服务发现已经由 Kubernetes 的 Service 和 Ingress 承担，所以这里我们只使用它的配置管理能力。当然，如果不需要热更新的配置项，也可以直接使用 Kubernetes 自带 ConfigMap</p>
+<p>Nacos提供三个核心能力：命名空间隔离（dev、prod 各一套配置互不干扰）、配置热更新（应用监听变更立即生效）、可视化控制台。拉起它只需要一条命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 8848:8848 -e MODE=standalone nacos/nacos-server   <span class="comment"># 单机模式拉起 Nacos，控制台与 API 端口 8848</span></span><br></pre></td></tr></table></figure>
+<p>需要说明 tRPC-Go 配置插件生态的现状：官方文档的插件矩阵里，Config 数据源 tested 的是 etcd（<code>trpc-ecosystem/go-config-etcd</code>），Naming 是 Polaris；Nacos 在 tRPC 生态里主要覆盖 Java 端。Go 端接入 Nacos 有两条路径：一是用社区实现，二是基于 tRPC-Go 的配置 Provider 接口自研适配，该接口只要求加载与监听两个能力，实现成本很低。如果不想做任何适配，直接用官方 tested 的 etcd 也能获得同样的热更新能力，代价是少了可视化控制台。</p>
+<p>配置的变更路径由此分成两类：</p>
+<ul>
+<li>改运行时参数使用 Nacos 热更新</li>
+<li>改框架级配置使用 ConfigMap 更新随后进行 <code>kubectl rollout restart</code></li>
+</ul>
+<h2 id="拉起全流程从代码到服务的闭环"><a class="markdownIt-Anchor" href="#拉起全流程从代码到服务的闭环"></a> 拉起全流程：从代码到服务的闭环</h2>
+<p>了解每一个层次的技术选型之后，我们可以尝试将它们串成一条完整的链路，首次拉起一共七步，而每一步的产物恰好是下一步的输入：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>动作</th>
+<th>产物</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>本地写好 Go 代码</td>
+<td>源码</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a target="_blank" rel="noopener" href="http://build.sh">build.sh</a> 构建并推送镜像</td>
+<td>registry 里的新 tag 镜像</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Nacos 写好业务配置</td>
+<td>配置中心里的配置</td>
+</tr>
+<tr>
+<td>4</td>
+<td>helm upgrade 挂载 Deployment</td>
+<td>新 Pod</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Pod 启动读 trpc_go.yaml，从 Nacos 拉配置</td>
+<td>服务就绪</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Ingress 路由生效</td>
+<td>对外可访问</td>
+</tr>
+<tr>
+<td>7</td>
+<td>健康检查确认</td>
+<td>服务上线</td>
+</tr>
+</tbody>
+</table>
+<p>日常更新则只有两条路径，<strong>修改业务代码</strong>后提交新镜像，并滚动更新，而<strong>修改参数</strong>可以直接通过 Nacos 热更新。</p>
+<p>需要额外注意的是，<strong>每次发布推新 tag 时，绝不可以覆盖旧 tag</strong>，原因在于 Kubernetes 的回滚机制依赖镜像引用，执行回滚时平台去仓库拉取旧 tag，如果它已经被新代码覆盖，拉到的还是新代码，回滚名存实亡。因此，我们可以配合代码的 git 仓库，每次修改业务代码后，push到仓库，使用该次 commit 号作为tag，更有利于管理。</p>
+<p>说到git仓库，对于一个后台系统的代码开发，可以给每个微服务拉去一个基于主分支的业务分支，在业务分支上开发，测试与验收后合并入主分支，合并前，记得先合并主分支远端代码到业务分支并处理冲突。</p>
+<p>从零到上线的完整命令序列的示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 首次拉起</span></span><br><span class="line">./docker/build.sh -s demosvr --push --tag v1.0.0   <span class="comment"># 构建并推送 v1.0.0 镜像</span></span><br><span class="line">helm upgrade --install demo ./helm -f helm/values.yaml -f helm/values-prod.yaml --namespace demo --create-namespace --<span class="built_in">set</span> services.demosvr.image.tag=v1.0.0   <span class="comment"># 首次安装：默认值加 prod 覆盖，指定镜像 tag</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 日常更新：新镜像 + 滚动</span></span><br><span class="line">./docker/build.sh -s demosvr --push --tag v1.1.0   <span class="comment"># 构建并推送 v1.1.0 镜像</span></span><br><span class="line">helm upgrade demo ./helm --reuse-values --<span class="built_in">set</span> services.demosvr.image.tag=v1.1.0   <span class="comment"># 只更新镜像 tag，触发滚动更新</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 回滚：切回旧 tag</span></span><br><span class="line">helm upgrade demo ./helm --reuse-values --<span class="built_in">set</span> services.demosvr.image.tag=v1.0.0   <span class="comment"># 镜像 tag 切回 v1.0.0，完成回滚</span></span><br></pre></td></tr></table></figure>
+<p>往这套骨架里加一个新服务，需要动的地方只有七处，全部是机械操作：</p>
+<ol>
+<li><code>cmd/&lt;newsvr&gt;/main.go</code>：入口</li>
+<li><code>internal/app/&lt;newsvr&gt;/</code>：应用层（Register + router + logic）</li>
+<li><code>configs/&lt;newsvr&gt;/</code>：trpc_go.yaml 与 .env 模板</li>
+<li><code>docker/Dockerfile.&lt;newsvr&gt;</code>：构建镜像</li>
+<li><code>docker/build.sh</code>：注册服务名</li>
+<li><code>helm/values.yaml</code>：添加服务配置</li>
+<li><code>docker/nginx.conf</code> 或 Ingress：添加路由规则</li>
+</ol>
+<h2 id="构建发布流水线"><a class="markdownIt-Anchor" href="#构建发布流水线"></a> 构建发布流水线</h2>
+<p>到这一章，所有环节还是手工命令，为了方便与规范化，我们可以使用流水线将一系列动作压缩为一次触发，阶段划分如下：</p>
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+提交代码<br/>打 tag
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+构建
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+单元测试
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+推送镜像<br/>新 tag
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+迁移 job<br/>（有 schema 变更时）
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #2563EB;border-radius:8px;background:#DBEAFE;font-weight:600;">
+helm upgrade<br/>触发滚动
+</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">
+健康检查
+</div>
+</div>
+<p>流水线成立有两个前提，都是前文已经铺垫过的规则，一是<strong>tag 不可变</strong>，流水线强制每次发布使用新 tag，从机制上禁止覆盖；二是<strong>服务无状态</strong>，数据全部外置到 MySQL 和 Redis，Pod 只是无状态执行体，滚动更新才不会丢状态。</p>
+<p>更新镜像本身不会修改数据库，MySQL 和 Redis 是独立服务，数据原样保留。真正有风险的是 Schema 变更，如果新代码改了表结构，而迁移在应用启动时执行，滚动窗口内新旧代码并存，旧代码读写新结构就会出错。因此，我们可以采用 <strong>Expand-Contract</strong>模式，即先发布只做加法的迁移（加列带默认值、加索引），新旧代码都能读写；全量流量切到新版本并稳定一个周期后，再删旧列和旧索引。迁移本身要独立于应用启动，作为流水线里的单独一步，避免多副本同时启动时并发执行迁移。</p>
+<p>滚动窗口内还有两个瞬态问题需要注意，长事务在 Pod 收到退出信号时会被中断回滚，这由 tRPC-Go 的优雅退出处理，它先排空存量连接再关闭进程；定时任务可能在新旧副本之间重叠执行，任务本身需要幂等或加锁兜底。</p>
+<p>落地形态从脚本级开始。给 <a target="_blank" rel="noopener" href="http://build.sh">build.sh</a> 加一个 deploy 参数，把&quot;构建、推送、更新&quot;这三步绑定为一条命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./docker/build.sh -s demosvr --push --deploy --tag v1.2.0 --<span class="built_in">env</span> prod   <span class="comment"># 构建、推送镜像并触发部署，目标环境 prod</span></span><br></pre></td></tr></table></figure>
+<p>再进一步是 CI 级，提交 tag 即触发整条流水线。一个最小的 GitHub Actions 定义如下，核心只有两步：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">deploy</span>                       <span class="comment"># 工作流名称</span></span><br><span class="line"><span class="attr">on:</span>                                <span class="comment"># 触发条件</span></span><br><span class="line">  <span class="attr">push:</span>                            <span class="comment"># 推送事件</span></span><br><span class="line">    <span class="attr">tags:</span> [<span class="string">&quot;v*&quot;</span>]                   <span class="comment"># 匹配 v 开头的 tag</span></span><br><span class="line"><span class="attr">jobs:</span>                              <span class="comment"># 任务列表</span></span><br><span class="line">  <span class="attr">deploy:</span>                          <span class="comment"># 任务名</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span>         <span class="comment"># 运行环境</span></span><br><span class="line">    <span class="attr">steps:</span>                         <span class="comment"># 步骤列表</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span>  <span class="comment"># 检出代码</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">build</span> <span class="string">and</span> <span class="string">push</span>       <span class="comment"># 步骤名：构建并推送镜像</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">./docker/build.sh</span> <span class="string">-s</span> <span class="string">demosvr</span> <span class="string">--push</span> <span class="string">--tag</span> <span class="string">$&#123;GITHUB_REF_NAME&#125;</span>   <span class="comment"># 用 git tag 名作为镜像 tag</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">helm</span> <span class="string">upgrade</span>         <span class="comment"># 步骤名：更新部署</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">helm</span> <span class="string">upgrade</span> <span class="string">demo</span> <span class="string">./helm</span> <span class="string">--reuse-values</span> <span class="string">--set</span> <span class="string">services.demosvr.image.tag=$&#123;GITHUB_REF_NAME&#125;</span>   <span class="comment"># 更新镜像 tag，触发滚动更新</span></span><br></pre></td></tr></table></figure>
+<p>GitLab CI、Jenkins 的写法同理，都是同一个阶段序列。同时，流水线末尾必须预留回滚入口，采用<code>helm rollback</code> 或切回旧 tag，一条命令即可完成回滚，不需要重新构建、重新推送镜像（因为旧镜像已经在仓库里了）。</p>
+<p>如果希望连&quot;打 tag&quot;这一步都省掉，让平台监听镜像仓库、发现新 tag 自动滚动，可以引入 Flux 的 image automation 或 Argo CD Image Updater，这里我们就不详细叙述了。</p>
+<h2 id="参考文章"><a class="markdownIt-Anchor" href="#参考文章"></a> 参考文章</h2>
+<p>[1] tRPC-Go 官方文档[EB/OL]. <a target="_blank" rel="noopener" href="https://trpc.group/docs/languages/go/">https://trpc.group/docs/languages/go/</a>.</p>
+<p>[2] trpc-group/trpc-go[EB/OL]. <a target="_blank" rel="noopener" href="https://github.com/trpc-group/trpc-go">https://github.com/trpc-group/trpc-go</a>.</p>
+<p>[3] Gin Web Framework[EB/OL]. <a target="_blank" rel="noopener" href="https://gin-gonic.com/">https://gin-gonic.com/</a>.</p>
+<p>[4] GORM[EB/OL]. <a target="_blank" rel="noopener" href="https://gorm.io/">https://gorm.io/</a>.</p>
+<p>[5] MySQL Docker Official Image[EB/OL]. <a target="_blank" rel="noopener" href="https://hub.docker.com/_/mysql">https://hub.docker.com/_/mysql</a>.</p>
+<p>[6] Redis Docker Official Image[EB/OL]. <a target="_blank" rel="noopener" href="https://hub.docker.com/_/redis">https://hub.docker.com/_/redis</a>.</p>
+<p>[7] Nginx[EB/OL]. <a target="_blank" rel="noopener" href="https://nginx.org/">https://nginx.org/</a>.</p>
+<p>[8] ingress-nginx[EB/OL]. <a target="_blank" rel="noopener" href="https://github.com/kubernetes/ingress-nginx">https://github.com/kubernetes/ingress-nginx</a>.</p>
+<p>[9] Docker[EB/OL]. <a target="_blank" rel="noopener" href="https://www.docker.com/">https://www.docker.com/</a>.</p>
+<p>[10] Kubernetes[EB/OL]. <a target="_blank" rel="noopener" href="https://kubernetes.io/">https://kubernetes.io/</a>.</p>
+<p>[11] Helm[EB/OL]. <a target="_blank" rel="noopener" href="https://helm.sh/">https://helm.sh/</a>.</p>
+<p>[12] Nacos[EB/OL]. <a target="_blank" rel="noopener" href="https://nacos.io/">https://nacos.io/</a>.</p>
+<p>[13] minikube[EB/OL]. <a target="_blank" rel="noopener" href="https://minikube.sigs.k8s.io/">https://minikube.sigs.k8s.io/</a>.</p>
+<p>[14] trpc-ecosystem/go-config-etcd[EB/OL]. <a target="_blank" rel="noopener" href="https://github.com/trpc-ecosystem/go-config-etcd">https://github.com/trpc-ecosystem/go-config-etcd</a>.</p>
+<p>[15] Flux Image Automation[EB/OL]. <a target="_blank" rel="noopener" href="https://fluxcd.io/flux/guides/image-update/">https://fluxcd.io/flux/guides/image-update/</a>.</p>
+<p>[16] Argo CD Image Updater[EB/OL]. <a target="_blank" rel="noopener" href="https://argocd-image-updater.readthedocs.io/">https://argocd-image-updater.readthedocs.io/</a>.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"># Go</a>
+              <a href="/tags/tRPC-Go/" rel="tag"># tRPC-Go</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/Docker/" rel="tag"># Docker</a>
+              <a href="/tags/Helm/" rel="tag"># Helm</a>
+              <a href="/tags/Nacos/" rel="tag"># Nacos</a>
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"># 微服务</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/05/16/OPenGIS01/" rel="prev" title="Agent驱动的GIS客户端OpenGIS：技术框架">
+      <i class="fa fa-chevron-left"></i> Agent驱动的GIS客户端OpenGIS：技术框架
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/07/07/Agent%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84InputToken%E6%B2%BB%E7%90%86/" rel="next" title="Agent 系统中的 Input Token 治理">
+      Agent 系统中的 Input Token 治理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E8%A7%88"><span class="nav-number">1.</span> <span class="nav-text"> 总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%AA%A8%E6%9E%B6go-trpc-go-gin-%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text"> 服务骨架：Go + tRPC-Go + Gin 中间件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B1%82mysql-redis"><span class="nav-number">3.</span> <span class="nav-text"> 数据层：MySQL &amp; Redis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A5%E5%8F%A3%E5%B1%82nginx"><span class="nav-number">4.</span> <span class="nav-text"> 入口层：Nginx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E5%B1%82docker-%E4%B8%A4%E6%AE%B5%E5%BC%8F%E9%95%9C%E5%83%8F"><span class="nav-number">5.</span> <span class="nav-text"> 构建层：Docker 两段式镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B3%E5%8F%B0%E5%B1%82kubernetes-%E4%B8%8E-helm"><span class="nav-number">6.</span> <span class="nav-text"> 平台层：Kubernetes 与 Helm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%B1%82%E4%B8%89%E5%B1%82%E9%85%8D%E7%BD%AE%E4%BD%93%E7%B3%BB%E4%B8%8E-nacos"><span class="nav-number">7.</span> <span class="nav-text"> 配置层：三层配置体系与 Nacos</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%89%E8%B5%B7%E5%85%A8%E6%B5%81%E7%A8%8B%E4%BB%8E%E4%BB%A3%E7%A0%81%E5%88%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E9%97%AD%E7%8E%AF"><span class="nav-number">8.</span> <span class="nav-text"> 拉起全流程：从代码到服务的闭环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E5%8F%91%E5%B8%83%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">9.</span> <span class="nav-text"> 构建发布流水线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">10.</span> <span class="nav-text"> 参考文章</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">72</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">176</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/ATFfang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ATFfang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-recommend">
+  <div class="sidebar-recommend-title">推荐阅读</div>
+  <ul class="sidebar-recommend-list">
+    <li>
+      <a href="/2026/08/03/OpenGIS%E7%9A%84%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7/" title="Agent驱动的GIS客户端OpenGIS：harness的架构升级">Agent驱动的GIS客户端OpenGIS：harness的架构升级</a>
+    </li>
+    <li>
+      <a href="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/" title="一个RAG系统的技术选型与pipeline">一个RAG系统的技术选型与pipeline</a>
+    </li>
+    <li>
+      <a href="/2026/04/13/OpenHarness/" title="【长文】港大新开源的OpenHarness，到底做了啥？">【长文】港大新开源的OpenHarness，到底做了啥？</a>
+    </li>
+    <li>
+      <a href="/2026/04/12/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E9%9D%A2%E5%90%91%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E7%9A%84%E5%A4%9A%E8%A7%86%E8%A7%89%E6%A3%80%E6%B5%8B%E4%BB%BB%E5%8A%A1%E7%B3%BB%E7%BB%9F/" title="系统设计：一个面向本地部署的多视觉检测任务系统">系统设计：一个面向本地部署的多视觉检测任务系统</a>
+    </li>
+    <li>
+      <a href="/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/" title="后台服务的快速搭建框架：一套简单 Go 技术栈">后台服务的快速搭建框架：一套简单 Go 技术栈</a>
+    </li>
+  </ul>
+</div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-terminal"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">664k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">20:07</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+<script>
+  // 强制页面从顶部开始展示（head.swig 已禁用浏览器滚动恢复，这里兜底拉回顶部）
+  // load 事件：图片等资源加载完成后浏览器可能再次调整滚动位置
+  // pageshow 事件：覆盖 bfcache（前进/后退）场景
+  var scrollToTop = function() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  scrollToTop();
+  window.addEventListener('load', scrollToTop);
+  window.addEventListener('pageshow', scrollToTop);
+</script>
+
+<!-- Dark mode toggle -->
+<div class="theme-toggle" id="theme-toggle" title="切换深色/浅色模式" role="button" aria-label="切换深色/浅色模式">
+  <span class="theme-toggle-icon">🌙</span>
+</div>
+<script>
+  (function() {
+    var KEY = 'blog-theme';
+    var root = document.documentElement;
+    var icon = document.querySelector('.theme-toggle-icon');
+
+    // 初始化：优先 localStorage，其次跟随系统偏好
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = saved !== null ? (saved === 'dark') : prefersDark;
+
+    var apply = function(dark) {
+      root.classList.toggle('dark', dark);
+      if (icon) icon.textContent = dark ? '☀️' : '🌙';
+    };
+    apply(isDark);
+
+    var btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        isDark = !isDark;
+        apply(isDark);
+        try { localStorage.setItem(KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+      });
+    }
+
+    // 跟随系统变化（用户未手动选择时）
+    if (saved === null && window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        apply(e.matches);
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

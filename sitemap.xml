@@ -668,15 +668,6 @@
   </url>
   
   <url>
-    <loc>https://atffang.github.io/2022/12/31/2022%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</loc>
-    
-    <lastmod>2026-08-06</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://atffang.github.io/tags/index.html</loc>
     
     <lastmod>2023-10-07</lastmod>
@@ -730,13 +721,6 @@
   
   <url>
     <loc>https://atffang.github.io/tags/%E7%94%9F%E6%B4%BB%E8%AE%B0%E5%BD%95/</loc>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://atffang.github.io/tags/%E5%9B%9E%E9%A1%BE/</loc>
     <lastmod>2026-08-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

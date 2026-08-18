@@ -72,7 +72,6 @@ https://atffang.github.io/2025/03/12/3D%20Guassian%20Splatting/
 https://atffang.github.io/2024/11/28/DTDC2024/
 https://atffang.github.io/2024/12/13/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/
 https://atffang.github.io/2024/11/25/2024%E4%B8%AD%E5%9B%BD%E7%A0%94%E7%A9%B6%E7%94%9F%E6%95%B0%E5%AD%A6%E5%BB%BA%E6%A8%A1%E7%AB%9E%E8%B5%9B/
-https://atffang.github.io/2022/12/31/2022%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/
 https://atffang.github.io/tags/index.html
 https://atffang.github.io/categories/index.html
 https://atffang.github.io/live2d-widget-model-wanko/package.json
@@ -80,7 +79,6 @@ https://atffang.github.io/live2d-widget-model-wanko/assets/wanko.model.json
 https://atffang.github.io/
 https://atffang.github.io/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/
 https://atffang.github.io/tags/%E7%94%9F%E6%B4%BB%E8%AE%B0%E5%BD%95/
-https://atffang.github.io/tags/%E5%9B%9E%E9%A1%BE/
 https://atffang.github.io/tags/3DGS/
 https://atffang.github.io/tags/%E4%B8%89%E7%BB%B4%E9%87%8D%E5%BB%BA/
 https://atffang.github.io/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/

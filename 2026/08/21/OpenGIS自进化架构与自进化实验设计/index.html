@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文将简略介绍初步设计等 OpenGIS Agent 的 harness 自进化框架，主要集中于其外围工具以及prompt等等自进化，并基于GIS benchmark 给出离线优化方案。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenGIS 自进化架构与自进化实验设计">
+<meta property="og:url" content="https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="本文将简略介绍初步设计等 OpenGIS Agent 的 harness 自进化框架，主要集中于其外围工具以及prompt等等自进化，并基于GIS benchmark 给出离线优化方案。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/%E6%9E%B6%E6%9E%84.jpg">
+<meta property="article:published_time" content="2026-08-21T01:53:23.000Z">
+<meta property="article:modified_time" content="2026-08-21T07:11:50.314Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="harness">
+<meta property="article:tag" content="自进化">
+<meta property="article:tag" content="系统设计">
+<meta property="article:tag" content="OpenGIS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/%E6%9E%B6%E6%9E%84.jpg">
+
+<link rel="canonical" href="https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<script>
+  // 尽早禁用浏览器滚动位置恢复（Chrome 在页面加载早期就会尝试恢复，
+  // 必须放在 head 里执行才拦得住；body-end 里设置已太晚）
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
+
+  <title>OpenGIS 自进化架构与自进化实验设计 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenGIS 自进化架构与自进化实验设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-08-21 09:53:23 / 修改时间：15:11:50" itemprop="dateCreated datePublished" datetime="2026-08-21T09:53:23+08:00">2026-08-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLM%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">LLM应用开发</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>21 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文将简略介绍初步设计等 OpenGIS Agent 的 harness 自进化框架，主要集中于其外围工具以及prompt等等自进化，并基于GIS benchmark 给出离线优化方案。</p>
+<span id="more"></span>
+<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
+<p>在上一篇文章中，我们介绍了 Agent 自进化的三个方向，即 <strong>Artifacts Iterative Optimization、Agent Harness Self-improvement、Model Learning without Gold Answers</strong>，而对于 Agent 应用开发者来说，最热门的方向无疑是 Agent Harness Self-improvement，而对于我开发的空间分析 Agent 客户端 OpenGIS 来说，构建 Agent 自进化的基础设施可以带来两个方面的优化：</p>
+<ul>
+<li>对于开发者（我本人）而言，可以通过开源的 GIS 行业 benchmark，让 OpenGIS Agent 自进化，提升系统的可用性，优化 tool、skill、operation（OpenGIS 特有的原子化 GIS 操作单元，类似于 ArcGIS 的工具）。不过这一步理论上来说不应该叫做自进化，而是<strong>离线优化</strong>，或者称之为 <strong>Benchmark-driven Harness Optimization</strong>，即便如此，我们还是希望使用自进化框架，辅以人工调优，来完成优化工作。</li>
+<li>对于使用者而言，OpenGIS 如果支持自进化，那么可以使得 Agent 越用越好用，而这个落点我们希望集中于可复用的 skill 以及 operation，这样用户在多次交互中完成的一次复杂任务，通过 operation 沉淀后，可能通过一轮短对话就完成了。</li>
+</ul>
+<p>同时，在上一篇文章中我们提到，Agent Harness Self-improvement 实际上包括了多个层级的工作，其中最深层次的是直接从 harness 架构层面的自进化，我个人认为对于一个倾向于稳定的、易于使用的客户端 Agent 来说，这一层次的改造太过于冒险，并且可以预见的在实际使用中容易出现不可用的行为。因此，OpenGIS 的自进化范围敲定在 harness 的外层，即 skill、operation等，以及隔离于系统提示词的自进化提示词 prompt_patch，具体的内容我们将在下文披露。</p>
+<p>本文将介绍当前 OpenGIS 做了哪些架构方面的设计以支持自进化功能，并且尝试基于行业 benchmark，设计一个 Benchmark-driven Harness Optimization 流程，当然，自进化基建和离线优化流程将在开发过程中不断迭代，目前仍在技术选型与测试阶段，后续的优化以及结果会在以后的文章中披露。</p>
+<h2 id="opengis-的自进化框架与基础设施"><a class="markdownIt-Anchor" href="#opengis-的自进化框架与基础设施"></a> OpenGIS 的自进化框架与基础设施</h2>
+<p>OpenGIS 已经有了一个较完整的 agent harness，LLM 通过 OpenGIS 提供的工程运行时使用地图、文件、工具和代码执行环境。它有桌面 GIS 前端、Sidecar 后端、工具系统、operation、skill、worker、memory、context projector、capability router、run archive 和 prompt cache。我们先对这组基础设施做一个简要说明：</p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>中文解释</th>
+<th>在 OpenGIS 中的角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sidecar</td>
+<td>伴随服务端</td>
+<td>随桌面端启动的 FastAPI 后端，负责 RPC、流式对话、代码执行和工作区状态管理</td>
+</tr>
+<tr>
+<td>Operation</td>
+<td>原子操作</td>
+<td>可执行、可参数化、可验证的 GIS 分析单元，适合沉淀稳定能力</td>
+</tr>
+<tr>
+<td>Skill</td>
+<td>技能文档</td>
+<td>面向 Agent 的经验说明、流程规则或领域知识包</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>驻守进程</td>
+<td>长时间运行的后台 Python 应用，用于持续数据采集、动态地图更新等任务</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>记忆</td>
+<td>会话内外的结构化经验、事实、失败教训和用户纠正</td>
+</tr>
+<tr>
+<td>Context Projector</td>
+<td>上下文投影器</td>
+<td>把工作区状态、记忆和能力资产压缩成模型可读的上下文</td>
+</tr>
+<tr>
+<td>Capability Router</td>
+<td>能力路由器</td>
+<td>根据任务选择少量相关 tool、skill、operation，避免上下文膨胀</td>
+</tr>
+<tr>
+<td>Run Archive</td>
+<td>运行归档</td>
+<td>保存每轮任务的消息、工具调用、代码执行、错误、产物和指标</td>
+</tr>
+<tr>
+<td>Prompt Cache</td>
+<td>提示词缓存</td>
+<td>通过稳定 prompt 前缀提升供应商侧缓存命中率，降低重复输入成本</td>
+</tr>
+</tbody>
+</table>
+<p>这里的 <strong>Agent Harness</strong>，指的是包裹在大模型外侧的工程系统：提示词组织、上下文裁剪、工具暴露、执行循环、记忆管理、评估器、权限边界和能力资产管理。模型本体并不直接知道文件系统、地图状态、图层样式、工作区结构和历史任务，它必须通过 harness 才能感知环境、调用工具、执行代码、观察结果并收束任务。</p>
+<p>因此，OpenGIS 的自进化也不应被理解为“训练模型”或“自动改核心代码”。它更准确的定义是：</p>
+<blockquote>
+<p>在固定模型、固定工具实现、固定执行环境下，OpenGIS 从历史 run archive 中提取失败模式、成功流程和用户纠正信号，生成候选能力；候选经过 replay、held-in / held-out 检查和 promotion gate 后，被物化为 skill、operation、prompt_patch 或 tool_policy；运行时由 CapabilityRouter 按需选择少量资产注入或暴露，并支持禁用与回滚。</p>
+</blockquote>
+<p>我们需要明确以下三点：</p>
+<ul>
+<li>第一，进化仅面向 OpenGIS harness 本身，和模型隔离。</li>
+<li>第二，<strong>不直接改 active harness 骨架</strong>。Active Harness（当前生效的运行框架）包括 loop kernel、核心 system prompt、权限系统、provider adapter、verifier 和核心渲染逻辑。它是生产运行时，不应该被候选能力在线改写。否则系统很容易通过改评估器、调大预算、绕过权限来刷分，并有可能生成我们不希望的产物。</li>
+<li>第三，<strong>进化产物必须是受控资产</strong>。OpenGIS 允许沉淀 skill、operation、prompt_patch、tool_policy 或 workflow，但这些资产应先进入 draft 或 review 状态，经评估或用户批准后启用。启用后如果造成回归，应能立即禁用或回滚。</li>
+</ul>
+<h3 id="opengis-已具备的基础设施"><a class="markdownIt-Anchor" href="#opengis-已具备的基础设施"></a> OpenGIS 已具备的基础设施</h3>
+<p>OpenGIS 已经具备自进化所需要的若干底座，我们依次介绍：</p>
+<p><strong>运行归档层</strong>负责把一次任务转成可分析的轨迹。<code>RunArchive</code> 保存用户输入、Agent 输出、工具调用、代码执行、错误、产物路径、token 消耗和终止原因。可以说没有运行归档，自进化就没有证据来源。</p>
+<p><strong>上下文构造层</strong>负责把工作区状态、会话记忆、工具 schema、能力资产和用户目标组织成 provider request，包含<code>ProviderRequestBuilder</code>、<code>ContextProjector</code>、<code>RequestBudgetManager</code> 和 <code>ToolMaterializer</code> 等用于编排模型请求的组件。</p>
+<p><strong>工具执行层</strong>负责把模型的意图转成可控动作。<code>ToolRuntime</code>、operation、workflow、worker、map RPC 和 datasource tool 共同构成了 Agent 的外部执行面。它们既是任务执行工具，也是未来可优化的对象。</p>
+<p><strong>记忆与经验层</strong>负责从运行记录中抽取可复用知识。<code>MemoryStore</code>、<code>KnowledgeExtractor</code>、<code>FailureMemoryExtractor</code> 和结构化 failure memory 可以记录用户纠正、失败修复和高频经验。</p>
+<p><strong>能力路由层</strong>负责在运行时选择少量相关能力。<code>CapabilityRouter</code> 和 tool pack 机制用于避免所有工具、所有 skill、所有 operation 同时进入上下文。这个模块对 token 成本、prompt cache 命中率和注意力稀释都非常关键。</p>
+<h3 id="自进化闭环"><a class="markdownIt-Anchor" href="#自进化闭环"></a> 自进化闭环</h3>
+<p>OpenGIS 自进化不是单纯的：</p>
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">run</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">log</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">summarize</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">reuse</div>
+</div>
+<p>这只是记忆系统。真正的自进化闭环应该是：</p>
+<div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">run</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">mine</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">propose</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">evaluate</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">promote</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">materialize</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">route</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">observe</div>
+<span style="color:#94A3B8;">→</span>
+<div style="padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;">rollback</div>
+</div>
+<p>对应到 OpenGIS 的工程模块，可以表示为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">RunArchive</span><br><span class="line">  -&gt; WeaknessMiner / EvolutionExtractor</span><br><span class="line">  -&gt; EvolutionCandidateStore</span><br><span class="line">  -&gt; ReplayEvaluator</span><br><span class="line">  -&gt; PromotionGate</span><br><span class="line">  -&gt; EvolutionMaterializer</span><br><span class="line">  -&gt; EvolutionAssetRegistry</span><br><span class="line">  -&gt; CapabilityRouter</span><br><span class="line">  -&gt; Agent Loop</span><br><span class="line">  -&gt; RunArchive</span><br></pre></td></tr></table></figure>
+<p>其中，<br />
+<code>RunArchive</code> 是运行归档，负责提供原始证据。<br />
+<code>WeaknessMiner</code> 是弱点挖掘器，负责从轨迹中发现高频失败、重复纠正和无意义绕路。<br />
+<code>EvolutionExtractor</code> 是候选提取器，负责把原始轨迹转成结构化候选。<br />
+<code>ReplayEvaluator</code> 是回放评估器，负责在隔离环境中验证候选是否有效。<br />
+<code>PromotionGate</code> 是晋升门，负责决定候选是否可以进入可用资产。<br />
+<code>EvolutionMaterializer</code> 是物化器，负责把候选落成 skill、operation、prompt_patch 或 tool_policy。<br />
+<code>EvolutionAssetRegistry</code> 是资产注册表，负责记录资产来源、版本、状态、评估结果和启用范围。<br />
+<code>CapabilityRouter</code> 是能力路由器，负责在后续任务中按需选择少量相关资产。</p>
+<p>这条链路强调两件事：候选生成要积极，候选启用要保守。系统可以从大量历史轨迹中发现潜在改进，但不能把所有候选都直接塞进运行时。</p>
+<h3 id="当前实现状态"><a class="markdownIt-Anchor" href="#当前实现状态"></a> 当前实现状态</h3>
+<p>OpenGIS 当前已经初步具备自进化链路中的关键组件：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>作用</th>
+<th>当前状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run Archive</td>
+<td>保存完整运行轨迹</td>
+<td>已具备</td>
+</tr>
+<tr>
+<td>Failure Memory</td>
+<td>抽取失败和纠正经验</td>
+<td>已具备</td>
+</tr>
+<tr>
+<td>Evolution Extractor</td>
+<td>从轨迹生成候选能力</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Weakness Miner</td>
+<td>聚合高频失败与纠正模式</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Replay Evaluator</td>
+<td>回放验证候选收益</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Promotion Gate</td>
+<td>控制候选晋升</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Materializer</td>
+<td>将候选物化为资产</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Asset Registry</td>
+<td>管理进化资产状态</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Evolution Reporter</td>
+<td>汇总候选、评估和资产状态</td>
+<td>已具备初版</td>
+</tr>
+<tr>
+<td>Headless CLI</td>
+<td>脚本化运行 Agent 与 benchmark</td>
+<td>已具备初版</td>
+</tr>
+</tbody>
+</table>
+<p>但这些模块还只是形成了自进化框架的第一版。它已经可以证明“轨迹可以转成候选，候选可以评估并物化”，但距离稳定的 benchmark 级自进化系统还有几个缺口：</p>
+<ul>
+<li>GABench 任务还需要更严格的 artifact verifier；</li>
+<li>canonical action 轨迹评分还需要更完整；</li>
+<li>promotion gate 需要更强的成本回归判断；</li>
+<li>evolution dashboard 需要展示更清楚的资产收益、回归和回滚状态；</li>
+<li>评估报告需要区分成功率提升、成本下降和无回归三类结果。</li>
+</ul>
+<h2 id="opengis-自进化系统的核心概念"><a class="markdownIt-Anchor" href="#opengis-自进化系统的核心概念"></a> OpenGIS 自进化系统的核心概念</h2>
+<img src="/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/%E6%9E%B6%E6%9E%84.jpg" class="" title="架构">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图1：OpenGIS 自进化基础框架 </p>
+<p>OpenGIS 自进化系统可以从四个问题理解：由谁优化、优化什么、如何优化、怎样评估。对应英文概念分别是 Optimizer、Optimization Target、Optimization Path 和 Evaluation Metrics。</p>
+<h3 id="optimizer"><a class="markdownIt-Anchor" href="#optimizer"></a> Optimizer</h3>
+<p><strong>Optimizer，优化器</strong> 是 OpenGIS 内部由多模块组成的治理链路，它的输入是历史运行轨迹，输出是经过验证的能力资产。这条治理链路的关键是基于证据提出建议，并基于评估拒绝或采纳建议。这点很重要，因为自进化系统最容易失控的地方不是不会生成候选，而是生成太多看起来合理、实际带来负担的候选。</p>
+<p>例如，一个泛化 recipe skill 可能会告诉 Agent：“进行 GIS 分析时要先检查字段、检查 CRS、检查输出路径，再验证结果。”这句话单看没有问题。但如果它导致每个简单任务都全量执行上述操作，它就不是正收益资产。因此，OpenGIS 的优化器可以概括为：</p>
+<blockquote>
+<p>以运行轨迹为证据、以回放评估为约束、以资产注册为边界的 harness 层优化链路。</p>
+</blockquote>
+<h3 id="optimization-target"><a class="markdownIt-Anchor" href="#optimization-target"></a> Optimization Target</h3>
+<p><strong>Optimization Target，优化对象</strong>定义哪些东西可以被自进化系统修改，哪些东西不能被自动修改，允许优化的对象包括：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>中文解释</th>
+<th>适合优化的原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>skill</code></td>
+<td>技能文档或任务经验包</td>
+<td>适合沉淀流程规则、错误规避和领域经验，成本低，易禁用</td>
+</tr>
+<tr>
+<td><code>operation</code></td>
+<td>可执行的原子 GIS 操作</td>
+<td>适合沉淀稳定代码、输入输出 contract 和可复用分析流程</td>
+</tr>
+<tr>
+<td><code>prompt_patch</code></td>
+<td>局部提示词补丁</td>
+<td>适合修正某类局部行为，例如“不要绕过失败 operation”</td>
+</tr>
+<tr>
+<td><code>tool_policy</code></td>
+<td>工具选择策略</td>
+<td>适合调整工具包暴露、工具优先级和重复调用抑制</td>
+</tr>
+<tr>
+<td><code>workflow</code></td>
+<td>多步骤任务编排</td>
+<td>适合沉淀高频、稳定、跨任务复用的分析链路</td>
+</tr>
+</tbody>
+</table>
+<p>而不应被自进化系统在线自动修改的对象包括：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>中文解释</th>
+<th>不自动修改的原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core System Prompt</td>
+<td>核心系统提示词</td>
+<td>这是行为宪法，在线自改容易造成全局行为漂移</td>
+</tr>
+<tr>
+<td>Loop Kernel</td>
+<td>执行循环内核</td>
+<td>影响工具调用、终止条件和状态一致性，风险过高</td>
+</tr>
+<tr>
+<td>Permission Model</td>
+<td>权限模型</td>
+<td>不能为了提高任务成功率绕过用户批准或文件安全边界</td>
+</tr>
+<tr>
+<td>Verifier</td>
+<td>验证器</td>
+<td>如果 Agent 能改验证器，就可能通过降低标准“刷分”</td>
+</tr>
+<tr>
+<td>Provider Adapter</td>
+<td>模型供应商适配层</td>
+<td>涉及消息协议、tool call 格式和缓存统计，属于基础设施</td>
+</tr>
+<tr>
+<td>Renderer Core</td>
+<td>地图渲染核心</td>
+<td>影响前端稳定性，不应由经验候选直接改写</td>
+</tr>
+</tbody>
+</table>
+<p>这是一条必要的安全边界。OpenGIS 的自进化不应该是系统改自己的一切，而应该是在一个受控编辑面内积累能力。重要的是，越靠近运行时骨架，越需要人工 review、测试和版本管理；越靠近 skill / operation / policy 资产，越适合自动提出、自动评估和半自动启用。</p>
+<h3 id="optimization-path"><a class="markdownIt-Anchor" href="#optimization-path"></a> Optimization Path</h3>
+<p><strong>Optimization Path，优化路径</strong>描述一次经验如何从任务轨迹变成可复用能力。</p>
+<p>完整路径如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">历史运行轨迹</span><br><span class="line">  -&gt; 弱点挖掘</span><br><span class="line">  -&gt; 候选能力生成</span><br><span class="line">  -&gt; held-in 回放</span><br><span class="line">  -&gt; held-out 检查</span><br><span class="line">  -&gt; 成本与副作用评估</span><br><span class="line">  -&gt; 晋升或拒绝</span><br><span class="line">  -&gt; 物化为资产</span><br><span class="line">  -&gt; 路由启用</span><br><span class="line">  -&gt; 持续观测</span><br><span class="line">  -&gt; 回滚或固化</span><br></pre></td></tr></table></figure>
+<p><code>held-in</code> 指与候选来源相近、用于验证候选是否修复原问题的任务集合。它回答的是：这个候选有没有修好它声称要修的问题。</p>
+<p><code>held-out</code> 指候选生成时没有参与的留出任务集合。它回答的是：这个候选有没有破坏其他任务。自进化系统如果没有 held-out，很容易出现“修好 A，破坏 B”的情况。</p>
+<p><code>cost regression</code> 指成本回归，也就是启用资产后虽然成功率可能提高，但 token、LLM turn、工具调用、耗时或 warning 变多。对 OpenGIS 这种本地桌面 Agent 来说，成本不只是钱，也包括等待时间、上下文压力和前端状态复杂度。</p>
+<p>这个流程中最重要的分离是：<strong>候选生成和候选启用必须分开</strong>。系统可以积极生成候选，但必须保守启用候选。候选如果没有清晰证据、没有重复支撑、没有回放收益、没有留出集验证，就只能停留在 draft 或 review 状态，不能进入 active runtime。</p>
+<h3 id="evaluation-metrics自进化必须同时看收益-成本和回归"><a class="markdownIt-Anchor" href="#evaluation-metrics自进化必须同时看收益-成本和回归"></a> Evaluation Metrics：自进化必须同时看收益、成本和回归</h3>
+<p><strong>Evaluation Metrics，评估指标</strong>决定系统能不能证明自己真的在变好。自进化评估不能只看任务是否成功。一个资产如果让成功率从 80% 提高到 100%，但平均 token 翻倍、工具调用增加、cache hit rate 下降，那么它可能只是让 Agent 更努力，而不是让 Agent 更聪明。由此，OpenGIS 的评估指标分成四层。</p>
+<div style="margin:16px 0;border:1px solid #7C8AA5;border-radius:8px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:13px;line-height:1.5;">
+  <div style="padding:8px 14px;background:#7C8AA5;color:#fff;font-weight:600;font-size:14px;">任务结果指标</div>
+  <table style="width:100%;border-collapse:collapse;background:#fff;">
+    <thead>
+      <tr style="background:#E9EDF3;">
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">指标</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">中文解释</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">作用</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-top:1px solid #E9EDF3;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Task Success Rate</td><td style="padding:7px 12px;">任务成功率</td><td style="padding:7px 12px;">判断是否完成用户目标</td></tr>
+      <tr style="border-top:1px solid #E9EDF3;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Artifact Correctness</td><td style="padding:7px 12px;">产物正确性</td><td style="padding:7px 12px;">判断输出文件、图层、统计结果是否符合 contract</td></tr>
+      <tr style="border-top:1px solid #E9EDF3;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Spatial Validity</td><td style="padding:7px 12px;">空间有效性</td><td style="padding:7px 12px;">检查 CRS、bbox、geometry、面积/距离单位是否合理</td></tr>
+      <tr style="border-top:1px solid #E9EDF3;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Warning-free Rate</td><td style="padding:7px 12px;">无警告率</td><td style="padding:7px 12px;">检查是否避免 CRS、nodata、参数弃用等隐性问题</td></tr>
+    </tbody>
+  </table>
+</div>
+<div style="margin:16px 0;border:1px solid #879B84;border-radius:8px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:13px;line-height:1.5;">
+  <div style="padding:8px 14px;background:#879B84;color:#fff;font-weight:600;font-size:14px;">执行轨迹指标</div>
+  <table style="width:100%;border-collapse:collapse;background:#fff;">
+    <thead>
+      <tr style="background:#E9EFE6;">
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">指标</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">中文解释</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">作用</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-top:1px solid #E9EFE6;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Canonical Action Coverage</td><td style="padding:7px 12px;">标准动作覆盖率</td><td style="padding:7px 12px;">判断是否完成必要 GIS 语义动作</td></tr>
+      <tr style="border-top:1px solid #E9EFE6;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Tool Efficiency</td><td style="padding:7px 12px;">工具效率</td><td style="padding:7px 12px;">判断工具调用是否膨胀</td></tr>
+      <tr style="border-top:1px solid #E9EFE6;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Loop Convergence</td><td style="padding:7px 12px;">循环收敛性</td><td style="padding:7px 12px;">判断结果完成后是否及时停止</td></tr>
+      <tr style="border-top:1px solid #E9EFE6;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Deviation Rate</td><td style="padding:7px 12px;">偏航率</td><td style="padding:7px 12px;">判断 Agent 是否偏离用户当前意图</td></tr>
+    </tbody>
+  </table>
+</div>
+<div style="margin:16px 0;border:1px solid #9A9272;border-radius:8px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:13px;line-height:1.5;">
+  <div style="padding:8px 14px;background:#9A9272;color:#fff;font-weight:600;font-size:14px;">成本指标</div>
+  <table style="width:100%;border-collapse:collapse;background:#fff;">
+    <thead>
+      <tr style="background:#F0EDE0;">
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">指标</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">中文解释</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">作用</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-top:1px solid #F0EDE0;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Total Token</td><td style="padding:7px 12px;">总 token 消耗</td><td style="padding:7px 12px;">衡量一次任务的上下文和模型成本</td></tr>
+      <tr style="border-top:1px solid #F0EDE0;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">LLM Turn</td><td style="padding:7px 12px;">模型请求轮数</td><td style="padding:7px 12px;">衡量 loop 是否过长</td></tr>
+      <tr style="border-top:1px solid #F0EDE0;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Tool Calls</td><td style="padding:7px 12px;">工具调用次数</td><td style="padding:7px 12px;">衡量执行路径是否简洁</td></tr>
+      <tr style="border-top:1px solid #F0EDE0;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Prompt Cache Hit Rate</td><td style="padding:7px 12px;">提示词缓存命中率</td><td style="padding:7px 12px;">衡量静态前缀和工具 schema 是否稳定</td></tr>
+      <tr style="border-top:1px solid #F0EDE0;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Wall Time</td><td style="padding:7px 12px;">端到端耗时</td><td style="padding:7px 12px;">衡量用户等待成本</td></tr>
+    </tbody>
+  </table>
+</div>
+<div style="margin:16px 0;border:1px solid #9187A9;border-radius:8px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:13px;line-height:1.5;">
+  <div style="padding:8px 14px;background:#9187A9;color:#fff;font-weight:600;font-size:14px;">自进化指标</div>
+  <table style="width:100%;border-collapse:collapse;background:#fff;">
+    <thead>
+      <tr style="background:#EFEBF4;">
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">指标</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">中文解释</th>
+        <th style="text-align:left;padding:8px 12px;color:#3F3D3A;font-weight:600;">作用</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-top:1px solid #EFEBF4;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Evolution Asset Lift Rate</td><td style="padding:7px 12px;">进化资产正收益率</td><td style="padding:7px 12px;">启用资产后带来正收益的比例</td></tr>
+      <tr style="border-top:1px solid #EFEBF4;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Held-out No-regression Rate</td><td style="padding:7px 12px;">留出集无回归率</td><td style="padding:7px 12px;">检查资产是否没有破坏其他任务</td></tr>
+      <tr style="border-top:1px solid #EFEBF4;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Closed-loop Rate</td><td style="padding:7px 12px;">闭环完成率</td><td style="padding:7px 12px;">轨迹到候选、评估、物化、启用、改善的完成比例</td></tr>
+      <tr style="border-top:1px solid #EFEBF4;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Rollback Effectiveness</td><td style="padding:7px 12px;">回滚有效性</td><td style="padding:7px 12px;">禁用资产后是否不再影响运行</td></tr>
+      <tr style="border-top:1px solid #EFEBF4;"><td style="padding:7px 12px;font-weight:600;color:#3F3D3A;white-space:nowrap;">Cost Regression Rate</td><td style="padding:7px 12px;">成本回归率</td><td style="padding:7px 12px;">识别成功率提升但成本恶化的资产</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>这套指标的判断标准可以概括为一句话：</p>
+<blockquote>
+<p>有效自进化必须带来可归因收益，并且不显著增加成本、不破坏留出任务、不污染运行时上下文。</p>
+</blockquote>
+<h3 id="核心术语表"><a class="markdownIt-Anchor" href="#核心术语表"></a> 核心术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>中文解释</th>
+<th>在 OpenGIS 中的含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agent</td>
+<td>智能体</td>
+<td>基于大模型、工具调用和执行反馈完成 GIS 任务的运行主体</td>
+</tr>
+<tr>
+<td>Harness</td>
+<td>智能体工程外壳 / 运行框架</td>
+<td>大模型外侧的 prompt、context、tool、loop、memory、policy、verifier 等工程系统</td>
+</tr>
+<tr>
+<td>Active Harness</td>
+<td>当前生效的运行框架</td>
+<td>正在服务用户任务的生产运行时，不应被自进化系统直接在线改写</td>
+</tr>
+<tr>
+<td>Run Archive</td>
+<td>运行归档</td>
+<td>每轮任务的消息、工具、代码、错误、产物和指标记录</td>
+</tr>
+<tr>
+<td>Weakness Mining</td>
+<td>弱点挖掘</td>
+<td>从失败、纠正和重复绕路中发现可优化模式</td>
+</tr>
+<tr>
+<td>Candidate</td>
+<td>候选能力</td>
+<td>尚未被采纳的改进提案</td>
+</tr>
+<tr>
+<td>Replay</td>
+<td>回放评估</td>
+<td>在隔离环境中复现任务，用于验证候选是否有效</td>
+</tr>
+<tr>
+<td>Held-in</td>
+<td>域内验证集</td>
+<td>与候选来源相近、用于验证候选是否修复原问题的任务集合</td>
+</tr>
+<tr>
+<td>Held-out</td>
+<td>留出验证集</td>
+<td>未参与候选生成、用于检查回归的任务集合</td>
+</tr>
+<tr>
+<td>Promotion Gate</td>
+<td>晋升门</td>
+<td>决定候选是否可以进入可用资产的评估与治理模块</td>
+</tr>
+<tr>
+<td>Materialization</td>
+<td>物化</td>
+<td>把候选转成 skill、operation、prompt_patch 或 tool_policy 等具体资产</td>
+</tr>
+<tr>
+<td>Asset Registry</td>
+<td>资产注册表</td>
+<td>管理进化资产版本、状态、来源和启用范围的 registry</td>
+</tr>
+<tr>
+<td>Capability Router</td>
+<td>能力路由器</td>
+<td>按当前任务选择少量相关 tool、skill、operation 或 policy</td>
+</tr>
+<tr>
+<td>Skill</td>
+<td>技能</td>
+<td>以文档形式沉淀的任务经验、操作规则或领域知识</td>
+</tr>
+<tr>
+<td>Operation</td>
+<td>原子操作</td>
+<td>具备输入输出 contract、可执行、可验证、可复用的 GIS 程序单元</td>
+</tr>
+<tr>
+<td>Prompt Patch</td>
+<td>提示词补丁</td>
+<td>局部行为修正规则，不改核心 system prompt</td>
+</tr>
+<tr>
+<td>Tool Policy</td>
+<td>工具策略</td>
+<td>工具选择、优先级、暴露范围和重试行为的建议策略</td>
+</tr>
+<tr>
+<td>Cost Regression</td>
+<td>成本回归</td>
+<td>启用资产后 token、turn、tool call、耗时或 warning 变差</td>
+</tr>
+<tr>
+<td>No-regression</td>
+<td>无回归</td>
+<td>新资产没有破坏 held-out 或其他既有任务能力</td>
+</tr>
+<tr>
+<td>Prompt Cache Hit Rate</td>
+<td>提示词缓存命中率</td>
+<td>provider 侧复用相同 prompt 前缀 token 的比例</td>
+</tr>
+</tbody>
+</table>
+<h2 id="自进化实验设计"><a class="markdownIt-Anchor" href="#自进化实验设计"></a> 自进化实验设计</h2>
+<h3 id="实验目标-数据集与实验设计"><a class="markdownIt-Anchor" href="#实验目标-数据集与实验设计"></a> 实验目标、数据集与实验设计</h3>
+<h4 id="实验动机"><a class="markdownIt-Anchor" href="#实验动机"></a> 实验动机</h4>
+<p>普通 benchmark 评估的是：</p>
+<blockquote>
+<p>这次任务做对了吗？</p>
+</blockquote>
+<p>而 OpenGIS 自进化实验要评估的是：</p>
+<blockquote>
+<p>系统是否能从任务历史中产生能力，并且这些能力在后续任务中被验证为有用？</p>
+</blockquote>
+<p>这两个问题差别很大。前者评估的是一次输出，后者评估的是一个运行时系统是否具备自我改进能力。如果一次任务失败了，系统能不能记住失败？如果同类失败反复出现，系统能不能把它抽象成一个可复用修复？如果某段代码或某个分析流程反复有效，系统能不能把它沉淀为 operation 或 skill？更重要的是，这些沉淀下来的能力是否真的让之后的任务更好，而不是只是把上下文变长、把 token 变贵？这就是本文实验设计要回答的问题，检验 OpenGIS 能否基于真实 GIS 任务轨迹完成受控自进化。</p>
+<h4 id="数据集介绍"><a class="markdownIt-Anchor" href="#数据集介绍"></a> 数据集介绍</h4>
+<p>评估与优化过程采用 GABench Data 数据集（<a target="_blank" rel="noopener" href="https://huggingface.co/datasets/zhangdw/GABench%EF%BC%89%E3%80%82GABench">https://huggingface.co/datasets/zhangdw/GABench）。GABench</a> 用于评估 Agent 在<strong>真实 GIS 分析任务</strong>中的表现。这些任务综合了<strong>自然语言指令、地理空间数据图层、工具链规划，以及生成的地图或表格输出</strong>等多个方面。它的任务天然包含 GIS 执行链：数据读取、字段检查、CRS 处理、空间分析、栅格处理、制图渲染、结果导出与参考产物，共53条，包括16组栅格空间分析，13组地统计，11组水文分析等，例如基于温度点数据做 Kriging 插值，并结合老年人口密度识别高风险区域。</p>
+<h4 id="gabench-到-opengis-的语义映射"><a class="markdownIt-Anchor" href="#gabench-到-opengis-的语义映射"></a> GABench 到 OpenGIS 的语义映射</h4>
+<p>OpenGIS 的工具体系（operation、skill、tool）与 GABench 参考工具链不同，不能要求工具名一致。通过 <strong>Canonical Action（标准语义动作）</strong> 把不同工具实现映射到同一类 GIS 语义动作，避免把语义等价但工具不同的执行路径误判为失败。</p>
+<table>
+<thead>
+<tr>
+<th>Canonical Action</th>
+<th>中文解释</th>
+<th>OpenGIS 中可能的实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inspect_dataset</code></td>
+<td>检查数据</td>
+<td><code>read_file</code>、<code>get_layer</code>、<code>get_raster_info</code>、<code>query_features</code></td>
+</tr>
+<tr>
+<td><code>vector_analysis</code></td>
+<td>矢量分析</td>
+<td><code>run_operation</code>、受控 <code>execute_code</code></td>
+</tr>
+<tr>
+<td><code>raster_analysis</code></td>
+<td>栅格分析</td>
+<td><code>run_operation</code>、受控 <code>execute_code</code></td>
+</tr>
+<tr>
+<td><code>load_vector</code></td>
+<td>加载矢量图层</td>
+<td><code>add_layer</code>、operation 输出后 <code>add_layer</code></td>
+</tr>
+<tr>
+<td><code>load_raster</code></td>
+<td>加载栅格图层</td>
+<td><code>add_raster</code></td>
+</tr>
+<tr>
+<td><code>style_vector</code></td>
+<td>设置矢量样式</td>
+<td><code>update_layer_style</code>、<code>set_categorized_style</code></td>
+</tr>
+<tr>
+<td><code>style_raster</code></td>
+<td>设置栅格样式</td>
+<td><code>set_raster_style</code></td>
+</tr>
+<tr>
+<td><code>export_artifact</code></td>
+<td>导出结果产物</td>
+<td>写出 GeoJSON / CSV / JSON / TIFF / PNG</td>
+</tr>
+<tr>
+<td><code>verify_output</code></td>
+<td>验证输出</td>
+<td>artifact verifier、schema check、空间统计 check</td>
+</tr>
+</tbody>
+</table>
+<h4 id="任务切分"><a class="markdownIt-Anchor" href="#任务切分"></a> 任务切分</h4>
+<p>GABench 任务量不大，实验切分分三层：</p>
+<ul>
+<li><strong>Held-in（域内验证集）</strong>：候选能力的来源，典型弱点包括参数错误、CRS warning、operation contract 缺失、输出已生成但 loop 不收口、用 Python 绕过已有工具、重复 list/read/check。</li>
+<li><strong>In-domain Held-out（同域留出集）</strong>：同领域不同任务，测同类泛化。</li>
+<li><strong>Cross-domain Transfer（跨域迁移集）</strong>：跨 GIS 领域（vector→raster、制图→空间统计），检查资产是否过拟合任务域。</li>
+</ul>
+<h4 id="实验臂设计"><a class="markdownIt-Anchor" href="#实验臂设计"></a> 实验臂设计</h4>
+<table>
+<thead>
+<tr>
+<th>实验臂</th>
+<th>含义</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Static Baseline</td>
+<td>静态基线，不启用自进化资产</td>
+<td>得到基础成功率、token、turn、工具调用</td>
+</tr>
+<tr>
+<td>Routed Baseline</td>
+<td>启用 CapabilityRouter，不启用资产</td>
+<td>分离工具路由收益</td>
+</tr>
+<tr>
+<td>Skill-only Evolution</td>
+<td>只允许 skill 资产启用</td>
+<td>看流程经验是否有用</td>
+</tr>
+<tr>
+<td>Operation Evolution</td>
+<td>允许 operation 资产启用</td>
+<td>看代码/分析能力复用收益</td>
+</tr>
+<tr>
+<td>Policy Evolution</td>
+<td>允许 prompt_patch / tool_policy</td>
+<td>看工具选择策略是否改善</td>
+</tr>
+<tr>
+<td>Full Evolution</td>
+<td>skill + operation + policy 全启用</td>
+<td>看完整系统收益</td>
+</tr>
+</tbody>
+</table>
+<h3 id="自进化闭环执行机制"><a class="markdownIt-Anchor" href="#自进化闭环执行机制"></a> 自进化闭环执行机制</h3>
+<h4 id="轨迹采集"><a class="markdownIt-Anchor" href="#轨迹采集"></a> 轨迹采集</h4>
+<p>每个 task-run 完整归档：user prompt、provider request 摘要、selected tool packs、selected skills / operations / evolution assets、tool call name / args / result、code step、warning / error / retry、artifact path、final answer、LLM turn、prompt / completion / cached tokens、wall time、loop termination reason。这些不是调试日志，而是自进化系统的训练材料。</p>
+<h4 id="候选生成"><a class="markdownIt-Anchor" href="#候选生成"></a> 候选生成</h4>
+<p>候选来自三类信号：</p>
+<ul>
+<li><strong>失败信号</strong>：tool 参数缺失、operation <code>KeyError</code>、raster style 参数不匹配、layer id 失效、CRS / geometry warning、timeout、API connection error。关键是错误后是否出现修复路径（如 <code>edit_operation -&gt; run_operation success</code>），这类轨迹比单纯失败更有价值。</li>
+<li><strong>纠正信号</strong>：用户直接反馈（“不要用 Python 设置样式，用 style tool”“输出已生成，为什么还不停止”），权重高于普通成功轨迹，直接暴露 harness 行为偏差。</li>
+<li><strong>复用信号</strong>：多次成功的工具序列、代码片段或 operation，且降低成本，才算能力。</li>
+</ul>
+<p>候选必须包含来源 run、触发原因、目标组件、证据、拟议修改、验证方式和适用边界。&quot;道路缓冲区分析要先投影到米制 CRS&quot;是候选能力；&quot;这次做了道路分析&quot;不是。</p>
+<h4 id="晋升门槛"><a class="markdownIt-Anchor" href="#晋升门槛"></a> 晋升门槛</h4>
+<p>自进化的核心不是会生成候选，而是会拒绝候选。Promotion Gate 包含三类门槛：</p>
+<ul>
+<li><strong>质量门槛</strong>：候选需具备 evidence、target component、proposed change、replay case、held-out check 和回滚路径；无复用意图、无重复支撑的泛化 recipe 只能停留在 review。</li>
+<li><strong>收益门槛</strong>：启用后至少一项正收益（success rate / artifact correctness 上升，或 token / turn / tool call / retry / warning 下降）；成功率提高但 token 大涨标记为 cost regression。</li>
+<li><strong>回归门槛</strong>：不得造成 held-out 成功率下降、token / tool call 持续上升、warning 增多、无关任务被错误路由、prompt cache hit rate 明显下降。</li>
+</ul>
+<h4 id="实验流程"><a class="markdownIt-Anchor" href="#实验流程"></a> 实验流程</h4>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Checkpoint 0: static baseline</span><br><span class="line">  -&gt; 跑 held-in / held-out / transfer</span><br><span class="line">Checkpoint 1: collect traces</span><br><span class="line">  -&gt; 只记录不启用，生成 candidates</span><br><span class="line">Checkpoint 2: evaluate candidates</span><br><span class="line">  -&gt; replay -&gt; held-in -&gt; held-out -&gt; promotion gate</span><br><span class="line">Checkpoint 3: canary enable</span><br><span class="line">  -&gt; 只启用少量资产，跑 held-in 小集，检查成本是否变差</span><br><span class="line">Checkpoint 4: full held-out evaluation</span><br><span class="line">  -&gt; 检查 no-regression</span><br><span class="line">Checkpoint 5: publish or rollback</span><br><span class="line">  -&gt; 正收益 publish，负收益 reject / archive</span><br></pre></td></tr></table></figure>
+<h3 id="成功判据与初步实验结果"><a class="markdownIt-Anchor" href="#成功判据与初步实验结果"></a> 成功判据与初步实验结果</h3>
+<h4 id="成功判据"><a class="markdownIt-Anchor" href="#成功判据"></a> 成功判据</h4>
+<ul>
+<li>任务成功率不下降；</li>
+<li>held-out 无明显回归；</li>
+<li>至少一个启用资产带来可归因正收益；</li>
+<li>token 或 turn 至少一个成本指标下降；</li>
+<li>负收益资产能被拒绝或回滚；</li>
+<li>资产不会无限膨胀进入上下文。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Agent/" rel="tag"># Agent</a>
+              <a href="/tags/harness/" rel="tag"># harness</a>
+              <a href="/tags/%E8%87%AA%E8%BF%9B%E5%8C%96/" rel="tag"># 自进化</a>
+              <a href="/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/" rel="tag"># 系统设计</a>
+              <a href="/tags/OpenGIS/" rel="tag"># OpenGIS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/08/18/Agentharness%E8%87%AA%E8%BF%9B%E5%8C%96/" rel="prev" title="Agent Harness 的自进化：自进化分类与Harness工程实践">
+      <i class="fa fa-chevron-left"></i> Agent Harness 的自进化：自进化分类与Harness工程实践
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#opengis-%E7%9A%84%E8%87%AA%E8%BF%9B%E5%8C%96%E6%A1%86%E6%9E%B6%E4%B8%8E%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="nav-number">2.</span> <span class="nav-text"> OpenGIS 的自进化框架与基础设施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#opengis-%E5%B7%B2%E5%85%B7%E5%A4%87%E7%9A%84%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="nav-number">2.1.</span> <span class="nav-text"> OpenGIS 已具备的基础设施</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E8%BF%9B%E5%8C%96%E9%97%AD%E7%8E%AF"><span class="nav-number">2.2.</span> <span class="nav-text"> 自进化闭环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E5%AE%9E%E7%8E%B0%E7%8A%B6%E6%80%81"><span class="nav-number">2.3.</span> <span class="nav-text"> 当前实现状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#opengis-%E8%87%AA%E8%BF%9B%E5%8C%96%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">3.</span> <span class="nav-text"> OpenGIS 自进化系统的核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#optimizer"><span class="nav-number">3.1.</span> <span class="nav-text"> Optimizer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#optimization-target"><span class="nav-number">3.2.</span> <span class="nav-text"> Optimization Target</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#optimization-path"><span class="nav-number">3.3.</span> <span class="nav-text"> Optimization Path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#evaluation-metrics%E8%87%AA%E8%BF%9B%E5%8C%96%E5%BF%85%E9%A1%BB%E5%90%8C%E6%97%B6%E7%9C%8B%E6%94%B6%E7%9B%8A-%E6%88%90%E6%9C%AC%E5%92%8C%E5%9B%9E%E5%BD%92"><span class="nav-number">3.4.</span> <span class="nav-text"> Evaluation Metrics：自进化必须同时看收益、成本和回归</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%9C%AF%E8%AF%AD%E8%A1%A8"><span class="nav-number">3.5.</span> <span class="nav-text"> 核心术语表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.</span> <span class="nav-text"> 自进化实验设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%9B%AE%E6%A0%87-%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.1.</span> <span class="nav-text"> 实验目标、数据集与实验设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E5%8A%A8%E6%9C%BA"><span class="nav-number">4.1.1.</span> <span class="nav-text"> 实验动机</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%9B%86%E4%BB%8B%E7%BB%8D"><span class="nav-number">4.1.2.</span> <span class="nav-text"> 数据集介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#gabench-%E5%88%B0-opengis-%E7%9A%84%E8%AF%AD%E4%B9%89%E6%98%A0%E5%B0%84"><span class="nav-number">4.1.3.</span> <span class="nav-text"> GABench 到 OpenGIS 的语义映射</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E5%88%87%E5%88%86"><span class="nav-number">4.1.4.</span> <span class="nav-text"> 任务切分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E8%87%82%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.1.5.</span> <span class="nav-text"> 实验臂设计</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E8%BF%9B%E5%8C%96%E9%97%AD%E7%8E%AF%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">4.2.</span> <span class="nav-text"> 自进化闭环执行机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%A8%E8%BF%B9%E9%87%87%E9%9B%86"><span class="nav-number">4.2.1.</span> <span class="nav-text"> 轨迹采集</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%80%99%E9%80%89%E7%94%9F%E6%88%90"><span class="nav-number">4.2.2.</span> <span class="nav-text"> 候选生成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%99%8B%E5%8D%87%E9%97%A8%E6%A7%9B"><span class="nav-number">4.2.3.</span> <span class="nav-text"> 晋升门槛</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">4.2.4.</span> <span class="nav-text"> 实验流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%8A%9F%E5%88%A4%E6%8D%AE%E4%B8%8E%E5%88%9D%E6%AD%A5%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">4.3.</span> <span class="nav-text"> 成功判据与初步实验结果</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%88%90%E5%8A%9F%E5%88%A4%E6%8D%AE"><span class="nav-number">4.3.1.</span> <span class="nav-text"> 成功判据</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">82</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">208</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/ATFfang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ATFfang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-recommend">
+  <div class="sidebar-recommend-title">推荐阅读</div>
+  <ul class="sidebar-recommend-list">
+    <li>
+      <a href="/2026/08/03/OpenGIS%E7%9A%84%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7/" title="Agent驱动的GIS客户端OpenGIS：harness的架构升级">Agent驱动的GIS客户端OpenGIS：harness的架构升级</a>
+    </li>
+    <li>
+      <a href="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/" title="一个RAG系统的技术选型与pipeline">一个RAG系统的技术选型与pipeline</a>
+    </li>
+    <li>
+      <a href="/2026/04/13/OpenHarness/" title="【长文】港大新开源的OpenHarness，到底做了啥？">【长文】港大新开源的OpenHarness，到底做了啥？</a>
+    </li>
+    <li>
+      <a href="/2026/04/12/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E9%9D%A2%E5%90%91%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E7%9A%84%E5%A4%9A%E8%A7%86%E8%A7%89%E6%A3%80%E6%B5%8B%E4%BB%BB%E5%8A%A1%E7%B3%BB%E7%BB%9F/" title="系统设计：一个面向本地部署的多视觉检测任务系统">系统设计：一个面向本地部署的多视觉检测任务系统</a>
+    </li>
+    <li>
+      <a href="/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/" title="后台服务的快速搭建框架：一套简单 Go 技术栈">后台服务的快速搭建框架：一套简单 Go 技术栈</a>
+    </li>
+  </ul>
+</div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-terminal"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">779k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">23:36</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+<script>
+  // 强制页面从顶部开始展示（head.swig 已禁用浏览器滚动恢复，这里兜底拉回顶部）
+  // load 事件：图片等资源加载完成后浏览器可能再次调整滚动位置
+  // pageshow 事件：覆盖 bfcache（前进/后退）场景
+  var scrollToTop = function() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  scrollToTop();
+  window.addEventListener('load', scrollToTop);
+  window.addEventListener('pageshow', scrollToTop);
+</script>
+
+<!-- Dark mode toggle -->
+<div class="theme-toggle" id="theme-toggle" title="切换深色/浅色模式" role="button" aria-label="切换深色/浅色模式">
+  <span class="theme-toggle-icon">🌙</span>
+</div>
+<script>
+  (function() {
+    var KEY = 'blog-theme';
+    var root = document.documentElement;
+    var icon = document.querySelector('.theme-toggle-icon');
+
+    // 初始化：优先 localStorage，其次跟随系统偏好
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = saved !== null ? (saved === 'dark') : prefersDark;
+
+    var apply = function(dark) {
+      root.classList.toggle('dark', dark);
+      if (icon) icon.textContent = dark ? '☀️' : '🌙';
+    };
+    apply(isDark);
+
+    var btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        isDark = !isDark;
+        apply(isDark);
+        try { localStorage.setItem(KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+      });
+    }
+
+    // 跟随系统变化（用户未手动选择时）
+    if (saved === null && window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        apply(e.matches);
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

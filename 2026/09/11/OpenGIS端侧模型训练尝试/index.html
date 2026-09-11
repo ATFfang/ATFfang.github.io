@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本次做了一个简单的实验，使用GPT辅助生产的地图控制SFT数据（约2.4w条，基于opengis harness的tool构造），对qwen3.5-2b进行lora微调，部署在一张4090上，让opengis接入口执行地图控制与要素样式修改，初步尝试端侧模型的可行性。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenGIS harness 对端侧模型的一次尝试">
+<meta property="og:url" content="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="本次做了一个简单的实验，使用GPT辅助生产的地图控制SFT数据（约2.4w条，基于opengis harness的tool构造），对qwen3.5-2b进行lora微调，部署在一张4090上，让opengis接入口执行地图控制与要素样式修改，初步尝试端侧模型的可行性。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/tool_distribution.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/training_curves.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/OpenGIS%E7%AB%AF%E4%BE%A72B.gif">
+<meta property="article:published_time" content="2026-09-11T05:05:11.000Z">
+<meta property="article:modified_time" content="2026-09-11T11:10:56.898Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/tool_distribution.png">
+
+<link rel="canonical" href="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<script>
+  // 尽早禁用浏览器滚动位置恢复（Chrome 在页面加载早期就会尝试恢复，
+  // 必须放在 head 里执行才拦得住；body-end 里设置已太晚）
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
+
+  <title>OpenGIS harness 对端侧模型的一次尝试 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenGIS harness 对端侧模型的一次尝试
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-09-11 13:05:11 / 修改时间：19:10:56" itemprop="dateCreated datePublished" datetime="2026-09-11T13:05:11+08:00">2026-09-11</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>20 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本次做了一个简单的实验，使用GPT辅助生产的地图控制SFT数据（约2.4w条，基于opengis harness的tool构造），对qwen3.5-2b进行lora微调，部署在一张4090上，让opengis接入口执行地图控制与要素样式修改，初步尝试端侧模型的可行性。</p>
+<span id="more"></span>
+<h2 id="sft-与-lora-微调"><a class="markdownIt-Anchor" href="#sft-与-lora-微调"></a> SFT 与 LoRA 微调</h2>
+<h3 id="sft-监督微调"><a class="markdownIt-Anchor" href="#sft-监督微调"></a> SFT 监督微调</h3>
+<p>SFT（Supervised Fine-Tuning，监督微调）指用带标注的指令-回复数据继续训练基座模型，把学习目标从预测语料中的下一个 token，换成给定指令生成示范回复。在预训练、SFT、偏好优化构成的三阶段对齐流程中，它位于基座模型和偏好优化之间，承担分布迁移的作用。这一阶段不要求模型学新知识，它的任务是把模型已经具备的语言能力收敛到具体任务的输出分布上。</p>
+<p>我们再详细一点，例如，我们准备这样一条训练数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">User:</span><br><span class="line">计算上海市各行政区的人口密度。</span><br><span class="line"></span><br><span class="line">Assistant:</span><br><span class="line">首先读取上海市行政区划数据和人口统计数据，</span><br><span class="line">然后按照行政区代码进行 Join，</span><br><span class="line">最后计算Populatio / Area</span><br></pre></td></tr></table></figure>
+<p>在训练过程中，我们希望，收入User信号给LLM，预测结果与标准答案比较产出Cross Entropy Loss，通过 Backpropagation 更新参数。因此，SFT 本质上还是一个<strong>标准的监督学习问题</strong>。</p>
+<p>为了更加深入的了解，我们必须知道，自回归语言模型对一段回复的建模方式是逐 token 的条件概率连乘：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>p</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>y</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><munderover><mo>∏</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">∣</mi><mi>y</mi><mi mathvariant="normal">∣</mi></mrow></munderover><msub><mi>p</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>∣</mo><mi>x</mi><mo separator="true">,</mo><msub><mi>y</mi><mrow><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">p_\theta(y \mid x) = \prod_{t=1}^{|y|} p_\theta(y_t \mid x, y_{&lt;t})
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:3.2281180000000003em;vertical-align:-1.267113em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.9610050000000003em;"><span style="top:-1.882887em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.050005em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∏</span></span></span><span style="top:-4.386005em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∣</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mord mtight">∣</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.267113em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mrel mtight">&lt;</span><span class="mord mathnormal mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.17737em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></p>
+<p>其中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal">x</span></span></span></span> 是 prompt，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi></mrow><annotation encoding="application/x-tex">y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span></span> 是示范回复。SFT 让这个连乘在训练数据上尽可能大，等价于在每个回复 token 上最小化负对数似然：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi mathvariant="script">L</mi><mtext>SFT</mtext></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>=</mo><mo>−</mo><mtext> </mtext><msub><mi mathvariant="double-struck">E</mi><mrow><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo stretchy="false">)</mo><mo>∼</mo><mi mathvariant="script">D</mi></mrow></msub><mrow><mo fence="true">[</mo><mfrac><mn>1</mn><mrow><mi mathvariant="normal">∣</mi><mi>y</mi><mi mathvariant="normal">∣</mi></mrow></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">∣</mi><mi>y</mi><mi mathvariant="normal">∣</mi></mrow></munderover><mi>log</mi><mo>⁡</mo><msub><mi>p</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>∣</mo><mi>x</mi><mo separator="true">,</mo><msub><mi>y</mi><mrow><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="false">)</mo><mo fence="true">]</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{SFT}}(\theta) = -\,\mathbb{E}_{(x,y)\sim\mathcal{D}} \left[ \frac{1}{|y|} \sum_{t=1}^{|y|} \log p_\theta(y_t \mid x, y_{&lt;t}) \right]
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord"><span class="mord mathcal">L</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">SFT</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.02778em;">θ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:3.6010299999999997em;vertical-align:-1.55002em;"></span><span class="mord">−</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">E</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.34480000000000005em;"><span style="top:-2.5198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mathnormal mtight">x</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mclose mtight">)</span><span class="mrel mtight">∼</span><span class="mord mtight"><span class="mord mathcal mtight" style="margin-right:0.02778em;">D</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3551999999999999em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner"><span class="mopen"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.0510099999999998em;"><span style="top:-2.2500000000000004em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎣</span></span></span><span style="top:-2.8099900000000004em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎢</span></span></span><span style="top:-4.05101em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎡</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.55002em;"><span></span></span></span></span></span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.32144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mord">∣</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.9610050000000003em;"><span style="top:-1.882887em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.050005em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.386005em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∣</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mord mtight">∣</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.267113em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mrel mtight">&lt;</span><span class="mord mathnormal mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.17737em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mclose"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.0510099999999998em;"><span style="top:-2.2500000000000004em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎦</span></span></span><span style="top:-2.8099900000000004em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎥</span></span></span><span style="top:-4.05101em;"><span class="pstrut" style="height:3.1550000000000002em;"></span><span class="delimsizinginner delim-size4"><span>⎤</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.55002em;"><span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p>这个损失只覆盖回复部分的 token，prompt 是条件而不是待拟合的目标，如果它参与损失，模型容量会分给复现指令模板，而不是学习作答行为。工程实现上把 prompt 位置的标签置为忽略索引（PyTorch <code>CrossEntropyLoss</code> 的 <code>ignore_index</code> 参数，取 -100），梯度只在模型生成的 token 上回传。而多轮对话按角色逐轮标注掩码，只有 assistant 轮次计入损失。</p>
+<p>从宏观上来看，SFT可以改变模型的<strong>行为模式</strong>、<strong>输出格式</strong>、<strong>任务能力</strong>、<strong>领域适应</strong>。</p>
+<h3 id="lora"><a class="markdownIt-Anchor" href="#lora"></a> LoRA</h3>
+<p>LoRA 全称 <strong>Low-Rank Adaptation</strong>，中文一般叫“低秩适配”。它属于 PEFT（Parameter-Efficient Fine-Tuning，参数高效微调）的一种。核心思想是不去更新大模型原本的全部参数，而是在部分线性层旁边增加一组很小的低秩矩阵，只训练这些新增参数。</p>
+<p>对于神经网络中的线性层，其前向传播可以表示为：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>y</mi><mo>=</mo><mi>W</mi><mi>x</mi><mo separator="true">,</mo><mspace width="2em"/><mi>W</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><msub><mi>d</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>×</mo><msub><mi>d</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub></mrow></msup></mrow><annotation encoding="application/x-tex">y = Wx,\qquad W\in\mathbb{R}^{d_{out}\times d_{in}}  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.899108em;vertical-align:0em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">R</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.899108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.29634285714285713em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span><span class="mbin mtight">×</span><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3280857142857143em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p>全参数微调（Full Fine-Tuning）直接更新完整权重矩阵 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi></mrow><annotation encoding="application/x-tex">W</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span>：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>W</mi><mtext>’</mtext><mo>=</mo><mi>W</mi><mo>+</mo><mi mathvariant="normal">Δ</mi><mi>W</mi></mrow><annotation encoding="application/x-tex">W’ = W + \Delta W  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord">’</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">Δ</span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span></span></p>
+<p>LoRA 则假设模型适应下游任务所需的权重变化 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>W</mi></mrow><annotation encoding="application/x-tex">\Delta W</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">Δ</span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span> 具有<strong>低秩（Low-Rank）特性</strong>，因此可以使用两个较小的矩阵进行分解：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>W</mi><mo>=</mo><mi>B</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">\Delta W = BA  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">Δ</span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span></span></span></span></span></p>
+<p>其中：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>A</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><mi>r</mi><mo>×</mo><msub><mi>d</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub></mrow></msup><mo separator="true">,</mo><mspace width="2em"/><mi>B</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><msub><mi>d</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>×</mo><mi>r</mi></mrow></msup><mo separator="true">,</mo><mspace width="2em"/><mi>r</mi><mo>≪</mo><mi>min</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>d</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo separator="true">,</mo><msub><mi>d</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">A\in\mathbb{R}^{r\times d_{in}},\qquad  
+B\in\mathbb{R}^{d_{out}\times r},\qquad  
+r\ll \min(d_{in},d_{out})  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72243em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.093548em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">R</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.899108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mbin mtight">×</span><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3280857142857143em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.093548em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">R</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.899108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.29634285714285713em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span><span class="mbin mtight">×</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≪</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">min</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">t</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></p>
+<p>因此，加入 LoRA 后的前向传播变为：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>y</mi><mo>=</mo><mi>W</mi><mi>x</mi><mo>+</mo><mi>B</mi><mi>A</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">y = Wx + BAx  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span><span class="mord mathnormal">x</span></span></span></span></span></p>
+<p>经典 LoRA 通常还会引入缩放系数 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mi mathvariant="normal">/</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\alpha/r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span>：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><menclose notation="box"><mstyle scriptlevel="0" displaystyle="false"><mstyle scriptlevel="0" displaystyle="false"><mstyle scriptlevel="0" displaystyle="true"><mrow><mi>y</mi><mo>=</mo><mi>W</mi><mi>x</mi><mo>+</mo><mfrac><mi>α</mi><mi>r</mi></mfrac><mi>B</mi><mi>A</mi><mi>x</mi></mrow></mstyle></mstyle></mstyle></menclose></mrow><annotation encoding="application/x-tex">\boxed{y = Wx + \frac{\alpha}{r}BAx}  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.47356em;vertical-align:-1.0259999999999998em;"></span><span class="mord"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4475600000000002em;"><span style="top:-4.47356em;"><span class="pstrut" style="height:4.47356em;"></span><span class="boxpad"><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span><span class="mord mathnormal">x</span></span></span></span></span><span style="top:-3.44756em;"><span class="pstrut" style="height:4.47356em;"></span><span class="stretchy fbox" style="height:2.47356em;border-style:solid;border-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.0259999999999998em;"><span></span></span></span></span></span></span></span></span></span></p>
+<p>训练过程中，原始权重 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi></mrow><annotation encoding="application/x-tex">W</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span> <strong>保持冻结</strong>，只更新低秩矩阵 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal">A</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>，从而大幅减少需要训练的参数量。其成立的基本条件基于一个核心假设：<strong>大模型在适配一个新任务时，真正需要发生的参数变化并不需要占满整个高维参数空间，而是集中在一个相对低维的子空间中。</strong> 也就是说，虽然 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi></mrow><annotation encoding="application/x-tex">W</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span> 可能是一个巨大的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4096</mn><mo>×</mo><mn>4096</mn></mrow><annotation encoding="application/x-tex">4096\times4096</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span></span></span></span> 矩阵，但新任务真正需要的变化方向可能只有几十维。举个具体数字。假设一个线性层 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><mn>4096</mn><mo>×</mo><mn>4096</mn></mrow></msup></mrow><annotation encoding="application/x-tex">W\in \mathbb{R}^{4096\times4096}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72243em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">R</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">4</span><span class="mord mtight">0</span><span class="mord mtight">9</span><span class="mord mtight">6</span><span class="mbin mtight">×</span><span class="mord mtight">4</span><span class="mord mtight">0</span><span class="mord mtight">9</span><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span></span> 完整参数量为：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4096</mn><mo>×</mo><mn>4096</mn><mo>=</mo><mn>16</mn><mo separator="true">,</mo><mn>777</mn><mo separator="true">,</mo><mn>216</mn></mrow><annotation encoding="application/x-tex">4096\times4096=16,777,216</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8388800000000001em;vertical-align:-0.19444em;"></span><span class="mord">1</span><span class="mord">6</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">7</span><span class="mord">7</span><span class="mord">7</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">2</span><span class="mord">1</span><span class="mord">6</span></span></span></span> ，约 1678 万，如果 LoRA 的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">r=16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord">6</span></span></span></span> ，那么参数量是<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4096</mn><mo>×</mo><mn>16</mn><mo>+</mo><mn>16</mn><mo>×</mo><mn>4096</mn></mrow><annotation encoding="application/x-tex">4096\times16+16\times4096</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span></span></span></span>，只有大约 13 万。</p>
+<p>因此，我们可以简单的讲 LoRA 理解成先把信息投影到一个很小的低维空间，然后再映射回来，当然，原本的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">Wx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord mathnormal">x</span></span></span></span> 原始路径是完全保留的，只是同时增加了一条支路。训练过程中梯度可以经过整个模型计算，但优化器真正更新的只有 LoRA 参数。</p>
+<p>LoRA 最常加在 Transformer 的 <strong>Linear 层</strong>上。以 Attention 为例，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord mathnormal">Q</span></span></span></span>、<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">K</span></span></span></span>、<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 以及输出投影都包含线性变换，因此常见的 LoRA 注入位置包括 <code>q_proj</code>、<code>k_proj</code>、<code>v_proj</code> 和 <code>o_proj</code>；对于更充分的参数适配，也可以进一步作用于 MLP 中的 <code>gate_proj</code>、<code>up_proj</code> 和 <code>down_proj</code>。</p>
+<p>LoRA 中最重要的几个超参数包括：</p>
+<ul>
+<li><strong><code>r</code></strong> ：低秩空间的维度，决定 LoRA 的参数量和学习容量。<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span> 越大，模型可学习的变化越丰富，但显存和计算开销也随之增加，常见取值为 8、16、32、64。</li>
+<li><strong><code>lora_alpha</code></strong>：LoRA 分支的缩放系数。经典 LoRA 中实际增量为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mi>α</mi><mi>r</mi></mfrac><mi>B</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">\frac{\alpha}{r}BA</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.040392em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span></span></span></span>，因此 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mi mathvariant="normal">/</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\alpha/r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span> 决定 LoRA 分支对原模型的影响尺度。</li>
+<li><strong><code>lora_dropout</code></strong>：LoRA 分支上的 Dropout，用于降低过拟合风险。</li>
+<li><strong><code>target_modules</code></strong>：指定哪些 Linear 层注入 LoRA，注入范围越大，通常意味着更强的适应能力和更高的训练成本。</li>
+</ul>
+<p>例如，一个常见配置可以写成：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">LoraConfig(</span><br><span class="line">    r=<span class="number">16</span>,</span><br><span class="line">    lora_alpha=<span class="number">32</span>,</span><br><span class="line">    lora_dropout=<span class="number">0.05</span>,</span><br><span class="line">    target_modules=[</span><br><span class="line">        <span class="string">&quot;q_proj&quot;</span>, <span class="string">&quot;k_proj&quot;</span>, <span class="string">&quot;v_proj&quot;</span>, <span class="string">&quot;o_proj&quot;</span></span><br><span class="line">    ]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>LoRA 能够显著降低训练成本的原因不仅在于<strong>可训练参数更少</strong>。全参数微调需要为大量模型参数维护梯度和 Optimizer State，而 LoRA 冻结 Base Model，只需要为少量低秩参数维护这些训练状态，因此可以显著降低训练显存占用。不过，Base Model 本身仍然需要加载到显存中；如果进一步将基础模型以 4-bit 等低精度方式加载，再结合 LoRA 训练，就形成了常见的 <strong>QLoRA</strong>。</p>
+<p>需要注意的是，<strong>SFT 和 LoRA 并不是同一级别的概念</strong>：SFT（Supervised Fine-Tuning）描述的是模型通过监督数据学习目标输出的<strong>训练范式</strong>，而 LoRA 描述的是训练过程中<strong>如何高效更新参数</strong>。因此工程中常见的 <strong>SFT + LoRA</strong>，本质上就是使用 SFT 的监督学习目标计算 Loss 和反向传播，但只更新 LoRA 参数。</p>
+<p>训练完成后，LoRA 通常只需要保存一个体积较小的 <strong>Adapter</strong>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Base Model + LoRA Adapter → Fine-tuned Model</span><br></pre></td></tr></table></figure>
+<p>同一个 Base Model 可以加载不同 Adapter 来适配不同任务，也可以将 LoRA 参数直接 Merge 回原模型：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>W</mi><mtext>merged</mtext></msub><mi>W</mi><mo>+</mo><mfrac><mi>α</mi><mi>r</mi></mfrac><mi>B</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">W_{\text{merged}}
+
+W+\frac{\alpha}{r}BA  
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">merged</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.7935600000000003em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span></span></span></span></span></p>
+<p>从而得到一个无需额外挂载 LoRA Adapter 的完整模型。</p>
+<p>因此，LoRA 的核心可以概括为：<strong>通过低秩矩阵近似下游任务所需的权重增量，在保留基础模型原始参数的同时，仅训练少量新增参数，以较低的显存、计算和存储成本完成模型适配。</strong></p>
+<h2 id="我们的-sft-目标"><a class="markdownIt-Anchor" href="#我们的-sft-目标"></a> 我们的 SFT 目标</h2>
+<p>为了测试基于 OpenGIS harness 提供 tool 以及 operation（原子化的GIS操作），能否使用端侧部署的小模型胜任简单的地图操作与空间分析能力，我计划使用qwen的小模型进行 LoRA 微调并部署测试。由于 GIS 分析相对复杂，涉及到的工作体量完全可以作为一篇论文了，我们本文与现阶段目标是在现有 Qwen3.5-2B 基座上，进行<strong>地图操作工具调用的监督微调</strong>，使模型能把用户指令和地图状态转换为 OpenGIS 可执行的工具名及参数。</p>
+<p>本次 SFT 操作数据与微调对象覆盖地图控制、图层管理、样式、查询、过滤等 18 种工具。下表展示了我们的各项参数，以及最终的微调结果，读者可以做一个简单的预览：</p>
+<table>
+<thead>
+<tr>
+<th>核心项目</th>
+<th>当前记录</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基座</td>
+<td>Qwen3.5-2B，本地权重</td>
+</tr>
+<tr>
+<td>最终数据</td>
+<td>27,123 条，18 种工具</td>
+</tr>
+<tr>
+<td>数据划分</td>
+<td>train 23,868 / eval 1,627 / test 1,628</td>
+</tr>
+<tr>
+<td>训练方式</td>
+<td>BF16 LoRA，双 RTX 4090，DDP</td>
+</tr>
+<tr>
+<td>配置轮数 / 总 step</td>
+<td>2 epochs / 1,492</td>
+</tr>
+<tr>
+<td>停止进度</td>
+<td>400 step，0.536283 epoch，26.81%</td>
+</tr>
+<tr>
+<td>当前训练 loss</td>
+<td>0.04337690</td>
+</tr>
+<tr>
+<td>当前验证 loss</td>
+<td>0.04338664</td>
+</tr>
+<tr>
+<td>当前验证 token accuracy</td>
+<td>98.6073%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="为什么从地图操作切入"><a class="markdownIt-Anchor" href="#为什么从地图操作切入"></a> 为什么从地图操作切入？</h3>
+<p>OpenGIS 的端侧模型建设可以分为地图交互和空间分析两个方向。地图交互具有较清晰的输入输出边界：用户给出要求，模型结合当前图层与地图状态选择工具，工具执行后产生可观察的界面变化。颜色、标注、图层顺序和视角等结果比较容易检查，因此适合作为训练和部署链路的首期验证对象。而空间分析我们刚才也说了，往往涉及数据质量、坐标参考系、单位、几何有效性和操作顺序，验证成本更高，工作量大，适宜在基础链路稳定后逐步加入。</p>
+<h2 id="基座模型与数据构造"><a class="markdownIt-Anchor" href="#基座模型与数据构造"></a> 基座模型与数据构造</h2>
+<h3 id="基座模型"><a class="markdownIt-Anchor" href="#基座模型"></a> 基座模型</h3>
+<p>本项目采用 <strong>Qwen3.5</strong> 系列模型作为基座模型，其整体架构为 <code>Qwen3_5ForConditionalGeneration</code>，属于面向条件生成任务设计的多模态大模型。语言侧包含 24 层 Transformer，隐藏维度为 2048，前馈网络中间维度为 6144，并采用 8 个注意力头与 2 个 Key-Value Head，在控制模型规模的同时兼顾推理效率；词表规模达到 248,320，最大位置编码长度为 262,144，具备较强的长上下文处理能力。视觉侧同样采用 24 层编码结构，隐藏维度为 1024，Patch Size 为 16，可将图像划分为视觉 Token 并与文本表示进行联合建模。整体上，该模型兼具文本生成、长上下文理解和视觉信息编码能力，适合作为后续领域 SFT 与 LoRA 微调的基础模型。</p>
+<p>训练硬件为两张 RTX 4090，各 24,564 MiB。</p>
+<h3 id="sft-数据构建过程"><a class="markdownIt-Anchor" href="#sft-数据构建过程"></a> SFT 数据构建过程</h3>
+<p>数据流程可以简单的归纳为：</p>
+<div style="display:flex; flex-direction:column; align-items:center; gap:6px; margin:16px 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:14px; line-height:1.3;">
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">从地图工具接口及状态构造任务</div>
+<span style="color:#94A3B8;">↓</span>
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">生成标准工具调用或澄清答案</div>
+<span style="color:#94A3B8;">↓</span>
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">控制类别规模</div>
+<span style="color:#94A3B8;">↓</span>
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">对每条源样本进行扩写 </div>
+<span style="color:#94A3B8;">↓</span>
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">合并校验</div>
+<span style="color:#94A3B8;">↓</span>
+<div style="width:280px;box-sizing:border-box;padding:8px 14px;border:1px solid #CBD5E1;border-radius:8px;background:#F8FAFC;text-align:center;">划分训练/验证/测试集</div>
+</div>
+<h4 id="从真实工具生成-operation-cards"><a class="markdownIt-Anchor" href="#从真实工具生成-operation-cards"></a> 从真实工具生成 Operation Cards</h4>
+<p>构建脚本启动 OpenGIS <code>ToolRegistry</code>，自动发现已经注册的工具，并通过 <code>tool_pack_for_registered()</code> 只选取 <code>map</code> 和 <code>style</code> 两类工具。对于每个工具，脚本提取以下信息：</p>
+<ul>
+<li>工具名称、所属 Tool Pack、功能类别和显示名称；</li>
+<li>工具描述、返回值描述、标签和示例；</li>
+<li>参数名称、类型、说明、默认值与必填状态；</li>
+<li>可直接用于模型 Tool Calling 的 OpenAI Function Schema。</li>
+</ul>
+<p>最终包含以下18种：</p>
+<table>
+<thead>
+<tr>
+<th>能力类型</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>图层管理</td>
+<td><code>add_layer</code>、<code>remove_layer</code>、<code>list_layers</code>、<code>get_layer</code></td>
+</tr>
+<tr>
+<td>地图视图</td>
+<td><code>fly_to</code>、<code>zoom_to_layer</code>、<code>get_map_state</code>、<code>set_basemap_visibility</code></td>
+</tr>
+<tr>
+<td>查询与选择</td>
+<td><code>query_features</code>、<code>highlight_features</code></td>
+</tr>
+<tr>
+<td>普通样式</td>
+<td><code>update_layer_style</code>、<code>set_layer_visual_variables</code></td>
+</tr>
+<tr>
+<td>专题制图</td>
+<td><code>set_graduated_style</code>、<code>set_categorized_style</code></td>
+</tr>
+<tr>
+<td>图层表达</td>
+<td><code>set_layer_filter</code>、<code>set_layer_label</code>、<code>set_layer_order</code>、<code>update_legend_spec</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="源轨迹构建"><a class="markdownIt-Anchor" href="#源轨迹构建"></a> 源轨迹构建</h4>
+<h5 id="数据结构"><a class="markdownIt-Anchor" href="#数据结构"></a> 数据结构</h5>
+<p>源数据使用轨迹结构保存。每条记录包含稳定标识、意图、业务权重、标签、地图状态、用户表达和目标轨迹。地图状态包括工作空间、视图中心、缩放级别、底图状态、图层列表、几何类型、字段和活动图层。工具参数中的 <code>layer_id</code> 和字段名称可以因此与环境状态建立对应关系。</p>
+<p>工具调用轨迹包含 OpenAI 风格的函数名称及 JSON arguments，并可以附带模拟的成功结果。多工具样本可以在同一条轨迹中包含多个调用。无工具样本则保存 assistant 文本，用于训练信息不足时的澄清行为或普通问答行为。</p>
+<p>下面是源数据中真实存在的澄清样本：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;assistant_message:023208&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;intent&quot;</span><span class="punctuation">:</span> <span class="string">&quot;clarify_missing_layer&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;weight&quot;</span><span class="punctuation">:</span> <span class="number">1.4</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;state&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;layers&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;active_layer_id&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">null</span></span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="string">&quot;把它改成红色&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;trajectory&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;action&quot;</span><span class="punctuation">:</span> <span class="string">&quot;assistant_message&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;我需要先知道要操作哪个图层。请先选择一个图层，或告诉我 layer_id。&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>这类样本的意义在于：相同的“把它改成红色”在有活动图层时可以调用样式工具，在没有任何图层时应该先澄清。模型需要学习地图状态会改变正确行为，而不是只把关键词“红色”固定映射到某个函数。</p>
+<h5 id="四类源数据"><a class="markdownIt-Anchor" href="#四类源数据"></a> 四类源数据</h5>
+<p>源轨迹由四部分构成：</p>
+<ol>
+<li><strong>基础 Seed</strong>：为 18 种工具提供核心调用、常见表达和基础参数示例。</li>
+<li><strong>参数组合</strong>：系统组合颜色、透明度、点大小、字段、分类方法、分类数、色带、过滤条件、标注字段和图层顺序等变量。</li>
+<li><strong>多工具轨迹</strong>：让一次用户请求产生多个存在顺序关系的地图或样式调用。</li>
+<li><strong>澄清与负样本</strong>：覆盖缺少图层、缺少字段、无需操作地图等场景。</li>
+</ol>
+<p>参数化生成比单纯改写一句话更重要，例如，分层设色会组合数值字段、<code>quantile</code>、<code>equal-interval</code>、<code>jenks</code> 等分类方法、3/5/7 个分类等级以及不同色带；过滤和查询则组合字段、比较操作符和具体值。它们扩展了模型需要判断的参数空间。</p>
+<p>每条源轨迹带有 <code>weight</code> 元数据，用于表达业务优先级。样式、分层设色、分类设色、过滤和多步操作通常具有较高权重</p>
+<h4 id="类别平衡"><a class="markdownIt-Anchor" href="#类别平衡"></a> 类别平衡</h4>
+<p>初始展开阶段共生成 <strong>23,429 条</strong>记录。由于参数组合空间不同，分层设色和普通样式数量远高于其他工具。如果直接使用全部记录，模型可能过度偏向高频工具，因此构建脚本对各类工具设置数量上限。</p>
+<p>默认单工具上限为 2,400 条，部分高频工具使用单独上限：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th style="text-align:right">上限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set_graduated_style</code></td>
+<td style="text-align:right">2,400</td>
+</tr>
+<tr>
+<td><code>update_layer_style</code></td>
+<td style="text-align:right">2,000</td>
+</tr>
+<tr>
+<td><code>set_categorized_style</code></td>
+<td style="text-align:right">1,600</td>
+</tr>
+<tr>
+<td><code>set_layer_filter</code></td>
+<td style="text-align:right">1,400</td>
+</tr>
+<tr>
+<td><code>set_layer_visual_variables</code></td>
+<td style="text-align:right">1,400</td>
+</tr>
+</tbody>
+</table>
+<p>assistant 澄清和负样本不受该工具上限限制。类别平衡后保留 <strong>9,041 条源记录</strong>，其中 8,819 条包含工具调用，222 条为 assistant 文本。平衡降低了最大类别的绝对规模，但没有将 18 类工具变成均匀分布；高频专题制图和样式操作仍然占据主要部分，这是当前数据的业务倾向。</p>
+<h4 id="自然语言扩写"><a class="markdownIt-Anchor" href="#自然语言扩写"></a> 自然语言扩写</h4>
+<p>在 9,041 条源轨迹基础上，为每条记录生成 <strong>2 条</strong>新的用户表达，共新增 18,082 条记录。扩写只替换用户请求，地图状态、目标工具、工具参数、业务权重和轨迹保持不变。扩写根据工具语义处理常见表达，例如把“分层设色”替换为“分级渲染”、把“高亮”替换为“突出显示”，或将结构化参数重新表达为自然语言。多工具轨迹会将多个调用描述组合成有顺序的请求；无工具记录会生成新的澄清或无需工具表达。</p>
+<h4 id="数据结果"><a class="markdownIt-Anchor" href="#数据结果"></a> 数据结果</h4>
+<p>总体规模如下：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th style="text-align:right">结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最终训练记录</td>
+<td style="text-align:right">27,123</td>
+</tr>
+<tr>
+<td>含工具调用记录</td>
+<td style="text-align:right">26,457（97.54%）</td>
+</tr>
+<tr>
+<td>澄清或无工具记录</td>
+<td style="text-align:right">666（2.46%）</td>
+</tr>
+<tr>
+<td>覆盖工具</td>
+<td style="text-align:right">18</td>
+</tr>
+<tr>
+<td>工具调用总次数</td>
+<td style="text-align:right">27,321</td>
+</tr>
+<tr>
+<td>结构校验错误</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>源记录</td>
+<td style="text-align:right">9,041</td>
+</tr>
+<tr>
+<td>新增改写</td>
+<td style="text-align:right">18,082</td>
+</tr>
+</tbody>
+</table>
+<p>工具调用总次数高于含工具调用记录数，是因为部分多步样本在一条记录中包含多个工具调用。工具分布如下：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th style="text-align:right">调用次数</th>
+<th style="text-align:right">调用占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set_graduated_style</code></td>
+<td style="text-align:right">7,338</td>
+<td style="text-align:right">26.86%</td>
+</tr>
+<tr>
+<td><code>update_layer_style</code></td>
+<td style="text-align:right">6,138</td>
+<td style="text-align:right">22.47%</td>
+</tr>
+<tr>
+<td><code>set_categorized_style</code></td>
+<td style="text-align:right">3,039</td>
+<td style="text-align:right">11.12%</td>
+</tr>
+<tr>
+<td><code>set_layer_visual_variables</code></td>
+<td style="text-align:right">2,016</td>
+<td style="text-align:right">7.38%</td>
+</tr>
+<tr>
+<td><code>set_layer_filter</code></td>
+<td style="text-align:right">1,932</td>
+<td style="text-align:right">7.07%</td>
+</tr>
+<tr>
+<td><code>query_features</code></td>
+<td style="text-align:right">1,440</td>
+<td style="text-align:right">5.27%</td>
+</tr>
+<tr>
+<td><code>set_layer_order</code></td>
+<td style="text-align:right">1,404</td>
+<td style="text-align:right">5.14%</td>
+</tr>
+<tr>
+<td><code>set_layer_label</code></td>
+<td style="text-align:right">1,197</td>
+<td style="text-align:right">4.38%</td>
+</tr>
+<tr>
+<td><code>fly_to</code></td>
+<td style="text-align:right">399</td>
+<td style="text-align:right">1.46%</td>
+</tr>
+<tr>
+<td><code>highlight_features</code></td>
+<td style="text-align:right">366</td>
+<td style="text-align:right">1.34%</td>
+</tr>
+<tr>
+<td><code>update_legend_spec</code></td>
+<td style="text-align:right">354</td>
+<td style="text-align:right">1.30%</td>
+</tr>
+<tr>
+<td><code>zoom_to_layer</code></td>
+<td style="text-align:right">351</td>
+<td style="text-align:right">1.28%</td>
+</tr>
+<tr>
+<td><code>set_basemap_visibility</code></td>
+<td style="text-align:right">336</td>
+<td style="text-align:right">1.23%</td>
+</tr>
+<tr>
+<td><code>get_layer</code></td>
+<td style="text-align:right">210</td>
+<td style="text-align:right">0.77%</td>
+</tr>
+<tr>
+<td><code>remove_layer</code></td>
+<td style="text-align:right">210</td>
+<td style="text-align:right">0.77%</td>
+</tr>
+<tr>
+<td><code>add_layer</code></td>
+<td style="text-align:right">204</td>
+<td style="text-align:right">0.75%</td>
+</tr>
+<tr>
+<td><code>get_map_state</code></td>
+<td style="text-align:right">195</td>
+<td style="text-align:right">0.71%</td>
+</tr>
+<tr>
+<td><code>list_layers</code></td>
+<td style="text-align:right">192</td>
+<td style="text-align:right">0.70%</td>
+</tr>
+</tbody>
+</table>
+<img src="/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/tool_distribution.png" class="" title="工具调用分布">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图1：SFT 数据的工具调用分布</p>
+<p>并按 88%/6%/6% 划分Train、Eval与Test。</p>
+<p>本阶段建立了一条从 OpenGIS 真实工具定义出发，经过轨迹构造、参数组合、类别平衡、自然语言扩写、结构校验和格式转换，最终形成 Qwen SFT 数据的完整工程管线。最终数据包含 <strong>27,123 条记录、18 种地图工具和 27,321 次工具调用</strong>，其中 26,457 条为工具调用记录，666 条为澄清或无需工具记录，并完成 Train、Eval、Test 三部分划分。</p>
+<h2 id="训练配置与流程"><a class="markdownIt-Anchor" href="#训练配置与流程"></a> 训练配置与流程</h2>
+<h3 id="训练配置"><a class="markdownIt-Anchor" href="#训练配置"></a> 训练配置</h3>
+<p>本次训练采用双 GPU 数据并行（Data Parallelism）策略，每张 GPU 均维护一份完整的模型副本，并分别处理不同的 micro-batch；反向传播后，各 GPU 通过梯度同步（通常采用 All-Reduce）聚合梯度，从而保证模型参数保持一致。需要注意的是，数据并行的主要作用是提高训练吞吐量并扩大有效 Batch Size，而不是将两张 24 GB GPU 的显存合并为一块连续的 48 GB 显存空间，因此单个模型副本及其训练状态仍需满足单卡显存约束。</p>
+<p>在数据并行与梯度累积共同作用下，全局有效 Batch Size（Global Effective Batch Size）可表示为：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>B</mi><mrow><mi mathvariant="normal">g</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi></mrow></msub><msub><mi>B</mi><mrow><mi mathvariant="normal">d</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">e</mi></mrow></msub><mo>×</mo><msub><mi>N</mi><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">m</mi></mrow></msub><mo>×</mo><msub><mi>N</mi><mrow><mi mathvariant="normal">G</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">U</mi></mrow></msub></mrow><annotation encoding="application/x-tex">B_{\mathrm{global}}
+
+B_{\mathrm{device}}
+\times
+N_{\mathrm{accum}}
+\times
+N_{\mathrm{GPU}}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.05017em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight" style="margin-right:0.01389em;">g</span><span class="mord mathrm mtight">l</span><span class="mord mathrm mtight">o</span><span class="mord mathrm mtight">b</span><span class="mord mathrm mtight">a</span><span class="mord mathrm mtight">l</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.05017em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">d</span><span class="mord mathrm mtight">e</span><span class="mord mathrm mtight" style="margin-right:0.01389em;">v</span><span class="mord mathrm mtight">i</span><span class="mord mathrm mtight">c</span><span class="mord mathrm mtight">e</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">a</span><span class="mord mathrm mtight">c</span><span class="mord mathrm mtight">c</span><span class="mord mathrm mtight">u</span><span class="mord mathrm mtight">m</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">G</span><span class="mord mathrm mtight">P</span><span class="mord mathrm mtight">U</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<p>本次训练配置为单卡 Batch Size = 1、梯度累积步数 = 16、GPU 数量 = 2，因此：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>B</mi><mrow><mi mathvariant="normal">g</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi></mrow></msub><mo>=</mo><mn>1</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">B_{\mathrm{global}} = 1\times16\times2=32
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.05017em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight" style="margin-right:0.01389em;">g</span><span class="mord mathrm mtight">l</span><span class="mord mathrm mtight">o</span><span class="mord mathrm mtight">b</span><span class="mord mathrm mtight">a</span><span class="mord mathrm mtight">l</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">2</span></span></span></span></span></p>
+<p>对于包含 23,868 条样本的数据集，每个 Epoch 理论上对应约 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>23</mn><mo separator="true">,</mo><mn>868</mn><mi mathvariant="normal">/</mi><mn>32</mn><mo>≈</mo><mn>745.9</mn></mrow><annotation encoding="application/x-tex">23,868/32\approx745.9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mord">3</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">8</span><span class="mord">6</span><span class="mord">8</span><span class="mord">/</span><span class="mord">3</span><span class="mord">2</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">7</span><span class="mord">4</span><span class="mord">5</span><span class="mord">.</span><span class="mord">9</span></span></span></span> 个参数更新步（Optimizer Steps）。训练 2 个 Epoch 后，总训练计划约为 1,492 个 Optimizer Steps。因此，训练进度条中的 step 表示完成梯度累积后的全局优化器更新次数，而非单张 GPU 处理的 micro-batch 数量；由于最后一个 Batch 可能不足完整 Batch Size，实际步数及尾批次处理方式应以 Trainer 最终记录的训练状态为准。</p>
+<p>训练采用 BF16 精度加载基座模型，并使用 PyTorch SDPA 完成注意力计算。为降低训练过程中 Activation 带来的显存占用，启用 Gradient Checkpointing 并关闭 use_cache。当前实验未启用 4-bit 量化，因此采用标准 LoRA 而非 QLoRA；配置中保留 NF4、BF16 Compute Dtype 与 Double Quantization 参数，以便后续扩展至 QLoRA 训练。</p>
+<p>LoRA 设置 Rank <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">r=16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord">6</span></span></span></span>、<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">\alpha=32</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">2</span></span></span></span>、Dropout 为 0.05，并将 Adapter 注入 Attention 的 q_proj、k_proj、v_proj、o_proj 以及 MLP 的 gate_proj、up_proj、down_proj，从而在冻结基座模型参数的基础上，对 Attention 与前馈网络进行任务适配。</p>
+<p>训练共进行 2 个 Epoch，学习率设置为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2\times10^{-4}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">4</span></span></span></span></span></span></span></span></span></span></span></span>，采用 AdamW 优化器 + Cosine 学习率调度，Warmup Ratio 为 0.03。单卡 Batch Size 为 1，梯度累积步数为 16，最大序列长度设置为 4096 Token；训练采用 BF16，并启用 TF32 加速部分矩阵运算。模型每 100 个 Optimizer Step 进行一次评估与 Checkpoint 保存，最多保留最近 3 个 Checkpoint。</p>
+<p>数据集按照 88% / 6% / 6% 划分为训练集、验证集和测试集，并在划分前进行随机打乱。训练读取统一处理后的 text 字段，同时保留原始 Messages。实验过程中额外记录数据集 Profile、训练样例、运行环境及 Git 状态，以保证训练过程具有良好的可追踪性与可复现性。</p>
+<p>训练过程中，原始 messages 首先通过 Chat Template 转换为符合基座模型对话协议的文本序列，再经 Tokenizer 编码为 Token 序列。模型采用自回归方式，在已有上下文条件下逐 Token 预测后续内容，并通过 <strong>交叉熵损失（Cross-Entropy Loss）</strong> 衡量预测分布与目标 Token 之间的差异。对于 Tool Calling 任务，模型不仅需要学习工具协议的结构与格式，还需要正确生成函数名称、参数字段及其具体取值。相比高度重复的结构 Token，函数名称、图层标识和参数值等任务相关内容通常具有更高的信息密度，其错误也更容易直接导致工具调用或任务执行失败，因此不同 Token 的预测错误在实际应用中的影响并不完全等价。</p>
+<p>本次 SFT 采用 Teacher Forcing（教师强制）进行训练，即模型预测当前位置 Token 时，输入上下文始终来自真实的目标序列；而在实际自回归推理过程中，后续预测依赖模型此前生成的内容，因此早期错误可能沿生成序列持续传播并产生误差累积（Error Accumulation）。这意味着较低的训练 Loss 只能说明模型在教师强制条件下具有较好的 Token 级预测能力，并不能直接保证自由生成时完整 JSON 的格式正确性、Tool Call 的参数准确性以及多步工具调用链的任务成功率。因此，在训练指标之外，还需要通过独立的推理评测对结构正确率、工具调用准确率和端到端任务成功率进行验证，从而建立训练 Loss 与模型实际 Agent 能力之间的联系。</p>
+<h3 id="训练过程数据"><a class="markdownIt-Anchor" href="#训练过程数据"></a> 训练过程数据</h3>
+<p>本次训练在 checkpoint-400 时已达到基本收敛。</p>
+<img src="/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/training_curves.png" class="" title="训练曲线">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图2：训练过程中的 loss 与学习率曲线</p>
+<p>每百步长的详细数据如下：</p>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>eval loss</th>
+<th>eval token accuracy</th>
+<th>eval entropy</th>
+<th>runtime 秒</th>
+<th>samples/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100</td>
+<td>0.05180109</td>
+<td>98.4887%</td>
+<td>0.05356669</td>
+<td>59.5623</td>
+<td>27.316</td>
+</tr>
+<tr>
+<td>200</td>
+<td>0.04565005</td>
+<td>98.5510%</td>
+<td>0.04524021</td>
+<td>59.422</td>
+<td>27.38</td>
+</tr>
+<tr>
+<td>300</td>
+<td>0.04443359</td>
+<td>98.5780%</td>
+<td>0.04536038</td>
+<td>59.6038</td>
+<td>27.297</td>
+</tr>
+<tr>
+<td>400</td>
+<td>0.04338664</td>
+<td>98.6073%</td>
+<td>0.04436830</td>
+<td>59.5518</td>
+<td>27.321</td>
+</tr>
+</tbody>
+</table>
+<p>从训练过程来看，模型的 Training Loss 整体呈持续下降趋势，并在训练后期逐渐趋于稳定，表明模型已能够较好地拟合当前 SFT 数据分布，参数更新幅度逐步减小，训练过程基本达到收敛状态。同时，Loss 曲线未出现明显的大幅震荡或持续反弹，说明当前学习率、Batch Size 与梯度累积等训练参数整体较为稳定，已经获得较稳定的泛化表现，未表现出显著的过拟合趋势。</p>
+<h2 id="实际效果"><a class="markdownIt-Anchor" href="#实际效果"></a> 实际效果</h2>
+<p>在实际使用中，通过 VLLM 在一块 4090 上部署了 SFT 微调后的模型，其大致效果如下（位加速，由压缩为较小的gif，画质较差）：</p>
+<img src="/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/OpenGIS%E7%AB%AF%E4%BE%A72B.gif" class="" title="端侧模型运行效果">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图3：端侧 2B 模型在地图控制任务上的运行效果</p>
+<p>对比LoRA微调前的2B本地模型，在工具调用的准确率上，微调后的模型在我们的测试任务上从约65%提升至78%，但面对长程任务基本无法完成，这应该触达了2B大小的端侧模型的能力上限。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/" rel="prev" title="OpenGIS 自进化架构与自进化实验设计">
+      <i class="fa fa-chevron-left"></i> OpenGIS 自进化架构与自进化实验设计
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#sft-%E4%B8%8E-lora-%E5%BE%AE%E8%B0%83"><span class="nav-number">1.</span> <span class="nav-text"> SFT 与 LoRA 微调</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sft-%E7%9B%91%E7%9D%A3%E5%BE%AE%E8%B0%83"><span class="nav-number">1.1.</span> <span class="nav-text"> SFT 监督微调</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lora"><span class="nav-number">1.2.</span> <span class="nav-text"> LoRA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%BB%AC%E7%9A%84-sft-%E7%9B%AE%E6%A0%87"><span class="nav-number">2.</span> <span class="nav-text"> 我们的 SFT 目标</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%8E%E5%9C%B0%E5%9B%BE%E6%93%8D%E4%BD%9C%E5%88%87%E5%85%A5"><span class="nav-number">2.1.</span> <span class="nav-text"> 为什么从地图操作切入？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E5%BA%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E6%95%B0%E6%8D%AE%E6%9E%84%E9%80%A0"><span class="nav-number">3.</span> <span class="nav-text"> 基座模型与数据构造</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E5%BA%A7%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text"> 基座模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sft-%E6%95%B0%E6%8D%AE%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text"> SFT 数据构建过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E%E7%9C%9F%E5%AE%9E%E5%B7%A5%E5%85%B7%E7%94%9F%E6%88%90-operation-cards"><span class="nav-number">3.2.1.</span> <span class="nav-text"> 从真实工具生成 Operation Cards</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%BA%90%E8%BD%A8%E8%BF%B9%E6%9E%84%E5%BB%BA"><span class="nav-number">3.2.2.</span> <span class="nav-text"> 源轨迹构建</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.2.2.1.</span> <span class="nav-text"> 数据结构</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9B%9B%E7%B1%BB%E6%BA%90%E6%95%B0%E6%8D%AE"><span class="nav-number">3.2.2.2.</span> <span class="nav-text"> 四类源数据</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E5%88%AB%E5%B9%B3%E8%A1%A1"><span class="nav-number">3.2.3.</span> <span class="nav-text"> 类别平衡</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E6%89%A9%E5%86%99"><span class="nav-number">3.2.4.</span> <span class="nav-text"> 自然语言扩写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%9C"><span class="nav-number">3.2.5.</span> <span class="nav-text"> 数据结果</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE%E4%B8%8E%E6%B5%81%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text"> 训练配置与流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE"><span class="nav-number">4.1.</span> <span class="nav-text"> 训练配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%AD%E7%BB%83%E8%BF%87%E7%A8%8B%E6%95%B0%E6%8D%AE"><span class="nav-number">4.2.</span> <span class="nav-text"> 训练过程数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E6%95%88%E6%9E%9C"><span class="nav-number">5.</span> <span class="nav-text"> 实际效果</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">208</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/ATFfang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ATFfang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-recommend">
+  <div class="sidebar-recommend-title">推荐阅读</div>
+  <ul class="sidebar-recommend-list">
+    <li>
+      <a href="/2026/08/03/OpenGIS%E7%9A%84%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7/" title="Agent驱动的GIS客户端OpenGIS：harness的架构升级">Agent驱动的GIS客户端OpenGIS：harness的架构升级</a>
+    </li>
+    <li>
+      <a href="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/" title="一个RAG系统的技术选型与pipeline">一个RAG系统的技术选型与pipeline</a>
+    </li>
+    <li>
+      <a href="/2026/04/13/OpenHarness/" title="【长文】港大新开源的OpenHarness，到底做了啥？">【长文】港大新开源的OpenHarness，到底做了啥？</a>
+    </li>
+    <li>
+      <a href="/2026/04/12/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E9%9D%A2%E5%90%91%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E7%9A%84%E5%A4%9A%E8%A7%86%E8%A7%89%E6%A3%80%E6%B5%8B%E4%BB%BB%E5%8A%A1%E7%B3%BB%E7%BB%9F/" title="系统设计：一个面向本地部署的多视觉检测任务系统">系统设计：一个面向本地部署的多视觉检测任务系统</a>
+    </li>
+    <li>
+      <a href="/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/" title="后台服务的快速搭建框架：一套简单 Go 技术栈">后台服务的快速搭建框架：一套简单 Go 技术栈</a>
+    </li>
+  </ul>
+</div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-terminal"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">790k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">23:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+<script>
+  // 强制页面从顶部开始展示（head.swig 已禁用浏览器滚动恢复，这里兜底拉回顶部）
+  // load 事件：图片等资源加载完成后浏览器可能再次调整滚动位置
+  // pageshow 事件：覆盖 bfcache（前进/后退）场景
+  var scrollToTop = function() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  scrollToTop();
+  window.addEventListener('load', scrollToTop);
+  window.addEventListener('pageshow', scrollToTop);
+</script>
+
+<!-- Dark mode toggle -->
+<div class="theme-toggle" id="theme-toggle" title="切换深色/浅色模式" role="button" aria-label="切换深色/浅色模式">
+  <span class="theme-toggle-icon">🌙</span>
+</div>
+<script>
+  (function() {
+    var KEY = 'blog-theme';
+    var root = document.documentElement;
+    var icon = document.querySelector('.theme-toggle-icon');
+
+    // 初始化：优先 localStorage，其次跟随系统偏好
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = saved !== null ? (saved === 'dark') : prefersDark;
+
+    var apply = function(dark) {
+      root.classList.toggle('dark', dark);
+      if (icon) icon.textContent = dark ? '☀️' : '🌙';
+    };
+    apply(isDark);
+
+    var btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        isDark = !isDark;
+        apply(isDark);
+        try { localStorage.setItem(KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+      });
+    }
+
+    // 跟随系统变化（用户未手动选择时）
+    if (saved === null && window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        apply(e.matches);
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

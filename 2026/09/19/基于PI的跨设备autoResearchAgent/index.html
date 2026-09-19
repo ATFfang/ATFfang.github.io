@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"atffang.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="以前训练模型，都是ssh到实验室服务器，上传代码或者直接使用vscode到remote编写、修正代码并开始训练，隔段时间去看一下进度如何。偷懒是第一生产力，后来我发现，其实这个任务可以托管给Codex，只不过在可视化、流程完整性上还是有所欠缺，因此，本尝试一套从文献召回到代码撰写与模型训练，再到训练实时监控与结果评估的 Agent 托管流程，取名为 AutoResearch Hub。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于PI的跨设备AutoResearch Agent：底座搭建与试用">
+<meta property="og:url" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/index.html">
+<meta property="og:site_name" content="Tianyao&#39; s BLOG">
+<meta property="og:description" content="以前训练模型，都是ssh到实验室服务器，上传代码或者直接使用vscode到remote编写、修正代码并开始训练，隔段时间去看一下进度如何。偷懒是第一生产力，后来我发现，其实这个任务可以托管给Codex，只不过在可视化、流程完整性上还是有所欠缺，因此，本尝试一套从文献召回到代码撰写与模型训练，再到训练实时监控与结果评估的 Agent 托管流程，取名为 AutoResearch Hub。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%96%87%E7%8C%AE%E5%BA%93.jpg">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E8%AE%AD%E7%BB%83%E8%BF%87%E7%A8%8B.jpg">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E8%AE%AD%E7%BB%83%E5%AE%8C%E6%88%90%E4%B8%8E%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90.jpg">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E5%8E%86%E5%8F%B2%E9%98%9F%E5%88%97.jpg">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_1.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_2.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_3.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_4.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_5.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_6.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_7.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_8.png">
+<meta property="og:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_9.png">
+<meta property="article:published_time" content="2026-09-19T06:02:28.000Z">
+<meta property="article:modified_time" content="2026-09-19T15:37:14.978Z">
+<meta property="article:author" content="Fang Tianyao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%9E%B6%E6%9E%84.png">
+
+<link rel="canonical" href="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<script>
+  // 尽早禁用浏览器滚动位置恢复（Chrome 在页面加载早期就会尝试恢复，
+  // 必须放在 head 里执行才拦得住；body-end 里设置已太晚）
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
+
+  <title>基于PI的跨设备AutoResearch Agent：底座搭建与试用 | Tianyao' s BLOG</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Tianyao' s BLOG" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Tianyao' s BLOG</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Tianyao</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Fang Tianyao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tianyao' s BLOG">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于PI的跨设备AutoResearch Agent：底座搭建与试用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-09-19 14:02:28 / 修改时间：23:37:14" itemprop="dateCreated datePublished" datetime="2026-09-19T14:02:28+08:00">2026-09-19</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>以前训练模型，都是ssh到实验室服务器，上传代码或者直接使用vscode到remote编写、修正代码并开始训练，隔段时间去看一下进度如何。偷懒是第一生产力，后来我发现，其实这个任务可以托管给Codex，只不过在可视化、流程完整性上还是有所欠缺，因此，本尝试一套从文献召回到代码撰写与模型训练，再到训练实时监控与结果评估的 Agent 托管流程，取名为 AutoResearch Hub。</p>
+<span id="more"></span>
+<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
+<p>AutoResearch Hub 是面向科研项目的自主研究控制平台，我们希望它把研究计划、领域文献、代码工作区、模型 Agent、GPU 训练任务和实验结果统一到一个可恢复、可审计、可远程控制的执行闭环中，并实现在明确的项目边界、资源预算和审批机制下，使 Agent 能够完成文献检索、方案可行性分析、代码实现、训练提交、指标跟踪、结果比较、绘图和研究总结。</p>
+<p>平台以 Karpathy Autoresearch 的“小步修改—固定预算实验—客观指标评估—保留或回退”思想作为实验协议参考，以 Pi 作为 Linux 侧默认 coding-agent harness，并在其外部增加身份认证、项目隔离、文献 RAG、GPU 任务管理、持久工作流、训练心跳、MCP 接入、审计和可观测性。针对上面的需求，我们列举以下工程目标：</p>
+<ol>
+<li>接受研究者提供的详细研究方向、研究计划和技术路线，并将其固化为项目上下文；</li>
+<li>支持批量领域文献导入、结构化解析、合理切块、混合检索和原文追溯；</li>
+<li>允许本地 Linux Agent 或外部 Agent 在项目范围内编写代码、读取数据和发起受控训练；</li>
+<li>将训练从 Agent 对话生命周期中解耦，支持实时日志、结构化指标、GPU 状态和低成本心跳；</li>
+<li>通过 REST 与项目级 MCP 暴露统一控制面，使 Codex 等外部 Agent 能进入指定项目工作；</li>
+<li>对用户、项目、文献、会话、模型配置和训练任务实施权限隔离；</li>
+<li>保留审计记录和研究产物，使实验过程可检查、可复现、可恢复。</li>
+</ol>
+<p>AutoResearch Hub 的总体架构如下图所示：</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%9E%B6%E6%9E%84.png" class="" title="架构">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图1：AutoResearch Hub 总体架构 </p>
+<h2 id="hybrid-rag"><a class="markdownIt-Anchor" href="#hybrid-rag"></a> Hybrid RAG</h2>
+<p>在文献召回方面，项目采用主流的 Hybrid RAG 模式。具体流程包括解析切块，Embedding、Agent 调用混合召回，查询时并行执行两条召回链路：</p>
+<p>查询时并行执行两条召回链路：</p>
+<ol>
+<li><strong>Lexical</strong>：SQLite FTS5/BM25，适合术语、缩写、方法名、数据集名称和精确表达；</li>
+<li><strong>Dense</strong>：SentenceTransformers 或 OpenAI 兼容 Embedding 的余弦相似度，适合语义改写和跨语言表达。</li>
+</ol>
+<p>两路候选通过 Reciprocal Rank Fusion（RRF）融合。简化表达为：</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">RRF</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>d</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>r</mi><mo>∈</mo><mi>R</mi></mrow></munder><mfrac><mn>1</mn><mrow><mi>k</mi><mo>+</mo><msub><mo><mi mathvariant="normal">rank</mi><mo>⁡</mo></mo><mi>r</mi></msub><mo stretchy="false">(</mo><mi>d</mi><mo stretchy="false">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">\operatorname{RRF}(d)=\sum_{r\in R}\frac{1}{k+\operatorname{rank}_r(d)}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">R</span><span class="mord mathrm">R</span><span class="mord mathrm">F</span></span><span class="mopen">(</span><span class="mord mathnormal">d</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:2.6431459999999998em;vertical-align:-1.321706em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.050005em;"><span style="top:-1.8556639999999998em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mrel mtight">∈</span><span class="mord mathnormal mtight" style="margin-right:0.00773em;">R</span></span></span></span><span style="top:-3.0500049999999996em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.321706em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.32144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mop"><span class="mop"><span class="mord mathrm">r</span><span class="mord mathrm">a</span><span class="mord mathrm">n</span><span class="mord mathrm">k</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">d</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<p>其中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span> 表示各召回器，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> 是抑制头部排名差异的常数。该策略不要求 BM25 分数与向量相似度具有相同量纲，适合工程上稳定融合。</p>
+<p>Embedding 后端支持：</p>
+<ul>
+<li>本地 SentenceTransformers，设备可选 CPU 或指定 GPU；</li>
+<li>OpenAI 兼容 <code>/embeddings</code> 第三方服务；</li>
+<li>不同项目或导入批次选择不同后端。</li>
+</ul>
+<p>Agent 原生工具包括 <code>rag_search</code>、<code>list_documents</code> 和 <code>read_chunk</code>。召回结果携带 document ID、chunk ID、文件名、页码和章节。Agent 可以先广泛召回，再读取命中段落精查；用户也能依据同一标识查看段落和全文。因此，最终结论可以从回答回溯到具体原文。</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%96%87%E7%8C%AE%E5%BA%93.jpg" class="" title="文献库">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图2：文献库管理与原文追溯 </p>
+<p>此外，系统还支持的基本的文件系统，支持预览、编辑、上传与下载。</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.png" class="" title="文件系统">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图3：项目文件系统 </p>
+<h2 id="agent-与工作流"><a class="markdownIt-Anchor" href="#agent-与工作流"></a> Agent 与工作流</h2>
+<p>我们基于 Pi 的可拓展体系，初步挂载了一下几个工具：</p>
+<ul>
+<li><code>rag_search</code>，在当前项目文献中执行混合检索</li>
+<li><code>list_documents</code> ，列出当前项目可访问文献</li>
+<li><code>read_chunk</code> ，根据 document/chunk ID 读取原文证据</li>
+<li><code>platform_status</code> ，检查 RAG、工作区和训练环境状态</li>
+<li><code>plot_chart</code> ，在项目训练环境中生成科研图像并保存到 <code>artifacts/figures/</code></li>
+<li><code>run_training_job</code> ，通过受控 Job Manager 提交训练并跟踪 GPU、指标和日志</li>
+</ul>
+<p>同时，也挂载了面向文献综述、科研写作、深度学习实验和 Autoresearch 流程等多个Skill。</p>
+<p>工作流方面，默认 Autoresearch 工作流阶段为：</p>
+<div style="padding:14px 16px;border:1px solid #4A90E2;border-radius:8px;background:#F5FAFF;margin:16px 0;">
+  <div style="font-weight:600;font-size:1.02em;color:#1D5FA8;margin-bottom:12px;">默认 Autoresearch 工作流</div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">plan</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">问题拆解、假设、数据需求、评价指标和资源估计</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">retrieve</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">多查询 RAG 证据包，带页码和 chunk 标识，为后续决策提供可追溯依据</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">feasibility</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">结构化可行性报告，含风险、依赖与停止条件</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #E9A33E;border-radius:6px;background:#FDF5E8;color:#B0701F;font-weight:600;font-size:12.5px;text-align:center;">approval</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">人工 approve / revise / reject 决策，是流程中唯一的人工卡点</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">implement</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">产出代码、配置、实验入口和 <code>.autoresearch/job.json</code></span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">train</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">经 Job Manager 校验后运行 GPU 任务，提交后与对话生命周期解耦</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">evaluate</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">读取指标、日志和产物，执行评价协议</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">review</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">复核结论、失败原因和证据充分性</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 118px;padding:3px 8px;border:1px solid #9B59B6;border-radius:6px;background:#F7F0FB;color:#7D3C98;font-weight:600;font-size:12.5px;text-align:center;">finalize</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">汇总报告、代码与实验产物，形成可复现的交付</span>
+    </div>
+  </div>
+</div>
+<p>各阶段含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>主要产出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plan</td>
+<td>问题拆解、假设、数据需求、评价指标和资源估计</td>
+</tr>
+<tr>
+<td>retrieve</td>
+<td>多查询 RAG 证据包，带页码和 chunk 标识</td>
+</tr>
+<tr>
+<td>feasibility</td>
+<td>结构化可行性报告、风险、依赖与停止条件</td>
+</tr>
+<tr>
+<td>approval</td>
+<td>人工 approve / revise / reject 决策</td>
+</tr>
+<tr>
+<td>implement</td>
+<td>代码、配置、实验入口和 <code>.autoresearch/job.json</code></td>
+</tr>
+<tr>
+<td>train</td>
+<td>经 Job Manager 校验后运行 GPU 任务</td>
+</tr>
+<tr>
+<td>evaluate</td>
+<td>读取指标、日志和产物，执行评价协议</td>
+</tr>
+<tr>
+<td>review</td>
+<td>复核结论、失败原因和证据充分性</td>
+</tr>
+<tr>
+<td>finalize</td>
+<td>汇总报告、代码与实验产物</td>
+</tr>
+</tbody>
+</table>
+<p>论文复现采用更细的阶段：</p>
+<div style="padding:14px 16px;border:1px solid #50C878;border-radius:8px;background:#F5FFF8;margin:16px 0;">
+  <div style="font-weight:600;font-size:1.02em;color:#2E7D4F;margin-bottom:12px;">论文复现工作流（细分阶段）</div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">scope</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">界定复现范围、任务边界与目标论文</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">extract_targets</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">抽取数据集、划分方式、指标、关键超参数与目标结果</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">retrieve</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">检索论文原文与相关文献，形成可追溯证据包</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">feasibility</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">复现可行性报告，含数据可得性、算力预算与风险</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #E9A33E;border-radius:6px;background:#FDF5E8;color:#B0701F;font-weight:600;font-size:12.5px;text-align:center;">approval</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">人工 approve / revise / reject 决策</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #50C878;border-radius:6px;background:#EBF8F0;color:#2E7D4F;font-weight:600;font-size:12.5px;text-align:center;">implement</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">编写复现代码、配置与实验入口</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">train</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">经 Job Manager 提交并运行训练任务</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">compare</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">把复现实验值与论文报告值并列比对</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #4A90E2;border-radius:6px;background:#EAF3FC;color:#1D5FA8;font-weight:600;font-size:12.5px;text-align:center;">visualize</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">生成对比图与对比表</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #9B59B6;border-radius:6px;background:#F7F0FB;color:#7D3C98;font-weight:600;font-size:12.5px;text-align:center;">review</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">复核结论、失败原因与证据充分性</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 12px;background:#fff;border-radius:6px;">
+      <span style="flex:0 0 138px;padding:3px 8px;border:1px solid #9B59B6;border-radius:6px;background:#F7F0FB;color:#7D3C98;font-weight:600;font-size:12.5px;text-align:center;">finalize</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.65;color:#333;">汇总报告、代码与实验产物，标注复现等级</span>
+    </div>
+  </div>
+</div>
+<p>该流程首先从论文中抽取数据集、划分方式、指标、关键超参数和目标结果，再执行实现与训练。<code>compare</code> 阶段把复现实验值与论文报告值并列，<code>visualize</code> 阶段生成对比图，最终报告需要区分“完全复现”“趋势一致”“部分复现”和“不可比”。</p>
+<h2 id="gpu-训练控制与实时监控"><a class="markdownIt-Anchor" href="#gpu-训练控制与实时监控"></a> GPU 训练控制与实时监控</h2>
+<p>Agent 不直接以后台 Shell 启动训练。implement 阶段必须生成 <code>.autoresearch/job.json</code>，例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;baseline&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;argv&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;/home/nvme1/AutoResearc/envs/train-py311/bin/python&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;-u&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;train.py&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;cwd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;code&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;gpu_ids&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="number">0</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;timeout_seconds&quot;</span><span class="punctuation">:</span> <span class="number">3600</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>系统接收到信息并校验通过后开始训练，在训练任务的生命周期中，任务状态包括 queued、running、succeeded、failed 和 cancelled。调度器按照并发上限和 GPU 可用性领取任务，启动独立进程组并降权到项目 UID。支持：</p>
+<ul>
+<li>GPU 排队与租约；</li>
+<li>最大运行时长；</li>
+<li>主动取消；</li>
+<li>超时后进程组清理；</li>
+<li>stdout/stderr 持久日志；</li>
+<li>软删除、重命名和星标；</li>
+<li>项目、工作流和创建人关联。</li>
+</ul>
+<p>训练脚本通过标准输出发送一行一个 JSON 的结构化指标：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AUTORESEARCH_METRIC &#123;&quot;step&quot;:120,&quot;loss&quot;:0.314,&quot;val_loss&quot;:0.351,&quot;accuracy&quot;:0.91,&quot;lr&quot;:0.0003&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这个流程，我们得以在对话中实时检测训练过程数据。</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E8%AE%AD%E7%BB%83%E8%BF%87%E7%A8%8B.jpg" class="" title="训练过程">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图4：对话中的训练过程实时监控 </p>
+<p>由于我们的模型训练往往是一个长程任务，我们无法期望其在一个loop中完成，Agent 需要等待大量时间，因此，系统采用心跳机制，完成下面的操作：</p>
+<ol>
+<li>读取增量日志和新增指标；</li>
+<li>查询进程状态和 GPU 遥测；</li>
+<li>更新最后 step、日志 offset、最新指标和最后进展时间；</li>
+<li>判断 warming_up、watching、attention_required 或 completed；</li>
+<li>将有界心跳记录写入 <code>job_heartbeats</code>；</li>
+<li>仅在停滞、异常、失败或完成时唤醒原 Agent 会话复核。</li>
+</ol>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E8%AE%AD%E7%BB%83%E5%AE%8C%E6%88%90%E4%B8%8E%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90.jpg" class="" title="训练完成与过程分析">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图5：训练完成与过程分析 </p>
+<p>同时，系统也支持查看训练队列中的历史数据，如下图所示。</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E5%8E%86%E5%8F%B2%E9%98%9F%E5%88%97.jpg" class="" title="历史队列">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图6：训练队列历史数据 </p>
+<h2 id="mcp-与外部-agent-接入"><a class="markdownIt-Anchor" href="#mcp-与外部-agent-接入"></a> MCP 与外部 Agent 接入</h2>
+<p>系统通过 MCP Streamable HTTP 暴露研究控制能力。项目级入口形如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.**.**:*****/mcp/?project_id=&lt;PROJECT_ID&gt;</span><br></pre></td></tr></table></figure>
+<p>服务端根据 URL 中的项目 ID 建立强制作用域，调用者即使在参数中传入其他项目 ID 也会被拒绝。MCP 使用 Bearer API Key 认证，不依赖浏览器登录态。</p>
+<p>主要 MCP 工具包括：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>system_status</code></td>
+<td>获取项目工作区、RAG 和任务状态</td>
+</tr>
+<tr>
+<td><code>list_jobs</code> / <code>get_job</code></td>
+<td>查询项目训练任务</td>
+</tr>
+<tr>
+<td><code>submit_job</code> / <code>cancel_job</code></td>
+<td>提交或取消受控训练</td>
+</tr>
+<tr>
+<td><code>get_job_logs</code> / <code>get_job_metrics</code></td>
+<td>读取实时日志和指标</td>
+</tr>
+<tr>
+<td><code>search_knowledge</code></td>
+<td>查询项目私有知识库</td>
+</tr>
+<tr>
+<td><code>list_projects</code> / <code>get_project_context</code></td>
+<td>获取项目与研究上下文</td>
+</tr>
+<tr>
+<td><code>list_workflows</code> / <code>get_workflow</code></td>
+<td>查询工作流进度</td>
+</tr>
+<tr>
+<td><code>approve_workflow</code></td>
+<td>执行可行性审批</td>
+</tr>
+<tr>
+<td><code>list_ingestion_batches</code></td>
+<td>查看文献导入状态</td>
+</tr>
+<tr>
+<td><code>update_workflow_progress</code></td>
+<td>外部可信 Agent 回写进度</td>
+</tr>
+<tr>
+<td><code>create_agent_session</code> / <code>send_agent_message</code></td>
+<td>操作持久 Agent 会话</td>
+</tr>
+</tbody>
+</table>
+<p>Codex 等外部 Agent 必须通过 <code>submit_job</code> 启动训练，而不是在自身连接中创建不可观测后台进程。只要任务由该接口提交，训练页面就能看到同一个 job 的实时日志、GPU 状态、指标和心跳。</p>
+<h2 id="测试"><a class="markdownIt-Anchor" href="#测试"></a> 测试</h2>
+<p>基于上述的架构，我简单测试了一篇文章的复线。Agent实现了召回文章、分析内容、下载数据、撰写代码、调用gpu训练、分析数据的完整闭环，生产报告如下：</p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_1.png" class="" title="测试报告_1">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图7：复现报告 第 1 页（封面与摘要） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_2.png" class="" title="测试报告_2">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图8：复现报告 第 2 页（概述与关键指标） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_3.png" class="" title="测试报告_3">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图9：复现报告 第 3 页（数据与数据分布） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_4.png" class="" title="测试报告_4">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图10：复现报告 第 4 页（每摄密度差异） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_5.png" class="" title="测试报告_5">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图11：复现报告 第 5 页（身份长尾与 ReID 特征） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_6.png" class="" title="测试报告_6">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图12：复现报告 第 6 页（指标定义） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_7.png" class="" title="测试报告_7">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图13：复现报告 第 7 页（双卡训练收敛） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_8.png" class="" title="测试报告_8">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图14：复现报告 第 8 页（阈值分析） </p>
+<img src="/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A_9.png" class="" title="测试报告_9">
+<p align="center" style="font-size: 0.9em; color: #888; margin-top: 0.4em;">图15：复现报告 第 9 页（训练脚本与复现命令） </p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/" rel="prev" title="OpenGIS harness 对端侧模型的一次尝试">
+      <i class="fa fa-chevron-left"></i> OpenGIS harness 对端侧模型的一次尝试
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hybrid-rag"><span class="nav-number">2.</span> <span class="nav-text"> Hybrid RAG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#agent-%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="nav-number">3.</span> <span class="nav-text"> Agent 与工作流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gpu-%E8%AE%AD%E7%BB%83%E6%8E%A7%E5%88%B6%E4%B8%8E%E5%AE%9E%E6%97%B6%E7%9B%91%E6%8E%A7"><span class="nav-number">4.</span> <span class="nav-text"> GPU 训练控制与实时监控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mcp-%E4%B8%8E%E5%A4%96%E9%83%A8-agent-%E6%8E%A5%E5%85%A5"><span class="nav-number">5.</span> <span class="nav-text"> MCP 与外部 Agent 接入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">6.</span> <span class="nav-text"> 测试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Fang Tianyao"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Fang Tianyao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">84</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">208</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:fty643737159@gmail.com" title="欢迎交流 E-Mail → mailto:fty643737159@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>欢迎交流 E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/ATFfang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ATFfang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-recommend">
+  <div class="sidebar-recommend-title">推荐阅读</div>
+  <ul class="sidebar-recommend-list">
+    <li>
+      <a href="/2026/08/03/OpenGIS%E7%9A%84%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7/" title="Agent驱动的GIS客户端OpenGIS：harness的架构升级">Agent驱动的GIS客户端OpenGIS：harness的架构升级</a>
+    </li>
+    <li>
+      <a href="/2026/04/29/%E4%B8%80%E4%B8%AARAG%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8Epipeline/" title="一个RAG系统的技术选型与pipeline">一个RAG系统的技术选型与pipeline</a>
+    </li>
+    <li>
+      <a href="/2026/04/13/OpenHarness/" title="【长文】港大新开源的OpenHarness，到底做了啥？">【长文】港大新开源的OpenHarness，到底做了啥？</a>
+    </li>
+    <li>
+      <a href="/2026/04/12/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E9%9D%A2%E5%90%91%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E7%9A%84%E5%A4%9A%E8%A7%86%E8%A7%89%E6%A3%80%E6%B5%8B%E4%BB%BB%E5%8A%A1%E7%B3%BB%E7%BB%9F/" title="系统设计：一个面向本地部署的多视觉检测任务系统">系统设计：一个面向本地部署的多视觉检测任务系统</a>
+    </li>
+    <li>
+      <a href="/2026/06/08/go%E5%90%8E%E5%8F%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E6%A1%86%E6%9E%B6/" title="后台服务的快速搭建框架：一套简单 Go 技术栈">后台服务的快速搭建框架：一套简单 Go 技术栈</a>
+    </li>
+  </ul>
+</div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-terminal"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Fang Tianyao</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">794k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">24:04</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.querySelectorAll('.pdfobject-container').forEach(element => {
+  let url = element.dataset.target;
+  let pdfOpenParams = {
+    navpanes : 0,
+    toolbar  : 0,
+    statusbar: 0,
+    pagemode : 'thumbs',
+    view     : 'FitH'
+  };
+  let pdfOpenFragment = '#' + Object.entries(pdfOpenParams).map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+  let fullURL = `/lib/pdf/web/viewer.html?file=${encodeURIComponent(url)}${pdfOpenFragment}`;
+
+  if (NexT.utils.supportsPDFs()) {
+    element.innerHTML = `<embed class="pdfobject" src="${url + pdfOpenFragment}" type="application/pdf" style="height: ${element.dataset.height};">`;
+  } else {
+    element.innerHTML = `<iframe src="${fullURL}" style="height: ${element.dataset.height};" frameborder="0"></iframe>`;
+  }
+});
+</script>
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+<script>
+  // 强制页面从顶部开始展示（head.swig 已禁用浏览器滚动恢复，这里兜底拉回顶部）
+  // load 事件：图片等资源加载完成后浏览器可能再次调整滚动位置
+  // pageshow 事件：覆盖 bfcache（前进/后退）场景
+  var scrollToTop = function() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  scrollToTop();
+  window.addEventListener('load', scrollToTop);
+  window.addEventListener('pageshow', scrollToTop);
+</script>
+
+<!-- Dark mode toggle -->
+<div class="theme-toggle" id="theme-toggle" title="切换深色/浅色模式" role="button" aria-label="切换深色/浅色模式">
+  <span class="theme-toggle-icon">🌙</span>
+</div>
+<script>
+  (function() {
+    var KEY = 'blog-theme';
+    var root = document.documentElement;
+    var icon = document.querySelector('.theme-toggle-icon');
+
+    // 初始化：优先 localStorage，其次跟随系统偏好
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = saved !== null ? (saved === 'dark') : prefersDark;
+
+    var apply = function(dark) {
+      root.classList.toggle('dark', dark);
+      if (icon) icon.textContent = dark ? '☀️' : '🌙';
+    };
+    apply(isDark);
+
+    var btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        isDark = !isDark;
+        apply(isDark);
+        try { localStorage.setItem(KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+      });
+    }
+
+    // 跟随系统变化（用户未手动选择时）
+    if (saved === null && window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        apply(e.matches);
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

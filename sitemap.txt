@@ -1,3 +1,4 @@
+https://atffang.github.io/2025/08/19/trasformer%E6%B5%85%E6%9E%90/
 https://atffang.github.io/2026/09/19/%E5%9F%BA%E4%BA%8EPI%E7%9A%84%E8%B7%A8%E8%AE%BE%E5%A4%87autoResearchAgent/
 https://atffang.github.io/2026/09/11/OpenGIS%E7%AB%AF%E4%BE%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95/
 https://atffang.github.io/2026/08/21/OpenGIS%E8%87%AA%E8%BF%9B%E5%8C%96%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%87%AA%E8%BF%9B%E5%8C%96%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1/
@@ -296,6 +297,9 @@ https://atffang.github.io/tags/%E7%A9%BA%E9%97%B4%E6%8F%92%E5%80%BC/
 https://atffang.github.io/tags/docker-compose/
 https://atffang.github.io/tags/CUDA/
 https://atffang.github.io/tags/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/
+https://atffang.github.io/tags/Transformer/
+https://atffang.github.io/tags/%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81/
+https://atffang.github.io/tags/%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B/
 https://atffang.github.io/categories/%E4%BD%9C%E5%93%81/
 https://atffang.github.io/categories/%E5%85%B6%E4%BB%96/
 https://atffang.github.io/categories/%E5%B7%A5%E5%85%B7%E4%B8%8E%E6%8A%80%E5%B7%A7/
